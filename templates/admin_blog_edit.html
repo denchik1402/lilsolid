@@ -1,0 +1,182 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Редактировать статью' if post else 'Новая статья' }} — Блог{% endblock %}
+
+{% block extra_css %}
+<link href="https://cdn.quilljs.com/1.3.7/quill.snow.css" rel="stylesheet">
+<style>
+.admin-panel .ql-container { min-height: 320px; font-size: 1rem; }
+.admin-panel .ql-editor { min-height: 320px; }
+.admin-panel .blog-cover-preview { max-height: 180px; border-radius: 8px; object-fit: cover; }
+.admin-panel .editor-hint { font-size: 0.85rem; color: #6c757d; }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="admin-panel">
+    <nav class="admin-breadcrumb mb-4">
+        <a href="{{ url_for('admin', tab='blog') }}">← Блог</a>
+    </nav>
+
+    <div class="card shadow-sm">
+        <div class="card-header {{ 'bg-primary' if post else 'bg-success' }} text-white">
+            <h5 class="mb-0">{{ '✏️ Редактировать статью' if post else '➕ Новая статья' }}</h5>
+        </div>
+        <div class="card-body">
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            {% for category, message in messages %}
+            <div class="alert alert-{{ category }} py-2">{{ message }}</div>
+            {% endfor %}
+            {% endif %}
+            {% endwith %}
+
+            <form method="post" enctype="multipart/form-data" id="blogForm">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="content" id="content-input" value="">
+
+                <div class="row">
+                    <div class="col-lg-8">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Заголовок</label>
+                            <input type="text" name="title" id="title-input" class="form-control" value="{{ post.title if post else '' }}" required placeholder="Как выбрать IQOS ILUMA">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">URL (slug)</label>
+                            <input type="text" name="slug" id="slug-input" class="form-control" value="{{ post.slug if post else '' }}" placeholder="kak-vybrat-iqos-iluma">
+                            <small class="text-muted">Латиница и дефисы. Пусто — сгенерируется из заголовка.</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Краткое описание (анонс)</label>
+                            <textarea name="excerpt" class="form-control" rows="2" maxlength="400" placeholder="1–2 предложения для карточки в списке">{{ post.excerpt if post else '' }}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Текст статьи</label>
+                            <p class="editor-hint mb-2">Форматирование, заголовки, списки, ссылки, таблицы и изображения. Классы блоков: <code>blog-lead</code>, <code>blog-callout</code>, <code>blog-callout-info</code>, <code>blog-table</code>.</p>
+                            <div id="editor"></div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Обложка (шапка статьи)</label>
+                            {% if post and post.cover_image %}
+                            <div class="mb-2">
+                                <img src="{{ post.cover_image|blog_cover_url }}" alt="" class="blog-cover-preview img-thumbnail w-100">
+                                <small class="text-muted d-block mt-1">{{ post.cover_image }}</small>
+                            </div>
+                            {% endif %}
+                            <input type="file" name="cover_image" class="form-control" accept="image/*">
+                            <small class="text-muted">JPG, PNG, WebP. Рекомендуем 1200×630 px. {{ 'Оставьте пустым, чтобы не менять.' if post else '' }}</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Или путь к фото товара</label>
+                            <input type="text" name="cover_image_path" class="form-control" value="{{ post.cover_image if post and post.cover_image and not post.cover_image.startswith('blog/') else '' }}" placeholder="products/Devices/.../file.webp">
+                            <small class="text-muted">Относительно static/images/</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Иконка (если нет обложки)</label>
+                            <input type="text" name="cover_icon" class="form-control" value="{{ post.cover_icon if post else 'fa-book-open' }}" placeholder="fa-book-open">
+                            <small class="text-muted">Font Awesome, напр. fa-box-open, fa-layer-group</small>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Время чтения (мин)</label>
+                            <input type="number" name="reading_minutes" class="form-control" value="{{ post.reading_minutes if post else 5 }}" min="1" max="60">
+                        </div>
+                        <div class="mb-3 form-check">
+                            <input type="checkbox" name="is_published" value="1" class="form-check-input" id="is_published" {{ 'checked' if not post or post.is_published else '' }}>
+                            <label class="form-check-label" for="is_published">Опубликовано</label>
+                        </div>
+                        <hr>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Meta description</label>
+                            <textarea name="meta_description" class="form-control" rows="3" maxlength="300">{{ post.meta_description if post else '' }}</textarea>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Meta keywords</label>
+                            <input type="text" name="meta_keywords" class="form-control" value="{{ post.meta_keywords if post else '' }}">
+                        </div>
+                        {% if post %}
+                        <p class="small text-muted mb-0">
+                            Создано: {{ post.created_at.strftime('%d.%m.%Y %H:%M') if post.created_at else '—' }}<br>
+                            <a href="{{ url_for('blog_post', slug=post.slug) }}" target="_blank" rel="noopener">Открыть на сайте →</a>
+                        </p>
+                        {% endif %}
+                    </div>
+                </div>
+                <hr>
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+                <a href="{{ url_for('admin', tab='blog') }}" class="btn btn-outline-secondary">Отмена</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.quilljs.com/1.3.7/quill.min.js"></script>
+<script>
+(function() {
+    var initialHtml = {{ (post.content if post else '')|tojson }};
+    var quill = new Quill('#editor', {
+        theme: 'snow',
+        modules: {
+            toolbar: {
+                container: [
+                    [{ header: [2, 3, false] }],
+                    ['bold', 'italic', 'underline'],
+                    [{ list: 'ordered' }, { list: 'bullet' }],
+                    ['blockquote', 'link', 'image'],
+                    ['clean']
+                ],
+                handlers: {
+                    image: imageHandler
+                }
+            }
+        }
+    });
+    if (initialHtml) {
+        quill.root.innerHTML = initialHtml;
+    }
+
+    function imageHandler() {
+        var input = document.createElement('input');
+        input.setAttribute('type', 'file');
+        input.setAttribute('accept', 'image/*');
+        input.click();
+        input.onchange = function() {
+            var file = input.files[0];
+            if (!file) return;
+            var fd = new FormData();
+            fd.append('image', file);
+            fd.append('csrf_token', document.querySelector('input[name=csrf_token]').value);
+            var range = quill.getSelection(true);
+            fetch('{{ url_for("admin_blog_upload_image") }}', { method: 'POST', body: fd, credentials: 'same-origin' })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.url) {
+                        quill.insertEmbed(range.index, 'image', data.url);
+                        quill.setSelection(range.index + 1);
+                    } else {
+                        alert(data.error || 'Ошибка загрузки');
+                    }
+                })
+                .catch(function() { alert('Ошибка загрузки изображения'); });
+        };
+    }
+
+    document.getElementById('blogForm').addEventListener('submit', function() {
+        document.getElementById('content-input').value = quill.root.innerHTML;
+    });
+
+    var titleInput = document.getElementById('title-input');
+    var slugInput = document.getElementById('slug-input');
+    titleInput.addEventListener('blur', function() {
+        if (!slugInput.value.trim() && titleInput.value.trim()) {
+            slugInput.placeholder = titleInput.value.trim().toLowerCase()
+                .replace(/[а-яё]/g, function() { return ''; })
+                .replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+        }
+    });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,25 @@
+{# Карточка блога для главной (киберпанк). Ожидает: post #}
+<article class="cyber-blog-card">
+    <a href="{{ url_for('blog_post', slug=post.slug) }}" class="cyber-blog-card-link text-decoration-none">
+        <div class="cyber-blog-card-media{% if not post.cover_image %} cyber-blog-card-media--icon{% endif %}">
+            {% if post.cover_image %}
+            <img src="{{ post.cover_image|blog_cover_url }}" alt="{{ post.title }}" loading="lazy" decoding="async">
+            {% else %}
+            <span class="cyber-blog-card-icon" aria-hidden="true"><i class="fas {{ post.cover_icon or 'fa-microchip' }}"></i></span>
+            {% endif %}
+        </div>
+        <div class="cyber-blog-card-shade" aria-hidden="true"></div>
+        <span class="cyber-blog-card-time"><i class="far fa-clock" aria-hidden="true"></i> {{ post.reading_minutes or 5 }} мин</span>
+        <div class="cyber-blog-card-glass">
+            <h3 class="cyber-blog-card-heading">{{ post.title }}</h3>
+            <div class="cyber-blog-card-details">
+                <div class="cyber-blog-card-details-inner">
+                    {% if post.excerpt %}
+                    <p class="cyber-blog-card-excerpt">{{ post.excerpt }}</p>
+                    {% endif %}
+                    <span class="cyber-blog-card-cta">Читать <i class="fas fa-arrow-right" aria-hidden="true"></i></span>
+                </div>
+            </div>
+        </div>
+    </a>
+</article>

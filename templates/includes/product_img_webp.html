@@ -1,0 +1,14 @@
+{# Изображение товара с WebP (если есть). Параметры: product, img, img_class, loading, img_id #}
+{% if img %}
+{% set _base = img.rsplit('.', 1)[0] %}
+{% if img|has_webp %}
+<picture>
+    <source type="image/webp" src="{{ url_for('static', filename='images/products/' + _base + '.webp') }}">
+    <img src="{{ url_for('static', filename='images/products/' + img) }}" class="{{ img_class|default('img-fluid') }}" alt="{{ product|product_alt }}" {% if loading|default(true) %}loading="lazy"{% endif %} {% if img_id %}id="{{ img_id }}"{% endif %}>
+</picture>
+{% else %}
+<img src="{{ url_for('static', filename='images/products/' + img) }}" class="{{ img_class|default('img-fluid') }}" alt="{{ product|product_alt }}" {% if loading|default(true) %}loading="lazy"{% endif %} {% if img_id %}id="{{ img_id }}"{% endif %}>
+{% endif %}
+{% else %}
+<img src="https://via.placeholder.com/400" class="{{ img_class|default('img-fluid') }}" alt="{{ product|product_alt }}" {% if loading|default(true) %}loading="lazy"{% endif %} {% if img_id %}id="{{ img_id }}"{% endif %}>
+{% endif %}

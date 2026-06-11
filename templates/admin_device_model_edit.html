@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+
+{% block title %}Редактировать модель{% endblock %}
+
+{% block content %}
+<div class="admin-panel">
+    <nav class="admin-breadcrumb mb-4">
+        <a href="{{ url_for('admin', tab='models') }}">← Модели устройств</a>
+    </nav>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">✏️ {{ device_model.name }}</h5>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Название *</label>
+                    <input type="text" name="name" class="form-control" required maxlength="100"
+                           value="{{ device_model.name }}">
+                    {% if product_count %}
+                    <small class="text-muted">При переименовании обновится поле «Модель» у {{ product_count }} товар(ов).</small>
+                    {% endif %}
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Порядок сортировки</label>
+                    <input type="number" name="sort_order" class="form-control"
+                           value="{{ device_model.sort_order or 0 }}" min="0" step="1">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Alt-текст (SEO)</label>
+                    <input type="text" name="image_alt" class="form-control" maxlength="200"
+                           value="{{ device_model.image_alt or '' }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Meta Description (SEO)</label>
+                    <input type="text" name="meta_description" class="form-control" maxlength="300"
+                           value="{{ device_model.meta_description or '' }}">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Meta Keywords (SEO)</label>
+                    <input type="text" name="meta_keywords" class="form-control" maxlength="300"
+                           value="{{ device_model.meta_keywords or '' }}">
+                </div>
+                <hr>
+                <button type="submit" class="btn btn-primary">💾 Сохранить</button>
+                <a href="{{ url_for('admin', tab='models') }}" class="btn btn-outline-secondary">Отмена</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

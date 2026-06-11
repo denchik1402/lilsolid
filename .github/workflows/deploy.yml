@@ -1,0 +1,75 @@
+name: Deploy lilsolid.ru
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          command_timeout: 8m
+          script: |
+            set -e
+            set -o pipefail
+            APP_DIR=/home/lilstore/lilsolid
+            SERVICE=lilsolid
+
+            echo "=== 1. chown ==="
+            rm -f "$APP_DIR/gunicorn.ctl" 2>/dev/null || true
+            find "$APP_DIR" -xtype l -delete 2>/dev/null || true
+            chown -hR lilstore:lilstore "$APP_DIR"
+
+            echo "=== 2. git pull ==="
+            sudo -u lilstore bash -c "cd $APP_DIR && git config --global --add safe.directory $APP_DIR && git fetch origin main && git reset --hard origin/main && git clean -fd alembic/versions/"
+
+            echo "=== 3. pip install ==="
+            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && pip install -r requirements.txt --quiet"
+
+            echo "=== 4. migrations ==="
+            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 -c \"
+            from app import app
+            from alembic_runner import run_alembic
+            with app.app_context():
+                run_alembic()
+            \" || python3 init_db.py"
+            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 repair_schema.py" || true
+
+            echo "=== 5. SEO scripts ==="
+            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 update_product_galleries.py" 2>/dev/null || true
+            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 fill_seo_meta.py" 2>/dev/null || true
+            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 normalize_product_names.py" 2>/dev/null || true
+            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 seed_seo_blog.py" 2>/dev/null || true
+
+            echo "=== 6. static permissions ==="
+            chown -R www-data:www-data "$APP_DIR/static"
+            find "$APP_DIR/static" -type d -exec chmod 755 {} \;
+            find "$APP_DIR/static" -type f -exec chmod 644 {} \;
+            for d in banners products blog categories; do
+              mkdir -p "$APP_DIR/static/images/$d"
+              chown -R lilstore:lilstore "$APP_DIR/static/images/$d"
+            done
+
+            echo "=== 7. nginx + systemd ==="
+            if [[ -f /etc/letsencrypt/live/lilsolid.ru/fullchain.pem ]]; then
+              cp "$APP_DIR/deploy/nginx-lilsolid.conf" /etc/nginx/sites-available/lilsolid
+            else
+              cp "$APP_DIR/deploy/nginx-lilsolid-http.conf" /etc/nginx/sites-available/lilsolid
+            fi
+            ln -sf /etc/nginx/sites-available/lilsolid /etc/nginx/sites-enabled/lilsolid
+            cp "$APP_DIR/deploy/lilsolid.service" "/etc/systemd/system/${SERVICE}.service"
+            cp "$APP_DIR/deploy/healthcheck.sh" /usr/local/bin/healthcheck-lilsolid.sh
+            chmod +x /usr/local/bin/healthcheck-lilsolid.sh
+            systemctl daemon-reload
+            nginx -t
+            systemctl reload nginx
+
+            echo "=== 8. restart site (NO telegram bot on this server) ==="
+            systemctl restart "$SERVICE"
+            echo "=== Deploy lilsolid completed ==="

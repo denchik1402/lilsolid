@@ -1,0 +1,88 @@
+{% extends "base.html" %}
+
+{% block title %}{{ post.title }} — LIL STORE{% endblock %}
+{% block meta_description %}{{ post.meta_description or post.excerpt }}{% endblock %}
+{% block meta_keywords %}{{ post.meta_keywords or '' }}{% endblock %}
+{% block canonical_url %}{{ request.url_root.rstrip('/') }}{{ url_for('blog_post', slug=post.slug) }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/blog.css') }}?v=18">
+{% endblock %}
+
+{% block schema_ld %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": {{ post.title|tojson }},
+  "description": {{ (post.meta_description or post.excerpt or '')|tojson }},
+  "datePublished": "{{ post.created_at.strftime('%Y-%m-%d') if post.created_at else '' }}",
+  "dateModified": "{{ post.updated_at.strftime('%Y-%m-%d') if post.updated_at else '' }}",
+  "author": {"@type": "Organization", "name": "LIL STORE"},
+  "publisher": {"@type": "Organization", "name": "LIL STORE", "url": "{{ request.url_root.rstrip('/') }}"},
+  "mainEntityOfPage": "{{ request.url_root.rstrip('/') }}{{ url_for('blog_post', slug=post.slug) }}"
+  {% if post.cover_image %},"image": "{{ request.url_root.rstrip('/') }}{{ post.cover_image|blog_cover_url }}"{% endif %}
+}
+</script>
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[
+  {"@type":"ListItem","position":1,"name":"Главная","item":"{{ request.url_root.rstrip('/') }}/"},
+  {"@type":"ListItem","position":2,"name":"Блог","item":"{{ request.url_root.rstrip('/') }}{{ url_for('blog_index') }}"},
+  {"@type":"ListItem","position":3,"name":{{ post.title|tojson }},"item":"{{ request.url_root.rstrip('/') }}{{ url_for('blog_post', slug=post.slug) }}"}
+]}
+</script>
+{% endblock %}
+
+{% block content %}
+<nav aria-label="breadcrumb" class="mb-3">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="{{ url_for('index') }}">Главная</a></li>
+        <li class="breadcrumb-item"><a href="{{ url_for('blog_index') }}">Блог</a></li>
+        <li class="breadcrumb-item active" aria-current="page">{{ post.title }}</li>
+    </ol>
+</nav>
+
+<article>
+    <header class="article-hero{% if post.cover_image %} article-hero--with-cover{% endif %}">
+        <div class="article-hero-text">
+            {% if not post.cover_image %}
+            <div class="article-hero-icon"><i class="fas {{ post.cover_icon or 'fa-book-open' }}"></i></div>
+            {% endif %}
+            <div class="article-meta"><i class="far fa-clock me-1"></i>{{ post.reading_minutes or 5 }} мин чтения</div>
+            <h1 class="h2 mb-0">{{ post.title }}</h1>
+        </div>
+        {% if post.cover_image %}
+        <div class="article-hero-media card-side-media article-img-zoom">
+            <img src="{{ post.cover_image|blog_cover_url }}" alt="{{ post.title }}" fetchpriority="high" decoding="async">
+        </div>
+        {% endif %}
+    </header>
+
+    <div class="article-content">
+        {{ post.content|sanitize_blog_html|blog_article_images|safe }}
+    </div>
+
+    <div class="article-cta">
+        <h2 class="h5 mb-2">Заказать в LIL STORE</h2>
+        <p class="text-muted mb-3">Оригинальные IQOS ILUMA и стики TEREA. Бронь на сайте, доставка 1–2 дня.</p>
+        <a href="{{ url_for('catalog') }}" class="btn btn-primary me-2 mb-2">Каталог</a>
+        <a href="{{ url_for('catalog', category_slug='terea-sticks') }}" class="btn btn-outline-primary me-2 mb-2">TEREA</a>
+        <a href="https://t.me/iluma_prime_bot" class="btn btn-outline-secondary mb-2" target="_blank" rel="noopener">Telegram</a>
+    </div>
+</article>
+
+{% if other_posts %}
+<section class="mt-5 pt-4 border-top">
+    <h2 class="h4 mb-4">Ещё статьи</h2>
+    <div class="row g-4">
+        {% for p in other_posts %}
+        <div class="col-md-4">
+            {% with post=p, title_tag='h3', title_class='h6', show_excerpt=false, compact=true, extra_class='h-100' %}
+            {% include 'includes/blog_card.html' %}
+            {% endwith %}
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endblock %}

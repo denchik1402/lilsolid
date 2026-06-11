@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+
+{% block title %}Заказ оформлен - LIL STORE{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+    <i class="fas fa-check-circle fa-5x text-success mb-4"></i>
+    <h1 class="mb-3">Спасибо за оформление!</h1>
+    <p class="lead mb-4">Номер вашего заказа: <strong>{{ order.order_number }}</strong></p>
+    
+    <div class="card mb-4 mx-auto" style="max-width: 600px;">
+        <div class="card-body">
+            <h5>Детали заказа</h5>
+            {% if order.items %}
+            <div class="mb-4">
+                <h6 class="mb-2">Товары:</h6>
+                <table class="table table-sm">
+                    <thead>
+                        <tr>
+                            <th>Товар</th>
+                            <th class="text-center">Кол-во</th>
+                            <th class="text-end">Цена</th>
+                            <th class="text-end">Сумма</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in order.items %}
+                        <tr>
+                            <td>{{ item.product.name if item.product else 'Товар #' ~ item.product_id }}</td>
+                            <td class="text-center">{{ item.quantity }}</td>
+                            <td class="text-end">{{ item.price|format_price }} ₽</td>
+                            <td class="text-end">{{ (item.quantity * item.price)|format_price }} ₽</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% endif %}
+            <table class="table">
+                <tr>
+                    <td>Имя:</td>
+                    <td>{{ order.customer_name }}</td>
+                </tr>
+                <tr>
+                    <td>Телефон:</td>
+                    <td>{{ order.customer_phone }}</td>
+                </tr>
+                <tr>
+                    <td>Email:</td>
+                    <td>{{ order.customer_email or 'Не указан' }}</td>
+                </tr>
+                <tr>
+                    <td>Сумма:</td>
+                    <td>{{ order.total_amount|format_price }} ₽</td>
+                </tr>
+                <tr>
+                    <td>Адрес доставки:</td>
+                    <td>{{ order.delivery_address or '—' }}</td>
+                </tr>
+                <tr>
+                    <td>Способ получения:</td>
+                    <td>Доставка 1–2 дня</td>
+                </tr>
+                <tr>
+                    <td>Оплата:</td>
+                    <td>При получении</td>
+                </tr>
+            </table>
+        </div>
+    </div>
+    
+    <p class="mb-4">Наш менеджер может связаться с вами для уточнения деталей доставки.</p>
+    
+    <div class="d-flex gap-2 justify-content-center flex-wrap">
+        <a href="{{ url_for('order_track') }}" class="btn btn-outline-primary">Отследить заказ</a>
+        <a href="/" class="btn btn-primary">Вернуться на главную</a>
+    </div>
+</div>
+{% endblock %}

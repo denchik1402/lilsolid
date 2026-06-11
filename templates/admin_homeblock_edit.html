@@ -1,0 +1,62 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Редактировать блок' if block else 'Добавить блок' }}{% endblock %}
+
+{% block content %}
+<div class="admin-panel">
+    <nav class="admin-breadcrumb mb-4">
+        <a href="{{ url_for('admin', tab='banners') }}">← Баннеры</a>
+    </nav>
+
+    <div class="card shadow-sm">
+        <div class="card-header {{ 'bg-primary' if block else 'bg-success' }} text-white">
+            <h5 class="mb-0">{{ '✏️ Редактировать блок' if block else '➕ Добавить блок' }}</h5>
+        </div>
+        <div class="card-body">
+            <p class="text-muted small mb-3">Рекомендуемые размеры: позиция 1 (левый большой) — 600×400 px; позиции 2–3 — 400×200 px.</p>
+            <form method="post" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Позиция</label>
+                    <select name="position" class="form-select" required>
+                        <option value="1" {{ 'selected' if block and block.position == 1 else '' }}>1 — Левый большой блок</option>
+                        <option value="2" {{ 'selected' if block and block.position == 2 else '' }}>2 — Правый верхний</option>
+                        <option value="3" {{ 'selected' if block and block.position == 3 else '' }}>3 — Правый нижний</option>
+                    </select>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Изображение (фон)</label>
+                    {% if block and block.image %}
+                    <div class="mb-2">
+                        <img src="{{ url_for('static', filename='images/banners/' + block.image) }}" alt="" class="img-thumbnail" style="max-height: 120px;">
+                    </div>
+                    {% endif %}
+                    <input type="file" name="image" class="form-control" accept="image/*" {{ 'required' if not block else '' }}>
+                    <small class="text-muted">JPG, PNG, GIF, WebP. {{ 'Оставьте пустым, чтобы не менять.' if block else '' }}</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Заголовок</label>
+                    <input type="text" name="title" class="form-control" value="{{ block.title if block else '' }}" required placeholder="О нашем магазине">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Описание</label>
+                    <textarea name="description" class="form-control" rows="3" placeholder="Текст под заголовком">{{ block.description if block else '' }}</textarea>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Текст кнопки</label>
+                        <input type="text" name="button_text" class="form-control" value="{{ block.button_text if block else '' }}" placeholder="Подробнее">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Ссылка кнопки</label>
+                        <input type="text" name="button_url" class="form-control" value="{{ block.button_url if block else '' }}" placeholder="/catalog или /about">
+                    </div>
+                </div>
+                <hr>
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+                <a href="{{ url_for('admin', tab='banners') }}" class="btn btn-outline-secondary">Отмена</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

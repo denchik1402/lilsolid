@@ -1,0 +1,20 @@
+{# WebP + srcset для изображения товара. Вызов: {% include 'includes/product_image.html' %} #}
+{% set _img = first_img or (product.all_images[0] if product.all_images else product.image) %}
+{% if _img %}
+{% set _base = _img.rsplit('.', 1)[0] %}
+{% set _has_v = has_image_variants(_img) %}
+{% if _has_v %}
+<picture>
+    <source type="image/webp" srcset="{{ url_for('static', filename='images/products/' + _base + '_400w.webp') }} 400w, {{ url_for('static', filename='images/products/' + _base + '.webp') }} 800w">
+    <img src="{{ url_for('static', filename='images/products/' + _img) }}" 
+         srcset="{{ url_for('static', filename='images/products/' + _base + '_400w.jpg') }} 400w, {{ url_for('static', filename='images/products/' + _img) }} 800w"
+         class="{{ img_class|default('img-fluid') }}" alt="{{ product|product_alt }}" 
+         {% if img_id %}id="{{ img_id }}"{% endif %}
+         {% if loading|default(true) %}loading="lazy"{% endif %}>
+</picture>
+{% else %}
+<img src="{{ url_for('static', filename='images/products/' + _img) }}" class="{{ img_class|default('img-fluid') }}" alt="{{ product|product_alt }}" loading="lazy" {% if img_id %}id="{{ img_id }}"{% endif %}>
+{% endif %}
+{% else %}
+<img src="https://via.placeholder.com/400" class="{{ img_class|default('img-fluid') }}" alt="{{ product|product_alt }}" loading="lazy">
+{% endif %}

@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+
+{% block title %}Избранное — LIL STORE{% endblock %}
+{% block meta_robots %}noindex, follow{% endblock %}
+{% block meta_description %}Ваши избранные товары. IQOS и стики TEREA в LIL STORE.{% endblock %}
+
+{% block schema_ld %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Главная","item":"{{ request.url_root.rstrip('/') }}/"},{"@type":"ListItem","position":2,"name":"Избранное","item":"{{ request.url_root.rstrip('/') }}{{ url_for('favorites') }}"}]}
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.favorites-empty-block { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; }
+.favorites-empty-icon { font-size: 5rem; color: var(--text-muted); opacity: 0.5; }
+.favorites-empty-icon i { transition: transform 0.3s; }
+.favorites-empty-block:hover .favorites-empty-icon i { transform: scale(1.05); }
+#favoritesGrid .favorite-btn-remove { z-index: 20; pointer-events: auto; }
+#favoritesGrid .product-card-link { pointer-events: none; }
+#favoritesGrid .product-card-link .product-card-img-wrap,
+#favoritesGrid .product-card-link .product-title,
+#favoritesGrid .product-card-link .product-price { pointer-events: auto; }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Избранное</h1>
+
+{% if products %}
+<div class="row" id="favoritesGrid">
+    {% for product in products %}
+    <div class="col-md-4 col-lg-3 mb-4 favorite-card" id="favorite-card-{{ product.id }}" data-product-id="{{ product.id }}">
+        <div class="product-card position-relative">
+            {% if product.is_hit %}<span class="badge bg-danger position-absolute top-0 start-0 m-2 product-badge-hit">Хит</span>{% endif %}
+            {% include 'includes/compare_btn.html' %}
+            <button type="button" class="favorite-btn active favorite-btn-remove position-absolute top-0 end-0 m-2" data-product-id="{{ product.id }}" title="Убрать из избранного"><i class="far fa-heart d-none"></i><i class="fas fa-heart text-danger"></i></button>
+                <a href="{{ product|product_url }}" class="product-card-link text-decoration-none text-dark">
+                <div class="product-card-img-wrap">
+                    {% set first_img = product.all_images[0] if product.all_images else product.image %}
+                    {% if first_img %}
+                    <img src="{{ url_for('static', filename='images/products/' + first_img) }}" class="img-fluid" alt="{{ product|product_alt }}" loading="lazy">
+                    {% else %}
+                    <img src="https://via.placeholder.com/400" class="img-fluid" alt="{{ product|product_alt }}" loading="lazy">
+                    {% endif %}
+                </div>
+                <h5 class="product-title">{{ product.name }}</h5>
+                <div class="product-price mb-2">
+                    {{ product.price|format_price }} ₽
+                    {% if product.old_price %}<span class="old-price">{{ product.old_price|format_price }} ₽</span>{% endif %}
+                </div>
+            </a>
+            <div class="d-grid gap-2">
+                <a href="{{ product|product_url }}" class="btn btn-outline-primary btn-sm">Подробнее</a>
+                {% include 'includes/add_to_cart_widget.html' %}
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="favorites-empty-block text-center py-5" id="favoritesEmpty">
+    <div class="favorites-empty-icon mb-3"><i class="far fa-heart"></i></div>
+    <h4 class="mb-2">В избранном пока ничего нет</h4>
+    <p class="text-muted mb-4">Добавляйте товары в избранное, нажимая <i class="fas fa-heart text-danger"></i> на карточках — так вы сможете быстро вернуться к понравившимся позициям.</p>
+    <a href="{{ url_for('catalog') }}" class="btn btn-primary btn-lg"><i class="fas fa-th-large me-2"></i>Перейти в каталог</a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    var ids = typeof wishlistGetIds === 'function' ? wishlistGetIds() : [];
+    if (ids.length > 0 && !window.location.search) {
+        window.location.href = '{{ url_for("favorites") }}?ids=' + ids.join(',');
+        return;
+    }
+    var grid = document.getElementById('favoritesGrid');
+    if (!grid) return;
+    grid.addEventListener('click', function(e) {
+        var btn = e.target && e.target.closest('.favorite-btn-remove');
+        if (!btn) return;
+        e.preventDefault();
+        e.stopPropagation();
+        var id = parseInt(btn.dataset.productId, 10);
+        if (isNaN(id)) return;
+        if (typeof wishlistRemove === 'function') wishlistRemove(id);
+        var cardEl = document.getElementById('favorite-card-' + id);
+        if (cardEl) cardEl.remove();
+        if (grid.children.length === 0) {
+            var catalogUrl = '{{ url_for("catalog") }}';
+            grid.outerHTML = '<div class="favorites-empty-block text-center py-5" id="favoritesEmpty"><div class="favorites-empty-icon mb-3"><i class="far fa-heart"></i></div><h4 class="mb-2">В избранном пока ничего нет</h4><p class="text-muted mb-4">Добавляйте товары в избранное, нажимая <i class="fas fa-heart text-danger"></i> на карточках — так вы сможете быстро вернуться к понравившимся позициям.</p><a href="' + catalogUrl + '" class="btn btn-primary btn-lg"><i class="fas fa-th-large me-2"></i>Перейти в каталог</a></div>';
+        }
+    }, true);
+})();
+</script>
+{% endblock %}

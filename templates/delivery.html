@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+
+{% block title %}Получение и оплата — LIL STORE{% endblock %}
+{% block meta_description %}Доставка IQOS и TEREA за 1–2 дня. Оплата при получении. Условия доставки и оплаты в LIL STORE.{% endblock %}
+{% block schema_ld %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Главная","item":"{{ request.url_root.rstrip('/') }}/"},{"@type":"ListItem","position":2,"name":"Получение и оплата","item":"{{ request.url_root.rstrip('/') }}{{ url_for('delivery') }}"}]}
+</script>
+{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Получение и оплата</h1>
+
+<div class="alert alert-info mb-4">
+    <strong>Важно:</strong> Продажа табачной продукции онлайн не осуществляется. На сайте возможна только <strong>бронь товара</strong>. Оплата — при получении в соответствии с законодательством РФ.
+</div>
+
+<div class="row">
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Доставка</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-2"><strong>Оперативная доставка</strong> в течение 1–2 рабочих дней по Москве.</p>
+                <p class="mb-0">После оформления брони наш менеджер свяжется с вами для уточнения адреса и времени доставки.</p>
+            </div>
+        </div>
+    </div>
+    
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5>Оплата</h5>
+            </div>
+            <div class="card-body">
+                <p>Оплата осуществляется <strong>при получении</strong> заказа курьером.</p>
+                <ul class="mb-0">
+                    <li>Наличными</li>
+                    <li>Банковской картой</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

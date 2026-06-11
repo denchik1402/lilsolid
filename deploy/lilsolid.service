@@ -1,0 +1,17 @@
+[Unit]
+Description=lilsolid.ru — Flask App (Gunicorn)
+After=network.target
+
+[Service]
+Type=simple
+User=lilstore
+Group=lilstore
+WorkingDirectory=/home/lilstore/lilsolid
+Environment="PATH=/home/lilstore/lilsolid/venv/bin"
+ExecStart=/home/lilstore/lilsolid/venv/bin/gunicorn --workers 2 --preload --bind 127.0.0.1:8000 --timeout 120 --max-requests 1000 --max-requests-jitter 50 app:app
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

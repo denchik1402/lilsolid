@@ -1,0 +1,173 @@
+{% extends "base.html" %}
+
+{% block title %}Часто задаваемые вопросы — LIL STORE{% endblock %}
+{% block meta_description %}Ответы на частые вопросы о заказе, доставке, оплате и гарантии в LIL STORE. IQOS и стики TEREA.{% endblock %}
+{% block schema_ld %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Главная","item":"{{ request.url_root.rstrip('/') }}/"},{"@type":"ListItem","position":2,"name":"FAQ","item":"{{ request.url_root.rstrip('/') }}{{ url_for('faq') }}"}]}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {"@type": "Question", "name": "Как оформить заказ?", "acceptedAnswer": {"@type": "Answer", "text": "Добавьте товары в корзину, нажмите «Оформить заказ» и заполните форму: имя, телефон, адрес доставки. После отправки заявки наш менеджер свяжется с вами для подтверждения и уточнения деталей."}},
+    {"@type": "Question", "name": "Как происходит оплата?", "acceptedAnswer": {"@type": "Answer", "text": "Оплата производится при получении товара — наличными или картой курьеру. Онлайн-оплата табачной продукции не предусмотрена законодательством РФ. На сайте возможна только бронь товара."}},
+    {"@type": "Question", "name": "Сколько стоит доставка и как долго ждать?", "acceptedAnswer": {"@type": "Answer", "text": "Доставка по Москве — 1–2 рабочих дня. Стоимость и сроки доставки по регионам России уточняйте у менеджера при оформлении заказа. После брони мы свяжемся с вами и согласуем все детали."}},
+    {"@type": "Question", "name": "Гарантирована ли оригинальность товаров?", "acceptedAnswer": {"@type": "Answer", "text": "Да. Мы работаем только с оригинальной продукцией. Все устройства IQOS и стики TEREA — подлинные, с официальной гарантией производителя."}},
+    {"@type": "Question", "name": "Как отследить заказ?", "acceptedAnswer": {"@type": "Answer", "text": "Перейдите в раздел «Отследить заказ», введите номер заказа и телефон — вы увидите текущий статус. Также можно написать нам в Telegram @iluma_prime_bot."}},
+    {"@type": "Question", "name": "Есть ли скидка за отзыв?", "acceptedAnswer": {"@type": "Answer", "text": "Да! Оставьте отзыв о покупке на странице товара — и получите скидку 500 ₽ на следующий заказ. Подробности уточняйте у менеджера в Telegram."}},
+    {"@type": "Question", "name": "Как связаться с поддержкой?", "acceptedAnswer": {"@type": "Answer", "text": "Звоните по телефону +7 (985) 490-48-80 или пишите в Telegram @iluma_prime_bot. Мы отвечаем оперативно."}}
+  ]
+}
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+/* FAQ accordion — адаптация под светлую и тёмную темы */
+#faqAccordion .accordion-item {
+    background: var(--bg-card);
+    border-color: var(--border);
+    color: var(--text);
+}
+#faqAccordion .accordion-button {
+    background: var(--bg-input);
+    color: var(--text);
+    border-color: var(--border);
+}
+#faqAccordion .accordion-button:not(.collapsed) {
+    background: var(--bg-card);
+    color: var(--text);
+    border-color: var(--border);
+    box-shadow: inset 0 -1px 0 var(--border);
+}
+#faqAccordion .accordion-button:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+#faqAccordion .accordion-button::after {
+    filter: none;
+}
+[data-theme="dark"] #faqAccordion .accordion-button::after {
+    filter: brightness(0) invert(1);
+}
+#faqAccordion .accordion-body {
+    background: var(--bg-card);
+    color: var(--text);
+    border-top: 1px solid var(--border);
+}
+#faqAccordion .accordion-body a {
+    color: #0d6efd;
+}
+[data-theme="dark"] #faqAccordion .accordion-body a {
+    color: #6ea8fe;
+}
+#faqAccordion .accordion-body a:hover {
+    color: #0a58ca;
+}
+[data-theme="dark"] #faqAccordion .accordion-body a:hover {
+    color: #8bb4ff;
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Часто задаваемые вопросы</h1>
+
+<div class="accordion" id="faqAccordion">
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button" type="button" data-bs-toggle="collapse" data-bs-target="#faq1" aria-expanded="true" aria-controls="faq1">
+                Как оформить заказ?
+            </button>
+        </h2>
+        <div id="faq1" class="accordion-collapse collapse show" data-bs-parent="#faqAccordion">
+            <div class="accordion-body">
+                Добавьте товары в корзину, нажмите «Оформить заказ» и заполните форму: имя, телефон, адрес доставки. После отправки заявки наш менеджер свяжется с вами для подтверждения и уточнения деталей.
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq2" aria-expanded="false" aria-controls="faq2">
+                Как происходит оплата?
+            </button>
+        </h2>
+        <div id="faq2" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+            <div class="accordion-body">
+                Оплата производится при получении товара — наличными или картой курьеру. Онлайн-оплата табачной продукции не предусмотрена законодательством РФ. На сайте возможна только бронь товара.
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq3" aria-expanded="false" aria-controls="faq3">
+                Сколько стоит доставка и как долго ждать?
+            </button>
+        </h2>
+        <div id="faq3" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+            <div class="accordion-body">
+                Доставка по Москве — 1–2 рабочих дня. Стоимость и сроки доставки по регионам России уточняйте у менеджера при оформлении заказа. После брони мы свяжемся с вами и согласуем все детали.
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq4" aria-expanded="false" aria-controls="faq4">
+                Гарантирована ли оригинальность товаров?
+            </button>
+        </h2>
+        <div id="faq4" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+            <div class="accordion-body">
+                Да. Мы работаем только с оригинальной продукцией. Все устройства IQOS и стики TEREA — подлинные, с официальной гарантией производителя.
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq5" aria-expanded="false" aria-controls="faq5">
+                Как отследить заказ?
+            </button>
+        </h2>
+        <div id="faq5" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+            <div class="accordion-body">
+                Перейдите в раздел <a href="{{ url_for('order_track') }}">«Отследить заказ»</a>, введите номер заказа и телефон — вы увидите текущий статус. Также можно написать нам в <a href="https://t.me/iluma_prime_bot" target="_blank" rel="noopener">Telegram</a>.
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq6" aria-expanded="false" aria-controls="faq6">
+                Есть ли скидка за отзыв?
+            </button>
+        </h2>
+        <div id="faq6" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+            <div class="accordion-body">
+                Да! Оставьте отзыв о покупке на странице товара — и получите скидку 500 ₽ на следующий заказ. Подробности уточняйте у менеджера в Telegram.
+            </div>
+        </div>
+    </div>
+
+    <div class="accordion-item">
+        <h2 class="accordion-header">
+            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#faq7" aria-expanded="false" aria-controls="faq7">
+                Как связаться с поддержкой?
+            </button>
+        </h2>
+        <div id="faq7" class="accordion-collapse collapse" data-bs-parent="#faqAccordion">
+            <div class="accordion-body">
+                Звоните по телефону <a href="tel:+79854904880">+7 (985) 490-48-80</a> или пишите в <a href="https://t.me/iluma_prime_bot" target="_blank" rel="noopener">Telegram @iluma_prime_bot</a>. Мы отвечаем оперативно.
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-4 p-3 rounded" style="background: var(--bg-input); border: 1px solid var(--border);">
+    <p class="mb-0">Не нашли ответ на свой вопрос? <a href="{{ url_for('contacts') }}">Свяжитесь с нами</a> — мы с радостью поможем.</p>
+</div>
+{% endblock %}

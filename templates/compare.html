@@ -1,0 +1,136 @@
+{% extends "base.html" %}
+
+{% block title %}Сравнение товаров — LIL STORE{% endblock %}
+{% block meta_description %}Сравните выбранные товары IQOS и TEREA. Характеристики, цены, модели.{% endblock %}
+
+{% block schema_ld %}
+<script type="application/ld+json">
+{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Главная","item":"{{ request.url_root.rstrip('/') }}/"},{"@type":"ListItem","position":2,"name":"Сравнение","item":"{{ request.url_root.rstrip('/') }}{{ url_for('compare') }}"}]}
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.compare-table { background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; overflow: hidden; }
+.compare-table th, .compare-table td { padding: 12px 16px; vertical-align: middle; border-color: var(--border); }
+.compare-table .compare-param { font-weight: 500; color: var(--text-muted); width: 180px; }
+.compare-table .compare-cell { text-align: center; min-width: 160px; }
+.compare-table .compare-cell img { max-height: 120px; object-fit: contain; }
+.compare-empty-block { background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; }
+.compare-empty-icon { font-size: 5rem; color: var(--text-muted); opacity: 0.5; }
+.compare-btn-remove { z-index: 20; }
+</style>
+{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Сравнение товаров</h1>
+
+{% if products %}
+<div class="table-responsive">
+    <table class="table compare-table mb-0">
+        <thead>
+            <tr>
+                <th class="compare-param">Параметр</th>
+                {% for product in products %}
+                <th class="compare-cell position-relative">
+                    <button type="button" class="btn btn-sm btn-outline-danger compare-btn compare-btn-remove position-absolute top-0 end-0 m-1" data-product-id="{{ product.id }}" title="Убрать из сравнения"><i class="fas fa-times"></i></button>
+                    <a href="{{ product|product_url }}" class="text-decoration-none text-dark d-block pt-3">
+                        <div class="mb-2">
+                            {% set first_img = product.all_images[0] if product.all_images else product.image %}
+                            {% if first_img %}
+                            <img src="{{ url_for('static', filename='images/products/' + first_img) }}" alt="{{ product|product_alt }}" class="img-fluid">
+                            {% else %}
+                            <img src="https://via.placeholder.com/160" alt="{{ product|product_alt }}" class="img-fluid">
+                            {% endif %}
+                        </div>
+                        <strong>{{ product.name }}</strong>
+                    </a>
+                </th>
+                {% endfor %}
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td class="compare-param">Цена</td>
+                {% for product in products %}
+                <td class="compare-cell">
+                    <strong>{{ product.price|format_price }} ₽</strong>
+                    {% if product.old_price %}<br><span class="text-muted text-decoration-line-through small">{{ product.old_price|format_price }} ₽</span>{% endif %}
+                </td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td class="compare-param">Модель</td>
+                {% for product in products %}
+                <td class="compare-cell">{{ product.model or '—' }}</td>
+                {% endfor %}
+            </tr>
+            <tr>
+                <td class="compare-param">Цвет</td>
+                {% for product in products %}
+                <td class="compare-cell">{{ product.color or '—' }}</td>
+                {% endfor %}
+            </tr>
+            {% set all_specs = {} %}
+            {% for product in products %}
+                {% for k, v in product.get_characteristics() %}
+                    {% set _ = all_specs.update({k: all_specs.get(k, True)}) %}
+                {% endfor %}
+            {% endfor %}
+            {% for param in all_specs.keys() %}
+            <tr>
+                <td class="compare-param">{{ param }}</td>
+                {% for product in products %}
+                <td class="compare-cell">
+                    {% set ns = namespace(v='—') %}
+                    {% for k, v in product.get_characteristics() %}
+                        {% if k == param %}{% set ns.v = v %}{% endif %}
+                    {% endfor %}
+                    {{ ns.v }}
+                </td>
+                {% endfor %}
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div class="d-flex flex-wrap gap-2 mt-4 align-items-center">
+    {% for product in products %}
+    <div class="d-flex align-items-center gap-2 border rounded p-2">
+        <a href="{{ product|product_url }}" class="btn btn-outline-primary btn-sm">Подробнее</a>
+        {% include 'includes/add_to_cart_widget.html' %}
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="compare-empty-block text-center py-5" id="compareEmpty">
+    <div class="compare-empty-icon mb-3"><i class="fas fa-balance-scale"></i></div>
+    <h4 class="mb-2">Сравнение пусто</h4>
+    <p class="text-muted mb-4">Добавляйте товары в сравнение, нажимая <i class="fas fa-balance-scale"></i> на карточках — так вы сможете сравнить характеристики и цены.</p>
+    <p class="text-muted small mb-4">Можно добавить до 4 товаров.</p>
+    <a href="{{ url_for('catalog') }}" class="btn btn-primary btn-lg"><i class="fas fa-th-large me-2"></i>Перейти в каталог</a>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    var ids = typeof compareGetIds === 'function' ? compareGetIds() : [];
+    if (ids.length > 0 && !window.location.search) {
+        window.location.href = '{{ url_for("compare") }}?ids=' + ids.join(',');
+        return;
+    }
+    document.querySelectorAll('.compare-btn-remove').forEach(function(btn) {
+        btn.addEventListener('click', function(e) {
+            e.preventDefault();
+            var id = parseInt(btn.dataset.productId, 10);
+            if (isNaN(id)) return;
+            if (typeof compareRemove === 'function') compareRemove(id);
+            window.location.href = '{{ url_for("compare") }}?ids=' + (typeof compareGetIds === 'function' ? compareGetIds() : []).join(',');
+        });
+    });
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,10 @@
+Flask>=2.0,<4.0
+Flask-SQLAlchemy>=2.5,<4.0
+alembic>=1.13,<2.0
+Flask-Caching>=2.0,<3.0
+Flask-WTF>=1.2,<2.0
+python-telegram-bot>=20.0,<22.0
+openpyxl>=3.0
+gunicorn>=21.0
+bleach>=6.0
+pytest>=7.0

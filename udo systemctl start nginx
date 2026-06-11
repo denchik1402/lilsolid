@@ -1,0 +1,20 @@
+○ nginx.service - A high performance web server and a reverse proxy server
+     Loaded: loaded (]8;;file://vmrf.firstbyte.club/usr/lib/systemd/system/nginx.service/usr/lib/systemd/system/nginx.service]8;;; [0;1;32menabled[0m; preset: [0;1;32menabled[0m)
+     Active: inactive (dead) since Tue 2026-03-17 14:24:43 UTC; 4s ago
+   Duration: 16h 41min 13.160s
+       Docs: ]8;;man:nginx(8)man:nginx(8)]8;;
+    Process: 282453 ExecReload=/usr/sbin/nginx -g daemon on; master_process on; -s reload [0;1;31m(code=exited, status=1/FAILURE)[0m
+    Process: 282465 ExecStop=/sbin/start-stop-daemon --quiet --stop --retry QUIT/5 --pidfile /run/nginx.pid (code=exited, status=0/SUCCESS)
+   Main PID: 270483 (code=exited, status=0/SUCCESS)
+        CPU: 10.166s
+
+Mar 17 14:23:20 vmrf.firstbyte.club systemd[1]: [0;1;39m[0;1;31m[0;1;39mnginx.service: Control process exited, code=exited, status=1/FAILURE[0m
+Mar 17 14:23:20 vmrf.firstbyte.club systemd[1]: [0;1;31m[0;1;39m[0;1;31mReload failed for nginx.service - A high performance web server and a reverse proxy server.[0m
+Mar 17 14:24:20 vmrf.firstbyte.club systemd[1]: Reloading nginx.service - A high performance web server and a reverse proxy server...
+Mar 17 14:24:20 vmrf.firstbyte.club nginx[282453]: 2026/03/17 14:24:20 [emerg] 282453#282453: cannot load certificate "/etc/letsencrypt/live/lilstore.ru/fullchain.pem": BIO_new_file() failed (SSL: error:80000002:system library::No such file or directory:calling fopen(/etc/letsencrypt/live/lilstore.ru/fullchain.pem, r) error:10000080:BIO routines::no such file)
+Mar 17 14:24:20 vmrf.firstbyte.club systemd[1]: [0;1;39m[0;1;31m[0;1;39mnginx.service: Control process exited, code=exited, status=1/FAILURE[0m
+Mar 17 14:24:20 vmrf.firstbyte.club systemd[1]: [0;1;31m[0;1;39m[0;1;31mReload failed for nginx.service - A high performance web server and a reverse proxy server.[0m
+Mar 17 14:24:43 vmrf.firstbyte.club systemd[1]: Stopping nginx.service - A high performance web server and a reverse proxy server...
+Mar 17 14:24:43 vmrf.firstbyte.club systemd[1]: nginx.service: Deactivated successfully.
+Mar 17 14:24:43 vmrf.firstbyte.club systemd[1]: Stopped nginx.service - A high performance web server and a reverse proxy server.
+Mar 17 14:24:43 vmrf.firstbyte.club systemd[1]: nginx.service: Consumed 10.166s CPU time, 10.4M memory peak, 0B memory swap peak.

@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+
+{% block title %}Редактирование категории — {{ category.name }}{% endblock %}
+
+{% block content %}
+<div class="admin-panel">
+    <nav class="admin-breadcrumb mb-4">
+        <a href="{{ url_for('admin', tab='categories') }}">← Категории</a>
+    </nav>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">✏️ {{ category.name }}</h5>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Описание категории</label>
+                    <textarea name="description" class="form-control" rows="4" placeholder="Текст о категории — показывается на странице каталога и используется для SEO">{{ category.description or '' }}</textarea>
+                    <small class="text-muted">Уникальное описание для страницы категории. Используется в meta, если не задан Meta Description.</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Meta Description (SEO)</label>
+                    <input type="text" name="meta_description" class="form-control" value="{{ category.meta_description or '' }}" maxlength="300" placeholder="Краткое описание для поисковиков (до 300 символов)">
+                    <small class="text-muted">Отображается в сниппете поиска. Если пусто — используется описание категории.</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Meta Keywords (SEO)</label>
+                    <input type="text" name="meta_keywords" class="form-control" value="{{ category.meta_keywords or '' }}" maxlength="300" placeholder="Ключевые слова через запятую">
+                </div>
+                <hr>
+                <button type="submit" class="btn btn-primary">💾 Сохранить</button>
+                <a href="{{ url_for('admin', tab='categories') }}" class="btn btn-outline-secondary">Отмена</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

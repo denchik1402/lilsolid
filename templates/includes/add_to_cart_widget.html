@@ -1,0 +1,20 @@
+{# Виджет «В корзину» в стиле Яндекс.Маркета: [−] [кол-во] [+] [В корзину] #}
+{% set in_cart = cart_qty.get(product.id, 0) %}
+<div class="add-to-cart-widget" data-product-id="{{ product.id }}">
+  {% if in_cart > 0 %}
+  <div class="cart-widget-active">
+    <div class="cart-widget-qty-block">
+      <button type="button" class="cart-widget-minus" aria-label="Уменьшить">−</button>
+      <input type="number" class="form-control cart-widget-qty" value="{{ in_cart }}" min="1" max="99" readonly>
+      <button type="button" class="cart-widget-plus" aria-label="Увеличить">+</button>
+    </div>
+    <a href="{{ url_for('cart') }}" class="btn-cart-link">В корзину</a>
+  </div>
+  {% else %}
+  <div class="cart-widget-inactive">
+    <button type="button" class="btn btn-success w-100 cart-widget-add">
+      <i class="fas fa-cart-plus me-1"></i>В корзину
+    </button>
+  </div>
+  {% endif %}
+</div>

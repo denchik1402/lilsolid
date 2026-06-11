@@ -1,0 +1,149 @@
+# -*- coding: utf-8 -*-
+"""
+Отправка уведомлений о заказах в Telegram.
+Чат для уведомлений: куда добавлен бот (сохраняется автоматически или через /set_notify).
+TELEGRAM_CHAT_ID в config — запасной вариант.
+"""
+
+import os
+import urllib.request
+import urllib.parse
+import json
+
+
+def get_config():
+    """Получает token и chat_id. Chat_id — из БД (куда добавлен бот) или config."""
+    token = os.environ.get('TELEGRAM_BOT_TOKEN')
+    chat_id = os.environ.get('TELEGRAM_CHAT_ID')
+    if not token and os.path.exists('config.py'):
+        try:
+            import config
+            token = getattr(config, 'TELEGRAM_BOT_TOKEN', None)
+            chat_id = getattr(config, 'TELEGRAM_CHAT_ID', None)
+        except ImportError:
+            pass
+    # Chat_id из БД (установлен ботом при добавлении в группу или /set_notify)
+    try:
+        from app import app
+        from models import BotSetting
+        with app.app_context():
+            s = BotSetting.query.filter_by(key='notification_chat_id').first()
+            if s and s.value:
+                chat_id = s.value
+    except Exception:
+        pass
+    return token, chat_id
+
+
+def format_order_message(order):
+    """Форматирует заказ для красивого отображения в Telegram"""
+    lines = [
+        "🛒 <b>НОВЫЙ ЗАКАЗ</b>",
+        "",
+        f"📋 Номер: <code>{order.order_number}</code>",
+        f"👤 Клиент: {order.customer_name}",
+        f"📞 Телефон: {order.customer_phone}",
+        f"✉️ Email: {order.customer_email or '—'}",
+        "",
+        "📦 <b>Товары:</b>",
+    ]
+    
+    for item in order.items:
+        product_name = item.product.name if item.product else f"Товар #{item.product_id}"
+        lines.append(f"  • {product_name} × {item.quantity} — {item.price * item.quantity:,.0f} ₽".replace(",", " "))
+    
+    total_str = f"{order.total_amount:,.0f}".replace(",", " ")
+    lines.extend([
+        "",
+        f"💰 <b>Итого: {total_str} ₽</b>",
+        "",
+        f"📍 Адрес доставки: {order.delivery_address or '—'}",
+        f"🚚 Способ получения: Доставка 1–2 дня",
+        f"💳 Оплата: При получении",
+    ])
+    
+    if order.comment:
+        lines.extend(["", f"💬 Комментарий: {order.comment}"])
+    
+    return "\n".join(lines)
+
+
+def send_order_to_telegram(order):
+    """Отправляет уведомление о заказе в Telegram"""
+    token, chat_id = get_config()
+    if not token:
+        return False, "Telegram не настроен (TELEGRAM_BOT_TOKEN)"
+    if not chat_id:
+        return False, "Добавьте бота в группу и напишите /start или /set_notify в чате"
+    
+    text = format_order_message(order)
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
+    data = urllib.parse.urlencode({
+        'chat_id': chat_id,
+        'text': text,
+        'parse_mode': 'HTML',
+        'disable_web_page_preview': True,
+    }).encode()
+    
+    try:
+        req = urllib.request.Request(url, data=data, method='POST')
+        req.add_header('Content-Type', 'application/x-www-form-urlencoded')
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = json.loads(resp.read().decode())
+            if result.get('ok'):
+                return True, None
+            return False, result.get('description', 'Unknown error')
+    except Exception as e:
+        return False, str(e)
+
+
+def format_review_pending_message(review):
+    """Форматирует отзыв на модерации для Telegram"""
+    product_name = "Товар"
+    try:
+        if review.product:
+            product_name = review.product.name
+    except Exception:
+        pass
+    stars = "★" * review.rating + "☆" * (5 - review.rating)
+    return (
+        f"💬 <b>НОВЫЙ ОТЗЫВ НА МОДЕРАЦИИ</b>\n\n"
+        f"📦 Товар: {product_name}\n"
+        f"👤 Автор: {review.customer_name}\n"
+        f"⭐ Оценка: {stars}\n\n"
+        f"📝 Текст:\n{review.text}"
+    )
+
+
+def send_review_pending_to_telegram(review):
+    """Отправляет уведомление об отзыве на модерации с кнопками одобрения/отклонения"""
+    token, chat_id = get_config()
+    if not token:
+        return False, "Telegram не настроен (TELEGRAM_BOT_TOKEN)"
+    if not chat_id:
+        return False, "Добавьте бота в группу и напишите /start или /set_notify"
+    
+    text = format_review_pending_message(review)
+    reply_markup = {
+        "inline_keyboard": [[
+            {"text": "✅ Одобрить", "callback_data": f"review_approve_{review.id}"},
+            {"text": "❌ Отклонить", "callback_data": f"review_reject_{review.id}"}
+        ]]
+    }
+    
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
+    data = urllib.parse.urlencode({
+        'chat_id': chat_id,
+        'text': text,
+        'parse_mode': 'HTML',
+        'reply_markup': json.dumps(reply_markup),
+    }).encode()
+    
+    try:
+        req = urllib.request.Request(url, data=data, method='POST')
+        req.add_header('Content-Type', 'application/x-www-form-urlencoded')
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            result = json.loads(resp.read().decode())
+            return result.get('ok', False), result.get('description')
+    except Exception as e:
+        return False, str(e)

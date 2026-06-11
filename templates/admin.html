@@ -1,0 +1,786 @@
+{% extends "base.html" %}
+
+{% block title %}Админ-панель{% endblock %}
+
+{% block content %}
+<div class="admin-panel">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="mb-0">🛠 Админ-панель</h2>
+        <div>
+            <a href="{{ url_for('admin_logout') }}" class="btn btn-outline-danger me-2">Выйти</a>
+            <a href="/" class="btn btn-outline-secondary">← На сайт</a>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-4" id="adminTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <a class="nav-link {% if tab == 'orders' %}active{% endif %}" 
+               href="{{ url_for('admin', tab='orders') }}" role="tab">
+                📦 Заказы
+            </a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link {% if tab == 'products' %}active{% endif %}" 
+               href="{{ url_for('admin', tab='products') }}" role="tab">
+                🛍 Товары
+            </a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link {% if tab == 'categories' %}active{% endif %}" 
+               href="{{ url_for('admin', tab='categories') }}" role="tab">
+                📁 Категории
+            </a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link {% if tab == 'models' %}active{% endif %}" 
+               href="{{ url_for('admin', tab='models') }}" role="tab">
+                📱 Модели
+            </a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link {% if tab == 'reviews' %}active{% endif %}" 
+               href="{{ url_for('admin', tab='reviews') }}" role="tab">
+                💬 Отзывы {% if pending_reviews_count %}<span class="badge bg-warning text-dark">{{ pending_reviews_count }}</span>{% endif %}
+            </a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link {% if tab == 'promo' %}active{% endif %}" 
+               href="{{ url_for('admin', tab='promo') }}" role="tab">
+                🎟 Промокоды
+            </a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link {% if tab == 'banners' %}active{% endif %}" 
+               href="{{ url_for('admin', tab='banners') }}" role="tab">
+                🖼 Баннеры
+            </a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link {% if tab == 'blog' %}active{% endif %}" 
+               href="{{ url_for('admin', tab='blog') }}" role="tab">
+                📝 Блог
+            </a>
+        </li>
+        <li class="nav-item" role="presentation">
+            <a class="nav-link {% if tab == 'stats' %}active{% endif %}" 
+               href="{{ url_for('admin', tab='stats', date_from=date_from, date_to=date_to) }}" role="tab">
+                📊 Статистика
+            </a>
+        </li>
+    </ul>
+
+    <div class="tab-content">
+        {# Вкладка: Заказы #}
+        <div class="tab-pane {% if tab == 'orders' %}show active{% endif %}" role="tabpanel">
+            <div class="mb-3">
+                <a href="{{ url_for('admin_orders_export', format='xlsx') }}" class="btn btn-outline-success me-2">📥 Excel</a>
+                <a href="{{ url_for('admin_orders_export', format='csv') }}" class="btn btn-outline-secondary">📥 CSV</a>
+            </div>
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>№</th>
+                                    <th>Дата</th>
+                                    <th>Клиент</th>
+                                    <th>Телефон</th>
+                                    <th>Адрес</th>
+                                    <th>Сумма</th>
+                                    <th>Статус</th>
+                                    {% if admin_can_delete_orders %}<th style="width:80px">Действия</th>{% endif %}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for o in orders %}
+                                <tr>
+                                    <td><code>{{ o.order_number }}</code></td>
+                                    <td>{{ o.created_at.strftime('%d.%m.%Y %H:%M') if o.created_at else '—' }}</td>
+                                    <td>{{ o.customer_name }}</td>
+                                    <td>{{ o.customer_phone }}</td>
+                                    <td>{{ o.delivery_address or '—' }}</td>
+                                    <td>{{ o.total_amount|format_price }} ₽</td>
+                                    <td>
+                                        {% if o.status == 'new' %}<span class="badge bg-info">получен</span>
+                                        {% elif o.status == 'processing' %}<span class="badge bg-primary">в работе</span>
+                                        {% elif o.status == 'completed' %}<span class="badge bg-success">доставлен</span>
+                                        {% elif o.status == 'cancelled' %}<span class="badge bg-danger">отказался</span>
+                                        {% else %}<span class="badge bg-secondary">{{ o.status }}</span>{% endif %}
+                                    </td>
+                                    {% if admin_can_delete_orders %}
+                                    <td>
+                                        <form method="post" action="{{ url_for('admin_order_delete', order_id=o.id) }}" class="d-inline" onsubmit="return confirm('Удалить заказ {{ o.order_number }}?');">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Удалить">🗑</button>
+                                        </form>
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% if not orders %}
+            <div class="alert alert-info mt-3">Заказов пока нет.</div>
+            {% endif %}
+        </div>
+
+        {# Вкладка: Товары #}
+        <div class="tab-pane {% if tab == 'products' %}show active{% endif %}" role="tabpanel">
+            <div class="mb-3 d-flex flex-wrap align-items-center gap-2">
+                <a href="{{ url_for('admin_product_add') }}" class="btn btn-success">➕ Добавить товар</a>
+                <form method="post" action="{{ url_for('admin_products_bulk') }}" class="d-flex flex-wrap align-items-center gap-2" id="bulkForm">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <select name="bulk_action" class="form-select form-select-sm" style="width: auto;">
+                        <option value="">— Массовые действия —</option>
+                        <option value="category">Изменить категорию</option>
+                        <option value="price">Изменить цену</option>
+                        <option value="old_price">Установить старую цену (скидка)</option>
+                        <option value="in_stock">В наличии</option>
+                        <option value="out_of_stock">Нет в наличии</option>
+                        <option value="delete">Удалить</option>
+                    </select>
+                    <select name="bulk_category_id" class="form-select form-select-sm bulk-value" style="width: auto; display:none;">
+                        {% for c in categories %}
+                        <option value="{{ c.id }}">{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                    <input type="number" name="bulk_price" class="form-control form-control-sm bulk-value" style="width: 100px; display:none;" step="0.01" min="0" placeholder="Цена">
+                    <input type="number" name="bulk_old_price" class="form-control form-control-sm bulk-value" style="width: 100px; display:none;" step="0.01" min="0" placeholder="Старая цена">
+                    <button type="submit" class="btn btn-primary btn-sm" id="bulkSubmit" disabled>Применить</button>
+                </form>
+            </div>
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width: 40px;"><input type="checkbox" id="selectAllProducts" title="Выбрать все"></th>
+                                    <th style="width: 60px;">Фото</th>
+                                    <th>Товар</th>
+                                    <th>Категория</th>
+                                    <th>Цена</th>
+                                    <th>Себестоимость</th>
+                                    <th style="width: 120px;">Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in products %}
+                                <tr>
+                                    <td><input type="checkbox" name="product_ids" form="bulkForm" value="{{ p.id }}" class="product-check"></td>
+                                    <td>
+                                        {% if p.image %}
+                                        <img src="{{ url_for('static', filename='images/products/' + p.image) }}" alt="" class="rounded" style="width: 50px; height: 50px; object-fit: cover;">
+                                        {% else %}
+                                        <div class="bg-light rounded d-flex align-items-center justify-content-center" style="width: 50px; height: 50px; font-size: 1.5rem;">📦</div>
+                                        {% endif %}
+                                    </td>
+                                    <td>{{ p.name }}</td>
+                                    <td>{{ p.category.name if p.category else '—' }}</td>
+                                    <td>{{ p.price|format_price }} ₽</td>
+                                    <td>{{ p.cost|format_price if p.cost else '—' }} ₽</td>
+                                    <td>
+                                        <a href="{{ url_for('admin_product_edit', product_id=p.id) }}" class="btn btn-sm btn-primary">✏️</a>
+                                        <form method="post" action="{{ url_for('admin_product_delete', product_id=p.id) }}" class="d-inline" onsubmit="return confirm('Удалить товар?');">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-sm btn-danger">🗑</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Вкладка: Категории (SEO meta) #}
+        <div class="tab-pane {% if tab == 'categories' %}show active{% endif %}" role="tabpanel">
+            <div class="alert alert-info mb-3">Уникальные meta description и keywords для страниц категорий улучшают SEO.</div>
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Категория</th>
+                                    <th>Meta Description</th>
+                                    <th>Meta Keywords</th>
+                                    <th style="width: 100px;">Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for c in categories %}
+                                <tr>
+                                    <td><strong>{{ c.name }}</strong><br><small class="text-muted">/catalog/{{ c.slug }}</small></td>
+                                    <td>{{ (c.meta_description or '—')[:60] }}{% if c.meta_description and c.meta_description|length > 60 %}…{% endif %}</td>
+                                    <td>{{ (c.meta_keywords or '—')[:40] }}{% if c.meta_keywords and c.meta_keywords|length > 40 %}…{% endif %}</td>
+                                    <td>
+                                        <a href="{{ url_for('admin_category_edit', category_id=c.id) }}" class="btn btn-sm btn-primary">✏️ Редактировать</a>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {# Вкладка: Модели устройств #}
+        <div class="tab-pane {% if tab == 'models' %}show active{% endif %}" role="tabpanel">
+            <div class="mb-3 d-flex flex-wrap align-items-center gap-2">
+                <a href="{{ url_for('admin_device_model_add') }}" class="btn btn-success">➕ Добавить модель</a>
+            </div>
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Модель</th>
+                                    <th>Товаров</th>
+                                    <th>Meta Description</th>
+                                    <th>Порядок</th>
+                                    <th style="width: 160px;">Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for m in device_models %}
+                                <tr>
+                                    <td><strong>{{ m.name }}</strong></td>
+                                    <td>{{ device_model_counts.get(m.name, 0) }}</td>
+                                    <td>{{ (m.meta_description or '—')[:60] }}{% if m.meta_description and m.meta_description|length > 60 %}…{% endif %}</td>
+                                    <td>{{ m.sort_order or 0 }}</td>
+                                    <td class="text-nowrap">
+                                        <a href="{{ url_for('admin_device_model_edit', model_id=m.id) }}" class="btn btn-sm btn-primary" title="Редактировать">✏️</a>
+                                        <form method="post" action="{{ url_for('admin_device_model_delete', model_id=m.id) }}" class="d-inline" onsubmit="return confirm('Удалить модель «{{ m.name }}»?');">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-sm btn-outline-danger" title="Удалить" {% if device_model_counts.get(m.name, 0) %}disabled{% endif %}>🗑</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% if not device_models %}
+            <div class="alert alert-info mt-3">Моделей пока нет. Добавьте первую — она появится в фильтре каталога и при редактировании товаров.</div>
+            {% else %}
+            <p class="text-muted small mt-2 mb-0">Удаление доступно только для моделей без привязанных товаров. При переименовании модель обновится у всех связанных товаров.</p>
+            {% endif %}
+        </div>
+
+        {# Вкладка: Отзывы #}
+        <div class="tab-pane {% if tab == 'reviews' %}show active{% endif %}" role="tabpanel">
+            {% if reviews %}
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <div class="list-group list-group-flush">
+                        {% for r in reviews %}
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-start gap-3">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1">{{ r.customer_name }} — {{ r.product.name if r.product else 'Товар' }}</h6>
+                                    <p class="mb-1 text-warning">{% for i in range(r.rating) %}★{% endfor %}{% for i in range(5 - r.rating) %}☆{% endfor %}</p>
+                                    <p class="mb-1">{{ r.text }}</p>
+                                    <small class="text-muted">{{ r.created_at.strftime('%d.%m.%Y %H:%M') }}</small>
+                                </div>
+                                <div class="btn-group flex-shrink-0">
+                                    <a href="{{ url_for('admin_review_action', review_id=r.id, action='approve') }}" class="btn btn-success btn-sm">✅ Одобрить</a>
+                                    <a href="{{ url_for('admin_review_action', review_id=r.id, action='reject') }}" class="btn btn-danger btn-sm">❌ Отклонить</a>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-info">Нет отзывов на модерации.</div>
+            {% endif %}
+        </div>
+
+        {# Вкладка: Промокоды #}
+        <div class="tab-pane {% if tab == 'promo' %}show active{% endif %}" role="tabpanel">
+            <div class="mb-3">
+                <a href="{{ url_for('admin_promo_add') }}" class="btn btn-success">➕ Добавить промокод</a>
+            </div>
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Код</th>
+                                    <th>Тип</th>
+                                    <th>Значение</th>
+                                    <th>Мин. заказ</th>
+                                    <th>Использований</th>
+                                    <th>Срок</th>
+                                    <th>Статус</th>
+                                    <th style="width: 120px;">Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in promo_codes %}
+                                <tr>
+                                    <td><code>{{ p.code }}</code></td>
+                                    <td>{{ 'Процент' if p.discount_type == 'percent' else 'Фикс' }}</td>
+                                    <td>{{ p.discount_value }}{% if p.discount_type == 'percent' %}%{% else %} ₽{% endif %}</td>
+                                    <td>{{ p.min_order|format_price if p.min_order else '—' }} ₽</td>
+                                    <td>{{ p.used_count }}{% if p.max_uses %} / {{ p.max_uses }}{% endif %}</td>
+                                    <td>
+                                        {% if p.valid_from or p.valid_until %}
+                                            {{ p.valid_from.strftime('%d.%m.%Y') if p.valid_from else '—' }} — {{ p.valid_until.strftime('%d.%m.%Y') if p.valid_until else '∞' }}
+                                        {% else %}
+                                            —
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if p.is_active %}<span class="badge bg-success">активен</span>
+                                        {% else %}<span class="badge bg-secondary">выкл</span>{% endif %}
+                                    </td>
+                                    <td>
+                                        <a href="{{ url_for('admin_promo_edit', promo_id=p.id) }}" class="btn btn-sm btn-primary">✏️</a>
+                                        <form method="post" action="{{ url_for('admin_promo_delete', promo_id=p.id) }}" class="d-inline" onsubmit="return confirm('Удалить промокод?');">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-sm btn-danger">🗑</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% if not promo_codes %}
+            <div class="alert alert-info mt-3">Промокодов пока нет.</div>
+            {% endif %}
+        </div>
+
+        {# Вкладка: Баннеры #}
+        <div class="tab-pane {% if tab == 'banners' %}show active{% endif %}" role="tabpanel">
+            {# Сначала — что сейчас в карусели на главной #}
+            {% if carousel_slides %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-header py-2"><strong>Сейчас в карусели на главной</strong></div>
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr><th>№</th><th>Тип</th><th>Название</th><th>Порядок</th><th style="width:180px">Действия</th></tr>
+                        </thead>
+                        <tbody>
+                        {% for s in carousel_slides %}
+                        <tr>
+                            <td>{{ loop.index }}</td>
+                            <td>{% if s.type == 'banner' %}<span class="badge bg-primary">Баннер</span>{% else %}<span class="badge bg-info">Товар</span>{% endif %}</td>
+                            <td>{{ s.title }}</td>
+                            <td>{% if s.type == 'banner' %}{{ s.obj.sort_order }}{% else %}—{% endif %}</td>
+                            <td>
+                                {% if s.type == 'banner' %}
+                                <a href="{{ url_for('admin_banner_edit', banner_id=s.obj.id) }}" class="btn btn-sm btn-primary" title="Редактировать">✏️</a>
+                                <a href="{{ url_for('admin_banner_move', banner_id=s.obj.id, direction='up') }}" class="btn btn-sm btn-outline-secondary" title="Выше">↑</a>
+                                <a href="{{ url_for('admin_banner_move', banner_id=s.obj.id, direction='down') }}" class="btn btn-sm btn-outline-secondary" title="Ниже">↓</a>
+                                <form method="post" action="{{ url_for('admin_banner_delete', banner_id=s.obj.id) }}" class="d-inline" onsubmit="return confirm('Удалить баннер «{{ s.title }}»?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-sm btn-danger" title="Удалить">🗑</button>
+                                </form>
+                                {% else %}
+                                <a href="{{ url_for('admin_product_edit', product_id=s.obj.id) }}" class="btn btn-sm btn-primary" title="Редактировать">✏️</a>
+                                <span class="text-muted small">(товары подставляются автоматически, если баннеров нет)</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="mb-4">
+                <h5 class="mb-3">Баннеры карусели</h5>
+                <p class="text-muted small mb-2">Рекомендуемый размер фото: 800×450 px или 1200×600 px. Порядок задаётся числом (меньше — выше).</p>
+                <a href="{{ url_for('admin_banner_add') }}" class="btn btn-success">➕ Добавить баннер</a>
+            </div>
+            {% if banners %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width:80px">Фото</th>
+                                    <th>Заголовок</th>
+                                    <th>Подзаголовок</th>
+                                    <th>Кнопка</th>
+                                    <th style="width:90px">Порядок</th>
+                                    <th class="text-end">Показы</th>
+                                    <th class="text-end">Клики</th>
+                                    <th class="text-end">CTR</th>
+                                    <th>A/B</th>
+                                    <th style="width:200px">Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for b in banners %}
+                                <tr>
+                                    <td>{% if b.image %}<img src="{{ url_for('static', filename=('images/' + b.image if b.image.startswith('products/') else 'images/banners/' + b.image)) }}" alt="" class="rounded" style="width:60px;height:40px;object-fit:cover">{% else %}—{% endif %}</td>
+                                    <td>{{ b.title }}</td>
+                                    <td>{{ b.subtitle or '—' }}</td>
+                                    <td>{{ b.button_text or '—' }} → {% if b.product_id %}/product/{{ b.product_id }}{% else %}{{ b.button_url or '—' }}{% endif %}</td>
+                                    <td>
+                                        <form method="post" action="{{ url_for('admin_banner_set_order', banner_id=b.id) }}" class="d-inline-flex align-items-center gap-1">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <input type="number" name="sort_order" value="{{ b.sort_order }}" class="form-control form-control-sm" style="width:70px" min="0" title="Порядок (меньше — выше)">
+                                            <button type="submit" class="btn btn-sm btn-outline-primary" title="Сохранить">✓</button>
+                                        </form>
+                                    </td>
+                                    <td class="text-end">{{ b.impressions or 0 }}</td>
+                                    <td class="text-end">{{ b.clicks or 0 }}</td>
+                                    <td class="text-end">{{ b.ctr }}%</td>
+                                    <td><span class="badge bg-secondary">{{ b.ab_test_group or '—' }}</span></td>
+                                    <td>
+                                        <a href="{{ url_for('admin_banner_move', banner_id=b.id, direction='up') }}" class="btn btn-sm btn-outline-secondary" title="Выше">↑</a>
+                                        <a href="{{ url_for('admin_banner_move', banner_id=b.id, direction='down') }}" class="btn btn-sm btn-outline-secondary" title="Ниже">↓</a>
+                                        <a href="{{ url_for('admin_banner_edit', banner_id=b.id) }}" class="btn btn-sm btn-primary">✏️</a>
+                                        <form method="post" action="{{ url_for('admin_banner_delete', banner_id=b.id) }}" class="d-inline" onsubmit="return confirm('Удалить баннер?');">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-sm btn-danger">🗑</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-info mb-4">Баннеров пока нет. Добавьте баннер — он появится в карусели выше. Пока баннеров нет, карусель показывает товары (хиты/новинки).</div>
+            {% endif %}
+
+            <hr class="my-4">
+            <div class="mb-3">
+                <h5 class="mb-3">Блоки «Премиальные устройства» (3 блока)</h5>
+                <p class="text-muted small mb-2">Рекомендуемые размеры (строго): блок 1 (левый) — 600×400 px (3:2); блоки 2–3 — 400×200 px (2:1). Сетка подстроена под эти пропорции.</p>
+                <a href="{{ url_for('admin_homeblock_add') }}" class="btn btn-success">➕ Добавить блок</a>
+            </div>
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Поз.</th>
+                                    <th style="width:80px">Фото</th>
+                                    <th>Заголовок</th>
+                                    <th>Описание</th>
+                                    <th style="width:120px">Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for h in home_blocks %}
+                                <tr>
+                                    <td>{{ h.position }} {% if h.position == 1 %}(левый){% elif h.position == 2 %}(правый вверху){% else %}(правый внизу){% endif %}</td>
+                                    <td>{% if h.image %}<img src="{{ url_for('static', filename='images/banners/' + h.image) }}" alt="" class="rounded" style="width:60px;height:40px;object-fit:cover">{% else %}—{% endif %}</td>
+                                    <td>{{ h.title }}</td>
+                                    <td>{{ (h.description or '')[:60] }}{% if (h.description or '')|length > 60 %}...{% endif %}</td>
+                                    <td>
+                                        <a href="{{ url_for('admin_homeblock_edit', block_id=h.id) }}" class="btn btn-sm btn-primary">✏️</a>
+                                        <form method="post" action="{{ url_for('admin_homeblock_delete', block_id=h.id) }}" class="d-inline" onsubmit="return confirm('Удалить блок?');">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-sm btn-danger">🗑</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% if not home_blocks %}
+            <div class="alert alert-info mt-3">Блоков нет. Будут показаны изображения из товаров (хиты/новинки).</div>
+            {% endif %}
+        </div>
+
+        {# Вкладка: Блог #}
+        <div class="tab-pane {% if tab == 'blog' %}show active{% endif %}" role="tabpanel">
+            <div class="mb-3 d-flex flex-wrap align-items-center gap-2">
+                <a href="{{ url_for('admin_blog_add') }}" class="btn btn-success">➕ Новая статья</a>
+                <a href="{{ url_for('blog_index') }}" class="btn btn-outline-primary" target="_blank" rel="noopener">Открыть блог на сайте</a>
+            </div>
+            {% if blog_posts %}
+            <div class="card shadow-sm">
+                <div class="card-body p-0">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th style="width:90px">Обложка</th>
+                                    <th>Заголовок</th>
+                                    <th>Slug</th>
+                                    <th style="width:90px">Статус</th>
+                                    <th style="width:110px">Дата</th>
+                                    <th style="width:140px">Действия</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for p in blog_posts %}
+                                <tr>
+                                    <td>
+                                        {% if p.cover_image %}
+                                        <img src="{{ p.cover_image|blog_cover_url }}" alt="" class="rounded" style="width:72px;height:48px;object-fit:cover">
+                                        {% else %}
+                                        <span class="d-inline-flex align-items-center justify-content-center rounded bg-light text-primary" style="width:72px;height:48px"><i class="fas {{ p.cover_icon or 'fa-book-open' }}"></i></span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <strong>{{ p.title }}</strong>
+                                        {% if p.excerpt %}<br><span class="text-muted small">{{ p.excerpt[:80] }}{% if p.excerpt|length > 80 %}…{% endif %}</span>{% endif %}
+                                    </td>
+                                    <td><code class="small">{{ p.slug }}</code></td>
+                                    <td>
+                                        {% if p.is_published %}<span class="badge bg-success">Опубликовано</span>
+                                        {% else %}<span class="badge bg-secondary">Черновик</span>{% endif %}
+                                    </td>
+                                    <td class="small">{{ p.created_at.strftime('%d.%m.%Y') if p.created_at else '—' }}</td>
+                                    <td>
+                                        <a href="{{ url_for('admin_blog_edit', post_id=p.id) }}" class="btn btn-sm btn-primary" title="Редактировать">✏️</a>
+                                        <a href="{{ url_for('blog_post', slug=p.slug) }}" class="btn btn-sm btn-outline-secondary" target="_blank" rel="noopener" title="На сайте">↗</a>
+                                        <form method="post" action="{{ url_for('admin_blog_delete', post_id=p.id) }}" class="d-inline" onsubmit="return confirm('Удалить статью «{{ p.title }}»?');">
+                                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                            <button type="submit" class="btn btn-sm btn-danger" title="Удалить">🗑</button>
+                                        </form>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            {% else %}
+            <div class="alert alert-info">Статей пока нет. Создайте первую или дождитесь seed при деплое.</div>
+            {% endif %}
+        </div>
+
+        {# Вкладка: Статистика #}
+        <div class="tab-pane {% if tab == 'stats' %}show active{% endif %}" role="tabpanel">
+            <form method="get" class="card shadow-sm mb-4">
+                <div class="card-body">
+                    <input type="hidden" name="tab" value="stats">
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-4">
+                            <label class="form-label">Дата с</label>
+                            <input type="date" name="date_from" class="form-control" value="{{ date_from }}">
+                        </div>
+                        <div class="col-md-4">
+                            <label class="form-label">Дата по</label>
+                            <input type="date" name="date_to" class="form-control" value="{{ date_to }}">
+                        </div>
+                        <div class="col-md-4">
+                            <button type="submit" class="btn btn-primary me-2">Применить</button>
+                            <a href="{{ url_for('admin', tab='stats') }}" class="btn btn-outline-secondary">Сбросить</a>
+                        </div>
+                    </div>
+                    <small class="text-muted">По умолчанию — за всё время. Оставьте пустым для сброса.</small>
+                </div>
+            </form>
+
+            <div class="row g-3 mb-4">
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-primary">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-1">Заказов</h6>
+                            <h3 class="mb-0">{{ total_orders }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-warning">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-1">Новых</h6>
+                            <h3 class="mb-0">{{ new_orders }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-success">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-1">Выполнено</h6>
+                            <h3 class="mb-0">{{ completed_orders }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-info">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-1">Выручка</h6>
+                            <h3 class="mb-0">{{ total_revenue|format_price }} ₽</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-1">Товаров</h6>
+                            <h3 class="mb-0">{{ products_count }}</h3>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="card shadow-sm">
+                        <div class="card-body">
+                            <h6 class="text-muted mb-1">Отзывов</h6>
+                            <h3 class="mb-0">{{ approved_reviews_count }} одобрено / {{ pending_reviews_count }} на модерации</h3>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {% if top_products_by_views %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">Топ товаров по просмотрам</div>
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr><th>Товар</th><th class="text-end">Просмотры</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for p in top_products_by_views %}
+                            <tr>
+                                <td><a href="{{ url_for('admin_product_edit', product_id=p.id) }}">{{ p.name }}</a></td>
+                                <td class="text-end">{{ p.views or 0 }}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+
+            {% if banner_stats %}
+            <div class="card shadow-sm mb-4">
+                <div class="card-header">Статистика баннеров</div>
+                <div class="card-body p-0">
+                    <table class="table table-hover mb-0">
+                        <thead class="table-light">
+                            <tr><th>Баннер</th><th class="text-end">Показы</th><th class="text-end">Клики</th><th class="text-end">CTR</th></tr>
+                        </thead>
+                        <tbody>
+                            {% for b in banner_stats %}
+                            <tr>
+                                <td>{{ b.title }}</td>
+                                <td class="text-end">{{ b.impressions or 0 }}</td>
+                                <td class="text-end">{{ b.clicks or 0 }}</td>
+                                <td class="text-end">{{ b.ctr }}%</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+
+            <div class="row g-3">
+                <div class="col-md-6">
+                    <div class="card shadow-sm">
+                        <div class="card-header">Выручка по дням</div>
+                        <div class="card-body">
+                            <canvas id="chartRevenue" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card shadow-sm">
+                        <div class="card-header">Заказы по статусам</div>
+                        <div class="card-body">
+                            <canvas id="chartStatus" height="200"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    {% if tab == 'stats' %}
+    var revLabels = {{ chart_revenue_labels|tojson }};
+    var revData = {{ chart_revenue_data|tojson }};
+    if (revLabels.length === 0) { revLabels = ['Нет данных']; revData = [0]; }
+    new Chart(document.getElementById('chartRevenue'), {
+        type: 'bar',
+        data: {
+            labels: revLabels,
+            datasets: [{
+                label: 'Выручка (₽)',
+                data: revData,
+                backgroundColor: 'rgba(13, 110, 253, 0.6)',
+                borderColor: 'rgb(13, 110, 253)',
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: { beginAtZero: true }
+            }
+        }
+    });
+    var statusLabels = {{ chart_status_labels|tojson }};
+    var statusData = {{ chart_status_data|tojson }};
+    var statusColors = {{ chart_status_colors|tojson }};
+    if (statusData.every(function(x){return x===0;})) { statusLabels = ['Нет заказов']; statusData = [1]; statusColors = ['#dee2e6']; }
+    new Chart(document.getElementById('chartStatus'), {
+        type: 'doughnut',
+        data: {
+            labels: statusLabels,
+            datasets: [{
+                data: statusData,
+                backgroundColor: statusColors,
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            plugins: { legend: { position: 'bottom' } }
+        }
+    });
+    {% endif %}
+    // Массовые операции с товарами
+    var bulkAction = document.querySelector('select[name="bulk_action"]');
+    var bulkValues = document.querySelectorAll('.bulk-value');
+    var bulkSubmit = document.getElementById('bulkSubmit');
+    var productChecks = document.querySelectorAll('.product-check');
+    var selectAll = document.getElementById('selectAllProducts');
+    if (bulkAction) {
+        function toggleBulkInputs() {
+            var v = bulkAction.value;
+            bulkValues.forEach(function(el){ el.style.display = 'none'; });
+            if (v === 'category') document.querySelector('select[name="bulk_category_id"]').style.display = 'inline-block';
+            if (v === 'price') document.querySelector('input[name="bulk_price"]').style.display = 'inline-block';
+            if (v === 'old_price') document.querySelector('input[name="bulk_old_price"]').style.display = 'inline-block';
+            bulkSubmit.disabled = !v || !document.querySelectorAll('.product-check:checked').length;
+        }
+        bulkAction.addEventListener('change', toggleBulkInputs);
+        productChecks.forEach(function(c){ c.addEventListener('change', toggleBulkInputs); });
+        if (selectAll) selectAll.addEventListener('change', function(){ productChecks.forEach(function(c){ c.checked = selectAll.checked; }); toggleBulkInputs(); });
+    }
+});
+</script>
+{% endblock %}

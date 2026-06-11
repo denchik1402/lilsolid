@@ -1,0 +1,8 @@
+Alembic — миграции схемы БД.
+
+Использование:
+  py -m alembic upgrade head   — применить миграции (новая БД)
+  py -m alembic stamp head     — пометить существующую БД (без выполнения)
+  py -m alembic revision -m "описание" --autogenerate  — новая миграция
+
+При запуске app.py/shop.py/init_db.py миграции применяются автоматически.

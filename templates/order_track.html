@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+
+{% block title %}Отслеживание заказа - LIL STORE{% endblock %}
+{% block meta_robots %}noindex, follow{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center py-5">
+    <div class="col-md-6">
+        <h2 class="mb-4">📦 Отслеживание заказа</h2>
+        <p class="text-muted mb-4">Введите номер заказа и телефон, указанный при оформлении.</p>
+        
+        <form method="post" class="card shadow-sm mb-4">
+            <div class="card-body">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <label class="form-label">Номер заказа</label>
+                    <input type="text" name="order_number" class="form-control form-control-lg" 
+                           placeholder="Например: ABC12345" value="{{ request.form.order_number or '' }}" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Телефон</label>
+                    <input type="tel" name="phone" class="form-control form-control-lg" 
+                           placeholder="+7 999 123-45-67" value="{{ request.form.phone or '' }}" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg w-100">Проверить статус</button>
+            </div>
+        </form>
+        
+        {% if error %}
+        <div class="alert alert-danger">{{ error }}</div>
+        {% endif %}
+        
+        {% if order %}
+        <div class="card shadow-sm">
+            <div class="card-header bg-primary text-white">
+                <h5 class="mb-0">Заказ {{ order.order_number }}</h5>
+            </div>
+            <div class="card-body">
+                <p class="mb-2">
+                    <strong>Статус:</strong>
+                    {% if order.status == 'new' %}<span class="badge bg-info">Получен</span>
+                    {% elif order.status == 'processing' %}<span class="badge bg-primary">В работе</span>
+                    {% elif order.status == 'completed' %}<span class="badge bg-success">Доставлен</span>
+                    {% elif order.status == 'cancelled' %}<span class="badge bg-danger">Отменён</span>
+                    {% else %}<span class="badge bg-secondary">{{ order.status }}</span>{% endif %}
+                </p>
+                <p class="mb-2"><strong>Сумма:</strong> {{ order.total_amount|format_price }} ₽</p>
+                <p class="mb-0"><strong>Дата:</strong> {{ order.created_at.strftime('%d.%m.%Y %H:%M') if order.created_at else '—' }}</p>
+            </div>
+        </div>
+        {% endif %}
+        
+        <p class="mt-4 text-center">
+            <a href="/" class="btn btn-outline-secondary">← На главную</a>
+        </p>
+    </div>
+</div>
+{% endblock %}

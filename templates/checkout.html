@@ -1,0 +1,229 @@
+{% extends "base.html" %}
+
+{% block title %}Оформление заказа - LIL STORE{% endblock %}
+{% block meta_robots %}noindex, follow{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Оформление</h1>
+<p class="text-muted mb-4">Доставка в течение 1–2 дней. Оплата при получении.</p>
+
+<form action="/checkout" method="post" id="checkoutForm">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+<input type="hidden" name="total" id="totalAmount">
+
+<div class="row">
+    <div class="col-md-8">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5>Контактные данные</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">ФИО *</label>
+                        <input type="text" name="name" class="form-control" placeholder="Иванов Иван Иванович" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Телефон *</label>
+                        <input type="tel" name="phone" class="form-control" placeholder="+7 (999) 123-45-67" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input type="email" name="email" class="form-control" placeholder="example@mail.ru">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5>Доставка</h5>
+                </div>
+                <div class="card-body">
+                    <p class="text-muted small mb-3">Оперативная доставка в течение 1–2 рабочих дней по Москве.</p>
+                    <input type="hidden" name="delivery" value="delivery">
+                    <div class="mb-3">
+                        <label class="form-label">Адрес доставки *</label>
+                        <input type="text" name="address" id="checkoutAddress" class="form-control" placeholder="Начните вводить адрес: Москва, ул. Примерная, д. 1" required autocomplete="off">
+                    </div>
+                </div>
+            </div>
+            
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5>Оплата</h5>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">Оплата при получении заказа.</p>
+                    <input type="hidden" name="payment" value="courier">
+                </div>
+            </div>
+            
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5>Комментарий к заказу</h5>
+                </div>
+                <div class="card-body">
+                    <textarea name="comment" class="form-control" rows="3" placeholder="Комментарий к заказу: этаж, код домофона, удобное время"></textarea>
+                </div>
+            </div>
+            
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h5>Промокод</h5>
+                </div>
+                <div class="card-body">
+                    <div class="input-group">
+                        <input type="text" name="promo_code" id="promoCodeInput" class="form-control" placeholder="Введите промокод">
+                        <button type="button" class="btn btn-outline-secondary" id="applyPromoBtn">Применить</button>
+                    </div>
+                    <p class="text-muted small mb-0 mt-2" id="promoMessage"></p>
+                </div>
+            </div>
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Ваш заказ</h5>
+            </div>
+            <div class="card-body">
+                {% if cart_items %}
+                    {% for item in cart_items %}
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>{{ item.product.name }} x{{ item.quantity }}</span>
+                            <span>{{ item.subtotal }} ₽</span>
+                        </div>
+                    {% endfor %}
+                    <hr>
+                    <div class="d-flex justify-content-between">
+                        <span>Сумма:</span>
+                        <span id="checkoutSubtotal" data-raw="{{ subtotal|default(total)|default(0) }}">{{ subtotal|default(total)|format_price }} ₽</span>
+                    </div>
+                    <div class="d-flex justify-content-between">
+                        <span>Доставка:</span>
+                        <span>0 ₽</span>
+                    </div>
+                    <div class="d-flex justify-content-between text-success" id="promoDiscountRow" style="display:none!important;">
+                        <span>Скидка:</span>
+                        <span id="checkoutDiscount">0 ₽</span>
+                    </div>
+                    <div class="d-flex justify-content-between mt-2">
+                        <strong>Итого:</strong>
+                        <strong id="checkoutTotal">{{ total|format_price }} ₽</strong>
+                    </div>
+                    <p class="text-muted small mb-0 mt-2">Оплата при доставке</p>
+                    <button type="submit" class="btn btn-success btn-lg w-100 mt-3" {% if not cart_items %}disabled{% endif %}>Оплатить при получении</button>
+                {% else %}
+                <p class="text-muted">Корзина пуста</p>
+                <p><a href="{{ url_for('catalog') }}" class="btn btn-primary">Перейти в каталог</a></p>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+</form>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    var input = document.getElementById("checkoutAddress");
+    if (!input) return;
+    var list = null;
+    var debounceTimer = null;
+    var lastReq = 0;
+    function hideList() {
+        if (list) { list.remove(); list = null; }
+    }
+    function showSuggestions(items) {
+        hideList();
+        if (!items.length) return;
+        list = document.createElement("ul");
+        list.className = "list-group position-absolute w-100";
+        list.style.zIndex = "1050";
+        list.style.maxHeight = "200px";
+        list.style.overflowY = "auto";
+        items.forEach(function(item) {
+            var li = document.createElement("li");
+            li.className = "list-group-item list-group-item-action";
+            li.textContent = item.display_name;
+            li.style.cursor = "pointer";
+            li.onclick = function() {
+                input.value = item.display_name;
+                hideList();
+            };
+            list.appendChild(li);
+        });
+        input.parentNode.style.position = "relative";
+        input.parentNode.appendChild(list);
+    }
+    input.addEventListener("input", function() {
+        var q = input.value.trim();
+        if (q.length < 3) { hideList(); return; }
+        clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(function() {
+            var elapsed = Date.now() - lastReq;
+            var delay = elapsed < 1100 ? 1100 - elapsed : 0;
+            setTimeout(function() {
+                lastReq = Date.now();
+                fetch("https://nominatim.openstreetmap.org/search?q=" + encodeURIComponent(q + ", Россия") + "&format=json&addressdetails=1&limit=5&countrycodes=ru", {
+                    headers: {"Accept": "application/json"},
+                    credentials: "omit"
+                }).then(function(r) { return r.json(); }).then(function(data) {
+                    showSuggestions(data);
+                }).catch(function() { hideList(); });
+            }, delay);
+        }, 500);
+    });
+    input.addEventListener("blur", function() { setTimeout(hideList, 200); });
+})();
+</script>
+<script>
+document.getElementById('checkoutForm').onsubmit = function() {
+    document.getElementById('totalAmount').value = document.getElementById('checkoutTotal').textContent.replace(/\s/g,'').replace('₽','');
+    return true;
+};
+(function() {
+    var totalInput = document.getElementById('totalAmount');
+    if (totalInput) totalInput.setAttribute('data-total', {{ total|default(0) }});
+    var btn = document.getElementById('applyPromoBtn');
+    var inp = document.getElementById('promoCodeInput');
+    var msg = document.getElementById('promoMessage');
+    var discountRow = document.getElementById('promoDiscountRow');
+    var discountEl = document.getElementById('checkoutDiscount');
+    var totalEl = document.getElementById('checkoutTotal');
+    var subtotalEl = document.getElementById('checkoutSubtotal');
+    if (!btn || !inp) return;
+    var appliedDiscount = 0;
+    var appliedFinal = {{ total|default(0) }};
+    btn.addEventListener('click', function() {
+        var code = inp.value.trim();
+        if (!code) { msg.textContent = ''; return; }
+        var fd = new FormData();
+        fd.append('code', code);
+        fetch('/api/validate-promo', { method: 'POST', body: fd })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) {
+                    appliedDiscount = data.discount;
+                    appliedFinal = data.final;
+                    msg.textContent = data.message;
+                    msg.className = 'text-success small mt-2 mb-0';
+                    discountRow.style.display = 'flex';
+                    discountEl.textContent = '-' + Math.round(data.discount).toLocaleString('ru-RU') + ' ₽';
+                    totalEl.textContent = Math.round(data.final).toLocaleString('ru-RU') + ' ₽';
+                } else {
+                    msg.textContent = data.error || 'Ошибка';
+                    msg.className = 'text-danger small mt-2 mb-0';
+                    discountRow.style.display = 'none';
+                    appliedDiscount = 0;
+                    var raw = parseFloat(subtotalEl.getAttribute('data-raw')) || 0;
+                    appliedFinal = raw;
+                    totalEl.textContent = Math.round(raw).toLocaleString('ru-RU') + ' ₽';
+                }
+            });
+    });
+})();
+</script>
+{% endblock %}

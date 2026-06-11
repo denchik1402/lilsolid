@@ -1,0 +1,52 @@
+# URL для ручного запроса индексирования — LIL STORE (lilstore.ru)
+#
+# Google Search Console → «Проверка URL» → «Запросить индексирование»
+# Яндекс.Вебмастер → «Переобход страниц»
+#
+# Sitemap (отправить ОДИН РАЗ в GSC и Вебмастере, не вместо sitemap):
+#   https://lilstore.ru/sitemap.xml
+#
+# Лимит Google: ~10–20 URL в день. Сначала блок «ПРИОРИТЕТ».
+# Полный список товаров — только в sitemap.xml или: python generate_indexing_urls.py на сервере
+#
+# Обновить этот файл на сервере:
+#   cd /home/lilstore/my_shop && source venv/bin/activate && python3 generate_indexing_urls.py
+
+=== ПРИОРИТЕТ (главная, блог, статика) ===
+https://lilstore.ru/
+https://lilstore.ru/catalog
+https://lilstore.ru/blog
+https://lilstore.ru/about
+https://lilstore.ru/delivery
+https://lilstore.ru/contacts
+https://lilstore.ru/faq
+https://lilstore.ru/privacy
+
+=== СТАТЬИ БЛОГА ===
+https://lilstore.ru/blog/kak-vybrat-iqos-iluma
+https://lilstore.ru/blog/terea-vs-heets
+https://lilstore.ru/blog/lil-solid-sravnenie
+https://lilstore.ru/blog/luchshie-vkusu-terea
+https://lilstore.ru/blog/terea-pearl-kapsuly
+https://lilstore.ru/blog/iqos-iluma-vs-lil-solid
+https://lilstore.ru/blog/uhod-za-iqos-iluma
+https://lilstore.ru/blog/perehod-na-iluma
+https://lilstore.ru/blog/skolko-stoit-iqos-iluma
+
+=== КАТАЛОГ (категории) ===
+https://lilstore.ru/catalog/iqos-iluma
+https://lilstore.ru/catalog/terea-sticks
+https://lilstore.ru/catalog/lil
+
+=== КАТАЛОГ (модели устройств, ЧПУ) ===
+https://lilstore.ru/catalog/iqos-iluma-i-one
+https://lilstore.ru/catalog/iqos-iluma-i-standart
+https://lilstore.ru/catalog/iqos-iluma-i-prime
+https://lilstore.ru/catalog/lil-solid-3-0
+https://lilstore.ru/catalog/lil-solid-dual
+https://lilstore.ru/catalog/lil-solid-4-0
+
+=== ТОВАРЫ ===
+# Все URL товаров в наличии — в sitemap.xml (десятки/сотни страниц).
+# Вручную запрашивайте только новинки и хиты после публикации.
+# Актуальный список: python3 generate_indexing_urls.py --out seo/google_indexing_urls_full.txt

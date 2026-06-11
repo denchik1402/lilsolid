@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+
+{% block title %}Редактировать промокод{% endblock %}
+
+{% block content %}
+<div class="admin-panel">
+    <nav class="admin-breadcrumb mb-4">
+        <a href="{{ url_for('admin', tab='promo') }}">← Промокоды</a>
+    </nav>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">✏️ Редактировать промокод {{ promo.code }}</h5>
+        </div>
+        <div class="card-body">
+            {% if error %}<div class="alert alert-danger">{{ error }}</div>{% endif %}
+            <form method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Код промокода</label>
+                    <input type="text" name="code" class="form-control" value="{{ promo.code }}" required maxlength="50">
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Тип скидки</label>
+                        <select name="discount_type" class="form-select" required>
+                            <option value="percent" {% if promo.discount_type == 'percent' %}selected{% endif %}>Процент (%)</option>
+                            <option value="fixed" {% if promo.discount_type == 'fixed' %}selected{% endif %}>Фиксированная сумма (₽)</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Значение</label>
+                        <input type="number" name="discount_value" class="form-control" step="0.01" min="0" value="{{ promo.discount_value }}" required>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Мин. сумма заказа (₽)</label>
+                        <input type="number" name="min_order" class="form-control" step="0.01" min="0" value="{{ promo.min_order or 0 }}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Макс. использований</label>
+                        <input type="number" name="max_uses" class="form-control" min="1" value="{{ promo.max_uses or '' }}" placeholder="Пусто = без лимита">
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Действует с</label>
+                        <input type="datetime-local" name="valid_from" class="form-control" value="{{ promo.valid_from.strftime('%Y-%m-%dT%H:%M') if promo.valid_from else '' }}">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Действует до</label>
+                        <input type="datetime-local" name="valid_until" class="form-control" value="{{ promo.valid_until.strftime('%Y-%m-%dT%H:%M') if promo.valid_until else '' }}">
+                    </div>
+                </div>
+                <div class="mb-3 form-check">
+                    <input type="checkbox" name="is_active" class="form-check-input" id="is_active" value="1" {% if promo.is_active %}checked{% endif %}>
+                    <label class="form-check-label" for="is_active">Активен</label>
+                </div>
+                <p class="text-muted small">Использовано: {{ promo.used_count }}{% if promo.max_uses %} / {{ promo.max_uses }}{% endif %}</p>
+                <hr>
+                <button type="submit" class="btn btn-primary">💾 Сохранить</button>
+                <a href="{{ url_for('admin', tab='promo') }}" class="btn btn-outline-secondary">Отмена</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

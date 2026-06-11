@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+
+{% block title %}Избранное - LIL STORE{% endblock %}
+{% block meta_robots %}noindex, follow{% endblock %}
+{% block meta_description %}Ваши избранные товары. LIL STORE — IQOS и стики TEREA.{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Избранное</h1>
+<div id="wishlistContent">
+    {% if products %}
+    <div class="row">
+        {% for product in products %}
+        <div class="col-md-4 mb-4">
+            <div class="product-card position-relative">
+                <button type="button" class="btn btn-sm wishlist-btn wishlist-btn-remove position-absolute top-0 end-0 m-2" data-product-id="{{ product.id }}" title="Удалить из избранного"><i class="fas fa-heart text-danger"></i></button>
+                <a href="{{ product|product_url }}" class="product-card-link text-decoration-none text-dark">
+                    <div class="product-card-img-wrap">
+                        {% set first_img = product.all_images[0] if product.all_images else product.image %}
+                        {% if first_img %}
+                        <img src="{{ url_for('static', filename='images/products/' + first_img) }}" class="img-fluid" alt="{{ product|product_alt }}" loading="lazy">
+                        {% else %}
+                        <img src="https://via.placeholder.com/400" class="img-fluid" alt="{{ product|product_alt }}">
+                        {% endif %}
+                    </div>
+                    <h5 class="product-title">{{ product.name }}</h5>
+                    <div class="product-price">{{ product.price|format_price }} ₽</div>
+                </a>
+                <div class="d-grid gap-2">
+                    <a href="{{ product|product_url }}" class="btn btn-primary">Подробнее</a>
+                    {% include 'includes/add_to_cart_widget.html' %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% else %}
+    <p class="alert alert-info" id="wishlistEmpty">Избранное пусто. Добавляйте товары, нажимая на сердечко в каталоге.</p>
+    <p><a href="{{ url_for('catalog') }}" class="btn btn-primary">Перейти в каталог</a></p>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    var ids = wishlistGetIds();
+    if (ids.length > 0 && !window.location.search) {
+        window.location.href = '/wishlist?ids=' + ids.join(',');
+        return;
+    }
+    document.querySelectorAll('.wishlist-btn-remove').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var id = parseInt(this.dataset.productId, 10);
+            wishlistRemove(id);
+            this.closest('.col-md-4').remove();
+            if (document.querySelectorAll('.product-card').length === 0) {
+                document.getElementById('wishlistContent').innerHTML = '<p class="alert alert-info">Избранное пусто.</p><p><a href="/catalog" class="btn btn-primary">Перейти в каталог</a></p>';
+            }
+        });
+    });
+})();
+</script>
+{% endblock %}

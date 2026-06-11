@@ -1,0 +1,105 @@
+{% extends "base.html" %}
+
+{% block title %}Редактирование — {{ product.name }}{% endblock %}
+
+{% block content %}
+<div class="admin-panel">
+    <nav class="admin-breadcrumb mb-4">
+        <a href="{{ url_for('admin', tab='products') }}">← Товары</a>
+    </nav>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-primary text-white">
+            <h5 class="mb-0">✏️ {{ product.name }}</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="row">
+                    <div class="col-md-4 mb-4">
+                        <label class="form-label fw-bold">Изображение</label>
+                        {% if product.image %}
+                        <div class="mb-2">
+                            <img src="{{ url_for('static', filename='images/products/' + product.image) }}" 
+                                 alt="{{ product|product_alt }}" class="img-thumbnail" style="max-height: 200px;">
+                        </div>
+                        {% endif %}
+                        <input type="file" name="image" class="form-control" accept="image/*">
+                        <small class="text-muted">JPG, PNG, GIF, WebP. Оставьте пустым, чтобы не менять.</small>
+                        <div class="mt-2">
+                            <label class="form-label fw-bold small">Alt-текст (SEO)</label>
+                            <input type="text" name="image_alt" class="form-control form-control-sm" value="{{ product.image_alt or '' }}" maxlength="200" placeholder="Описание картинки для поисковиков. Если пусто — используется название товара.">
+                        </div>
+                    </div>
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label class="form-label fw-bold">Название</label>
+                            <input type="text" name="name" class="form-control" value="{{ product.name }}" required>
+                        </div>
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Цена (₽)</label>
+                                <input type="number" name="price" class="form-control" value="{{ product.price }}" step="0.01" min="0" required>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Старая цена (₽)</label>
+                                <input type="number" name="old_price" class="form-control" value="{{ product.old_price or '' }}" step="0.01" min="0" placeholder="Для блока «Акция!»">
+                                <small class="text-muted">Если указана — товар попадёт в блок «Акция!» на главной</small>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Себестоимость (₽)</label>
+                                <input type="number" name="cost" class="form-control" value="{{ product.cost or '' }}" step="0.01" min="0" placeholder="Для расчёта прибыли">
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Модель устройства</label>
+                                <select name="model" class="form-select">
+                                    <option value="">— не указана —</option>
+                                    {% for dm in device_models %}
+                                    <option value="{{ dm.name }}" {% if product.model == dm.name %}selected{% endif %}>{{ dm.name }}</option>
+                                    {% endfor %}
+                                    {% if product.model and product.model not in ['IQOS Iluma i One','IQOS Iluma i Standart','IQOS Iluma i Prime','lil SOLID DUAL','lil SOLID 3.0'] %}
+                                    <option value="{{ product.model }}" selected>{{ product.model }}</option>
+                                    {% endif %}
+                                </select>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label class="form-label fw-bold">Цвет</label>
+                                <select name="color" class="form-select">
+                                    <option value="">— не указан —</option>
+                                    {% for c in ['Серый','Зеленый','Синий','Бежевый','Красный','Черный','Оранжевый','Фиолетовый','Желтый','Смешанный'] %}
+                                    <option value="{{ c }}" {% if product.color == c %}selected{% endif %}>{{ c }}</option>
+                                    {% endfor %}
+                                    {% if product.color and product.color not in ['Серый','Зеленый','Синий','Бежевый','Красный','Черный','Оранжевый','Фиолетовый','Желтый','Смешанный'] %}
+                                    <option value="{{ product.color }}" selected>{{ product.color }}</option>
+                                    {% endif %}
+                                </select>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <div class="form-check">
+                                    <input type="checkbox" name="is_exclusive" class="form-check-input" id="is_exclusive" {% if product.is_exclusive %}checked{% endif %}>
+                                    <label class="form-check-label" for="is_exclusive">Эксклюзив</label>
+                                </div>
+                                <div class="form-check">
+                                    <input type="checkbox" name="is_hit" class="form-check-input" id="is_hit" {% if product.is_hit %}checked{% endif %}>
+                                    <label class="form-check-label" for="is_hit">Хит продаж</label>
+                                </div>
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label class="form-label fw-bold">Meta Description (SEO)</label>
+                                <input type="text" name="meta_description" class="form-control" value="{{ product.meta_description or '' }}" maxlength="300" placeholder="Краткое описание для поисковиков (до 300 символов)">
+                            </div>
+                            <div class="col-12 mb-3">
+                                <label class="form-label fw-bold">Meta Keywords (SEO)</label>
+                                <input type="text" name="meta_keywords" class="form-control" value="{{ product.meta_keywords or '' }}" maxlength="300" placeholder="Ключевые слова через запятую">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                <button type="submit" class="btn btn-primary">💾 Сохранить</button>
+                <a href="{{ url_for('admin', tab='products') }}" class="btn btn-outline-secondary">Отмена</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,248 @@
+{% extends "base.html" %}
+
+{% block title %}Корзина - LIL STORE{% endblock %}
+{% block meta_robots %}noindex, follow{% endblock %}
+
+{% block content %}
+<h1 class="mb-4">Корзина</h1>
+
+{% if cart_items %}
+<div class="row">
+    <div class="col-md-8" id="cartItemsContainer">
+        {% for item in cart_items %}
+        <div class="card mb-3 cart-item-row" data-product-id="{{ item.product.id }}">
+            <div class="card-body">
+                <div class="row align-items-center g-2">
+                    <div class="col-4 col-md-2">
+                        {% set img = item.product.all_images[0] if item.product.all_images else item.product.image %}
+                        {% if img %}
+                        <img src="{{ url_for('static', filename='images/products/' + img) }}" class="img-fluid rounded" alt="{{ item.product|product_alt }}" loading="lazy">
+                        {% else %}
+                        <img src="https://via.placeholder.com/80" class="img-fluid rounded" alt="{{ item.product|product_alt }}">
+                        {% endif %}
+                    </div>
+                    <div class="col-8 col-md-4">
+                        <h5 class="mb-0">{{ item.product.name }}</h5>
+                        <p class="text-muted mb-0 small">{{ item.product.price|format_price }} ₽ за шт.</p>
+                    </div>
+                    <div class="col-12 col-md-3">
+                        <div class="cart-widget-qty-block d-inline-flex">
+                            <button type="button" class="cart-widget-minus cart-qty-minus" data-product-id="{{ item.product.id }}" aria-label="Уменьшить">−</button>
+                            <input type="text" class="form-control cart-widget-qty cart-qty-input text-center" value="{{ item.quantity }}" min="1" max="99" data-product-id="{{ item.product.id }}" data-price="{{ item.product.price }}" readonly>
+                            <button type="button" class="cart-widget-plus cart-qty-plus" data-product-id="{{ item.product.id }}" aria-label="Увеличить">+</button>
+                        </div>
+                    </div>
+                    <div class="col-6 col-md-2">
+                        <strong class="cart-item-subtotal" data-product-id="{{ item.product.id }}">{{ item.subtotal|format_price }} ₽</strong>
+                    </div>
+                    <div class="col-6 col-md-1 text-end">
+                        <button type="button" class="cart-remove-btn" data-product-id="{{ item.product.id }}" title="Удалить из корзины">
+                            <i class="far fa-trash-alt cart-remove-icon-default"></i>
+                            <i class="fas fa-times cart-remove-icon-hover"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    
+    <div class="col-md-4">
+        <div class="card">
+            <div class="card-header">
+                <h5>Итого</h5>
+            </div>
+            <div class="card-body">
+                <table class="table">
+                    <tr>
+                        <td>Товаров:</td>
+                        <td id="cartItemsCount">{{ cart_items|length }}</td>
+                    </tr>
+                    <tr>
+                        <td>Сумма:</td>
+                        <td id="cartSubtotal">{{ total|format_price }} ₽</td>
+                    </tr>
+                    <tr>
+                        <td>Доставка:</td>
+                        <td>0 ₽</td>
+                    </tr>
+                    <tr>
+                        <td><strong>Итого:</strong></td>
+                        <td><strong id="cartTotal">{{ total|format_price }} ₽</strong></td>
+                    </tr>
+                    <tr>
+                        <td colspan="2" class="text-muted small">Оплата при доставке</td>
+                    </tr>
+                </table>
+                <a href="/checkout" class="btn btn-success w-100">Оформить заказ</a>
+                <a href="/catalog" class="btn btn-outline-primary w-100 mt-2">Продолжить покупки</a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Похожие товары -->
+{% if similar_products %}
+<div class="row mt-5">
+    <div class="col-12">
+        <h3>Похожие товары</h3>
+        <p class="text-muted">Добавьте ещё — возможно, вам понравится</p>
+        <div class="row">
+            {% for product in similar_products %}
+            <div class="col-6 col-md-3 mb-4">
+                <div class="product-card position-relative">
+                    {% if product.is_hit %}<span class="badge bg-danger position-absolute top-0 start-0 m-2 product-badge-hit">Хит</span>{% endif %}
+                    <a href="{{ product|product_url }}" class="product-card-link text-decoration-none text-dark">
+                        <div class="product-card-img-wrap">
+                            {% set first_img = product.all_images[0] if product.all_images else product.image %}
+                            {% if first_img %}
+                            <img src="{{ url_for('static', filename='images/products/' + first_img) }}" class="img-fluid" alt="{{ product|product_alt }}" loading="lazy">
+                            {% else %}
+                            <img src="https://via.placeholder.com/400" class="img-fluid" alt="{{ product|product_alt }}" loading="lazy">
+                            {% endif %}
+                        </div>
+                        <h5 class="product-title">{{ product.name }}</h5>
+                        <div class="product-price mb-2">{{ product.price|format_price }} ₽</div>
+                    </a>
+                    <div class="d-grid gap-2">
+                        <a href="{{ product|product_url }}" class="btn btn-outline-primary">Подробнее</a>
+                        {% include 'includes/add_to_cart_widget.html' %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endif %}
+
+{% if not cart_items %}
+<div class="empty-cart text-center py-5">
+    <div class="empty-cart-icon mb-4">
+        <i class="fas fa-shopping-basket fa-5x text-muted"></i>
+    </div>
+    <h3 class="mb-3">Корзина пуста</h3>
+    <p class="text-muted mb-4">Добавьте товары из каталога, чтобы оформить бронирование</p>
+    <a href="/catalog" class="btn btn-primary btn-lg"><i class="fas fa-store me-2"></i>Перейти в каталог</a>
+</div>
+{% endif %}
+
+{% if similar_products and not cart_items %}
+<!-- Рекомендации при пустой корзине -->
+<div class="row mt-4">
+    <div class="col-12">
+        <h3>Вам может понравиться</h3>
+        <div class="row">
+            {% for product in similar_products %}
+            <div class="col-6 col-md-3 mb-4">
+                <div class="product-card position-relative">
+                    {% if product.is_hit %}<span class="badge bg-danger position-absolute top-0 start-0 m-2 product-badge-hit">Хит</span>{% endif %}
+                    <a href="{{ product|product_url }}" class="product-card-link text-decoration-none text-dark">
+                        <div class="product-card-img-wrap">
+                            {% set first_img = product.all_images[0] if product.all_images else product.image %}
+                            {% if first_img %}
+                            <img src="{{ url_for('static', filename='images/products/' + first_img) }}" class="img-fluid" alt="{{ product|product_alt }}" loading="lazy">
+                            {% else %}
+                            <img src="https://via.placeholder.com/400" class="img-fluid" alt="{{ product|product_alt }}" loading="lazy">
+                            {% endif %}
+                        </div>
+                        <h5 class="product-title">{{ product.name }}</h5>
+                        <div class="product-price mb-2">{{ product.price|format_price }} ₽</div>
+                    </a>
+                    <div class="d-grid gap-2">
+                        <a href="{{ product|product_url }}" class="btn btn-outline-primary">Подробнее</a>
+                        {% include 'includes/add_to_cart_widget.html' %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    function formatPrice(n) { return n.toLocaleString('ru-RU', {maximumFractionDigits: 0}); }
+    function updateCart(productId, quantity) {
+        var fd = new FormData();
+        fd.append('quantity', quantity);
+        return fetch('/update-cart/' + productId, {
+            method: 'POST',
+            headers: {'X-Requested-With': 'XMLHttpRequest'},
+            body: fd
+        }).then(function(r) { return r.json(); });
+    }
+    document.querySelectorAll('.cart-qty-minus').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var pid = this.dataset.productId;
+            var inp = document.querySelector('.cart-qty-input[data-product-id="' + pid + '"]');
+            var q = Math.max(0, parseInt(inp.value, 10) - 1);
+            updateCart(pid, q).then(function(data) {
+                var item = data.items.find(function(i){return String(i.product_id)===String(pid);});
+                if (item) {
+                    inp.value = item.quantity;
+                    document.querySelector('.cart-item-subtotal[data-product-id="' + pid + '"]').textContent = formatPrice(item.subtotal) + ' ₽';
+                } else {
+                    var row = btn.closest('.cart-item-row');
+                    if (row) row.remove();
+                    document.getElementById('cartItemsCount').textContent = data.items.length;
+                    if (data.items.length === 0) location.reload();
+                }
+                var el = document.getElementById('cartSubtotal');
+                if (el) el.textContent = formatPrice(data.total) + ' ₽';
+                document.getElementById('cartTotal').textContent = formatPrice(data.total) + ' ₽';
+                if (typeof updateCartCounter === 'function') updateCartCounter();
+            });
+        });
+    });
+    document.querySelectorAll('.cart-qty-plus').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var pid = this.dataset.productId;
+            var inp = document.querySelector('.cart-qty-input[data-product-id="' + pid + '"]');
+            var q = Math.min(99, parseInt(inp.value, 10) + 1);
+            inp.value = q;
+            updateCart(pid, q).then(function(data) {
+                document.querySelector('.cart-item-subtotal[data-product-id="' + pid + '"]').textContent = formatPrice(data.items.find(function(i){return String(i.product_id)===String(pid);}).subtotal) + ' ₽';
+                var subEl = document.getElementById('cartSubtotal');
+                if (subEl) subEl.textContent = formatPrice(data.total) + ' ₽';
+                document.getElementById('cartTotal').textContent = formatPrice(data.total) + ' ₽';
+                if (typeof updateCartCounter === 'function') updateCartCounter();
+            });
+        });
+    });
+    document.querySelectorAll('.cart-qty-input').forEach(function(inp) {
+        inp.addEventListener('change', function() {
+            var pid = this.dataset.productId;
+            var q = Math.max(1, Math.min(99, parseInt(this.value, 10) || 1));
+            this.value = q;
+            updateCart(pid, q).then(function(data) {
+                document.querySelector('.cart-item-subtotal[data-product-id="' + pid + '"]').textContent = formatPrice(data.items.find(function(i){return String(i.product_id)===String(pid);}).subtotal) + ' ₽';
+                var subEl = document.getElementById('cartSubtotal');
+                if (subEl) subEl.textContent = formatPrice(data.total) + ' ₽';
+                document.getElementById('cartTotal').textContent = formatPrice(data.total) + ' ₽';
+                if (typeof updateCartCounter === 'function') updateCartCounter();
+            });
+        });
+    });
+    document.querySelectorAll('.cart-remove-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var pid = this.dataset.productId;
+            var row = this.closest('.cart-item-row');
+            updateCart(pid, 0).then(function(data) {
+                row.remove();
+                document.getElementById('cartItemsCount').textContent = data.items.length;
+                var subEl = document.getElementById('cartSubtotal');
+                if (subEl) subEl.textContent = formatPrice(data.total) + ' ₽';
+                document.getElementById('cartTotal').textContent = formatPrice(data.total) + ' ₽';
+                if (typeof updateCartCounter === 'function') updateCartCounter();
+                if (data.items.length === 0) location.reload();
+            });
+        });
+    });
+})();
+</script>
+{% endblock %}

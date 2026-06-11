@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}{{ 'Редактировать баннер' if banner else 'Добавить баннер' }}{% endblock %}
+
+{% block content %}
+<div class="admin-panel">
+    <nav class="admin-breadcrumb mb-4">
+        <a href="{{ url_for('admin', tab='banners') }}">← Баннеры</a>
+    </nav>
+
+    <div class="card shadow-sm">
+        <div class="card-header {{ 'bg-primary' if banner else 'bg-success' }} text-white">
+            <h5 class="mb-0">{{ '✏️ Редактировать баннер' if banner else '➕ Добавить баннер' }}</h5>
+        </div>
+        <div class="card-body">
+            <p class="text-muted small mb-3">Рекомендуемый размер фото: 800×450 px или 1200×600 px.</p>
+            <form method="post" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Изображение</label>
+                    {% if banner and banner.image %}
+                    <div class="mb-2">
+                        <img src="{{ url_for('static', filename=('images/' + banner.image if banner.image.startswith('products/') else 'images/banners/' + banner.image)) }}" alt="" class="img-thumbnail" style="max-height: 150px;">
+                    </div>
+                    {% endif %}
+                    <input type="file" name="image" class="form-control" accept="image/*" {{ 'required' if not banner else '' }}>
+                    <small class="text-muted">JPG, PNG, GIF, WebP. {{ 'Оставьте пустым, чтобы не менять.' if banner else '' }}</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Заголовок</label>
+                    <input type="text" name="title" class="form-control" value="{{ banner.title if banner else '' }}" required placeholder="IQOS ILUMA ONE">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Подзаголовок (цена или текст)</label>
+                    <input type="text" name="subtitle" class="form-control" value="{{ banner.subtitle if banner else '' }}" placeholder="12 990 ₽">
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Текст кнопки</label>
+                        <input type="text" name="button_text" class="form-control" value="{{ banner.button_text if banner else 'Купить сейчас' }}" placeholder="Купить сейчас">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Ссылка кнопки (если не товар)</label>
+                        <input type="text" name="button_url" class="form-control" value="{{ banner.button_url if banner else '' }}" placeholder="/catalog или https://...">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Или привязать к товару</label>
+                    <select name="product_id" class="form-select">
+                        <option value="">— Не привязывать</option>
+                        {% for p in products_for_link %}
+                        <option value="{{ p.id }}" {{ 'selected' if banner and banner.product_id == p.id else '' }}>{{ p.name }} ({{ p.price|format_price }} ₽)</option>
+                        {% endfor %}
+                    </select>
+                    <small class="text-muted">Если выбран товар — кнопка ведёт на страницу товара</small>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Бейдж</label>
+                        <select name="badge_type" class="form-select">
+                            <option value="">— Без бейджа</option>
+                            <option value="telegram" {{ 'selected' if banner and banner.badge_type == 'telegram' else '' }}>Telegram</option>
+                            <option value="promo" {{ 'selected' if banner and banner.badge_type == 'promo' else '' }}>Акция</option>
+                            <option value="bonus" {{ 'selected' if banner and banner.badge_type == 'bonus' else '' }}>Бонус</option>
+                            <option value="hit" {{ 'selected' if banner and banner.badge_type == 'hit' else '' }}>Хит</option>
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Порядок (0 = первый)</label>
+                        <input type="number" name="sort_order" class="form-control" value="{{ banner.sort_order if banner else 0 }}" min="0">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">A/B-тест (группа)</label>
+                    <input type="text" name="ab_test_group" class="form-control" value="{{ banner.ab_test_group if banner and banner.ab_test_group else '' }}" placeholder="test1 — баннеры с одной группой показываются по очереди">
+                    <small class="text-muted">Баннеры с одинаковой группой (например test1) — варианты A/B. Пользователь видит один случайный вариант.</small>
+                </div>
+                <hr>
+                <button type="submit" class="btn btn-primary">Сохранить</button>
+                <a href="{{ url_for('admin', tab='banners') }}" class="btn btn-outline-secondary">Отмена</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

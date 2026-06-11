@@ -1,0 +1,22 @@
+{# Карточка статьи блога. Ожидает: post #}
+<article class="blog-card {{ extra_class or '' }}">
+    <a href="{{ url_for('blog_post', slug=post.slug) }}" class="blog-card-link text-decoration-none{% if post.cover_image %} blog-card-link--cover{% endif %}">
+        <div class="blog-card-body">
+            {% if show_meta|default(true) %}
+            <div class="blog-card-meta"><i class="far fa-clock me-1"></i>{{ post.reading_minutes or 5 }} мин чтения</div>
+            {% endif %}
+            <{{ title_tag|default('h2') }} class="blog-card-title {{ title_class|default('h4') }}">{{ post.title }}</{{ title_tag|default('h2') }}>
+            {% if show_excerpt|default(true) and post.excerpt %}
+            <p class="blog-card-excerpt">{{ post.excerpt }}</p>
+            {% endif %}
+            <span class="blog-card-read">Читать {% if compact %}→{% else %}статью {% endif %}<i class="fas fa-arrow-right ms-1"></i></span>
+        </div>
+        {% if post.cover_image %}
+        <div class="blog-card-media card-side-media">
+            <img src="{{ post.cover_image|blog_cover_url }}" alt="{{ post.title }}" loading="lazy" decoding="async">
+        </div>
+        {% else %}
+        <div class="blog-card-icon"><i class="fas {{ post.cover_icon or 'fa-book-open' }}"></i></div>
+        {% endif %}
+    </a>
+</article>

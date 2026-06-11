@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+
+{% block title %}Добавить товар{% endblock %}
+
+{% block content %}
+<div class="admin-panel">
+    <nav class="admin-breadcrumb mb-4">
+        <a href="{{ url_for('admin', tab='products') }}">← Товары</a>
+    </nav>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">➕ Добавить товар</h5>
+        </div>
+        <div class="card-body">
+            <form method="post" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Название</label>
+                    <input type="text" name="name" class="form-control" required>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Категория</label>
+                    <select name="category_id" class="form-select" required>
+                        {% for c in categories %}
+                        <option value="{{ c.id }}">{{ c.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Цена (₽)</label>
+                        <input type="number" name="price" class="form-control" step="0.01" min="0" required>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Себестоимость (₽)</label>
+                        <input type="number" name="cost" class="form-control" step="0.01" min="0" placeholder="Для расчёта прибыли">
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Модель устройства</label>
+                        <select name="model" class="form-select">
+                            <option value="">— не указана —</option>
+                            {% for dm in device_models %}
+                            <option value="{{ dm.name }}">{{ dm.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <label class="form-label fw-bold">Цвет</label>
+                        <select name="color" class="form-select">
+                            <option value="">— не указан —</option>
+                            {% for c in ['Серый','Зеленый','Синий','Бежевый','Красный','Черный','Оранжевый','Фиолетовый','Желтый','Смешанный'] %}
+                            <option value="{{ c }}">{{ c }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Изображение</label>
+                    <input type="file" name="image" class="form-control" accept="image/*">
+                    <small class="text-muted">JPG, PNG, GIF, WebP</small>
+                    <div class="mt-2">
+                        <label class="form-label fw-bold small">Alt-текст (SEO)</label>
+                        <input type="text" name="image_alt" class="form-control" value="" maxlength="200" placeholder="Описание картинки для поисковиков. Если пусто — используется название товара.">
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Meta Description (SEO)</label>
+                    <input type="text" name="meta_description" class="form-control" maxlength="300" placeholder="Краткое описание для поисковиков (до 300 символов)">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Meta Keywords (SEO)</label>
+                    <input type="text" name="meta_keywords" class="form-control" maxlength="300" placeholder="Ключевые слова через запятую">
+                </div>
+                <hr>
+                <button type="submit" class="btn btn-success">➕ Добавить</button>
+                <a href="{{ url_for('admin', tab='products') }}" class="btn btn-outline-secondary">Отмена</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

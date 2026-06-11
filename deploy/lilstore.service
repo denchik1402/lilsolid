@@ -1,0 +1,17 @@
+[Unit]
+Description=LIL STORE Flask App (Gunicorn)
+After=network.target
+
+[Service]
+Type=simple
+User=lilstore
+Group=lilstore
+WorkingDirectory=/home/lilstore/my_shop
+Environment="PATH=/home/lilstore/my_shop/venv/bin"
+ExecStart=/home/lilstore/my_shop/venv/bin/gunicorn --workers 2 --bind 127.0.0.1:8000 --timeout 120 app:app
+ExecReload=/bin/kill -s HUP $MAINPID
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

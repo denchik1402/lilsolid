@@ -1,0 +1,624 @@
+{% extends "base.html" %}
+
+{% block canonical_url %}{{ request.url_root.rstrip('/') }}{% if category %}{{ url_for('catalog', category_slug=category.slug) }}{% else %}{{ url_for('catalog') }}{% endif %}{% endblock %}
+{% block rel_prev_next %}
+{% if pagination and pagination.pages > 1 %}
+{% set _args = request.args.to_dict(flat=True) %}
+{% set _ = _args.pop('page', None) %}
+{% if pagination.has_prev %}<link rel="prev" href="{{ request.url_root.rstrip('/') }}{% if category %}{{ url_for('catalog', category_slug=category.slug, page=pagination.prev_num, **_args) }}{% else %}{{ url_for('catalog', page=pagination.prev_num, **_args) }}{% endif %}">{% endif %}
+{% if pagination.has_next %}<link rel="next" href="{{ request.url_root.rstrip('/') }}{% if category %}{{ url_for('catalog', category_slug=category.slug, page=pagination.next_num, **_args) }}{% else %}{{ url_for('catalog', page=pagination.next_num, **_args) }}{% endif %}">{% endif %}
+{% endif %}
+{% endblock %}
+{% block title %}
+    {% if category %}
+        {{ category.name }} — купить в LIL STORE
+    {% else %}
+        Каталог IQOS и TEREA — LIL STORE
+    {% endif %}
+{% endblock %}
+{% block meta_description %}
+    {% if category %}
+        {% if category.meta_description %}{{ category.meta_description }}{% else %}{{ category.name }}. {{ category.description or 'Оригинальная продукция.' }} Бронь на сайте, доставка 1–2 дня.{% endif %}
+    {% else %}
+        Каталог устройств IQOS и стиков TEREA. Оригинальная продукция, доставка по России.
+    {% endif %}
+{% endblock %}
+{% block meta_keywords %}
+    {% if category and category.meta_keywords %}{{ category.meta_keywords }}{% else %}IQOS, TEREA, ILUMA, стики, нагревательные устройства, купить{% endif %}
+{% endblock %}
+{% block schema_ld %}
+{% set _base = request.url_root.rstrip('/') %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Главная", "item": {{ (_base + '/')|tojson }}},
+    {"@type": "ListItem", "position": 2, "name": "Каталог", "item": {{ (_base + url_for('catalog'))|tojson }}}{% if category %},
+    {"@type": "ListItem", "position": 3, "name": {{ category.name|tojson }}, "item": {{ (_base + url_for('catalog', category_slug=category.slug))|tojson }}}{% endif %}
+  ]
+}
+</script>
+{% if products %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "ItemList",
+  "numberOfItems": {{ products|length }},
+  "itemListElement": [
+    {% for product in products %}
+    {"@type": "ListItem", "position": {{ loop.index }}, "item": {"@type": "Product", "name": {{ product.name|tojson }}, "url": {{ (_base + (product|product_url))|tojson }}}}{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ]
+}
+</script>
+{% endif %}
+{% endblock %}
+
+{% block content %}
+<style>
+/* Фильтры в стиле Яндекс Маркет */
+.catalog-filters {
+    background: #f7f8fa;
+    border-radius: 12px;
+    padding: 16px 0;
+    border: 1px solid #e8e8e8;
+}
+.catalog-filters .filter-section {
+    border-bottom: 1px solid #e8e8e8;
+    padding: 0 16px;
+}
+.catalog-filters .filter-section:last-child { border-bottom: none; }
+.catalog-filters .filter-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #333;
+    padding: 12px 0 8px;
+    margin: 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    cursor: pointer;
+    user-select: none;
+}
+.catalog-filters .filter-title .chevron {
+    font-size: 10px;
+    color: #999;
+    transition: transform 0.2s;
+}
+.catalog-filters .filter-title[aria-expanded="false"] .chevron { transform: rotate(-90deg); }
+.catalog-filters .filter-body { padding-bottom: 12px; }
+.catalog-filters .filter-body.collapse:not(.show) { display: none; }
+.catalog-filters .filter-option {
+    display: flex;
+    align-items: center;
+    padding: 6px 0;
+    font-size: 14px;
+    color: #333;
+    text-decoration: none;
+    border-radius: 6px;
+    transition: background 0.15s, color 0.15s;
+}
+.catalog-filters .filter-option:hover { background: #eef0f2; color: #333; }
+.catalog-filters .filter-option.active {
+    color: #0d6efd;
+    font-weight: 500;
+    background: rgba(13, 110, 253, 0.06);
+}
+.catalog-filters .filter-option.active:hover { color: #0a58ca; }
+.catalog-filters .filter-check {
+    width: 18px;
+    height: 18px;
+    margin-right: 10px;
+    border: 2px solid #ccc;
+    border-radius: 4px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+.catalog-filters .filter-option.active .filter-check {
+    background: #0d6efd;
+    border-color: #0d6efd;
+}
+.catalog-filters .filter-option.active .filter-check::after {
+    content: "✓";
+    color: #fff;
+    font-size: 11px;
+    font-weight: bold;
+}
+.catalog-filters .btn-reset {
+    margin: 12px 16px 0;
+    font-size: 13px;
+    color: #666;
+    background: transparent;
+    border: 1px solid #ddd;
+    padding: 8px 16px;
+    border-radius: 8px;
+    width: calc(100% - 32px);
+    transition: all 0.2s;
+}
+.catalog-filters .btn-reset:hover {
+    background: #fff;
+    border-color: #ccc;
+    color: #333;
+}
+/* Ползунок цены (два range в два ряда) */
+.price-slider-wrap {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+.price-slider-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.price-slider-row label {
+    font-size: 12px;
+    color: var(--text-muted, #6c757d);
+    min-width: 24px;
+    margin: 0;
+}
+.price-slider-wrap input[type="range"] {
+    flex: 1;
+    height: 6px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: #dee2e6;
+    border-radius: 3px;
+}
+.price-slider-wrap input[type="range"]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #0d6efd;
+    cursor: pointer;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+.price-slider-wrap input[type="range"]::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: #0d6efd;
+    cursor: pointer;
+    border: 2px solid #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+}
+/* Панель: поделиться, сортировка, вид — одинаковая высота, выровнены */
+.catalog-toolbar-actions {
+    display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem;
+}
+.catalog-toolbar-actions .btn,
+.catalog-toolbar-actions .dropdown .btn,
+.catalog-toolbar-actions .btn-group .btn {
+    height: 38px; min-height: 38px;
+    padding: 0 0.75rem;
+    display: inline-flex; align-items: center; justify-content: center;
+    line-height: 1;
+}
+.catalog-toolbar-actions .dropdown .btn { min-width: 140px; justify-content: space-between; }
+/* Переключатель вида */
+.view-switcher .btn.active { background: #0d6efd; color: #fff !important; border-color: #0d6efd; }
+.view-switcher .btn { padding: 0 0.6rem; }
+/* Вид списком */
+.catalog-list .product-card {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    padding: 16px;
+}
+.catalog-list .product-card .product-card-link {
+    display: grid;
+    grid-template-columns: 120px 1fr;
+    grid-template-rows: auto auto;
+    gap: 0 20px;
+    align-items: center;
+    flex: 1;
+    min-width: 0;
+}
+.catalog-list .product-card-img-wrap {
+    width: 120px;
+    min-width: 120px;
+    height: 120px;
+    aspect-ratio: unset;
+    margin-bottom: 0;
+    margin-right: 0;
+    grid-row: 1 / -1;
+}
+.catalog-list .product-card .product-title { margin: 0 0 4px 0; font-size: 1.1rem; grid-column: 2; }
+.catalog-list .product-card .product-price { margin: 0; grid-column: 2; }
+.catalog-list .product-card .d-grid {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-left: 16px;
+}
+.catalog-list .col-md-4 { flex: 0 0 100%; max-width: 100%; }
+/* Поля цены: без стрелочек, текст по центру */
+.price-filter input[type="number"] {
+    text-align: center;
+    -moz-appearance: textfield;
+}
+.price-filter input[type="number"]::-webkit-outer-spin-button,
+.price-filter input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+/* Тёмная тема для фильтров */
+[data-theme="dark"] .catalog-filters {
+    background: var(--bg-card);
+    border-color: var(--border);
+}
+[data-theme="dark"] .catalog-filters .filter-section { border-color: var(--border); }
+[data-theme="dark"] .catalog-filters .filter-title { color: var(--text); }
+[data-theme="dark"] .catalog-filters .filter-title .chevron { color: var(--text-muted); }
+[data-theme="dark"] .catalog-filters .filter-option { color: var(--text); }
+[data-theme="dark"] .catalog-filters .filter-option:hover { background: var(--bg-input); color: var(--text); }
+[data-theme="dark"] .catalog-filters .filter-option.active { color: #6ea8fe; background: rgba(110, 168, 254, 0.15); }
+[data-theme="dark"] .catalog-filters .filter-option.active:hover { color: #8bb4ff; }
+[data-theme="dark"] .catalog-filters .filter-check { border-color: var(--border); }
+[data-theme="dark"] .catalog-filters .filter-option.active .filter-check { background: #6ea8fe; border-color: #6ea8fe; }
+[data-theme="dark"] .catalog-filters .btn-reset { color: var(--text-muted); border-color: var(--border); }
+[data-theme="dark"] .catalog-filters .btn-reset:hover { background: var(--bg-input); border-color: var(--text-muted); color: var(--text); }
+[data-theme="dark"] .price-slider-wrap input[type="range"] { background: var(--border); }
+[data-theme="dark"] .view-switcher .btn { border-color: var(--border); color: var(--text); }
+[data-theme="dark"] .view-switcher .btn.active { background: #6ea8fe; border-color: #6ea8fe; }
+[data-theme="dark"] .breadcrumb { background: transparent; }
+[data-theme="dark"] .breadcrumb-item a { color: #6ea8fe; }
+[data-theme="dark"] .breadcrumb-item.active { color: var(--text-muted); }
+[data-theme="dark"] .form-select { background: var(--bg-input); border-color: var(--border); color: var(--text); }
+[data-theme="dark"] .catalog-toolbar-actions .btn-outline-secondary { border-color: var(--border); color: var(--text); }
+[data-theme="dark"] .catalog-toolbar-actions .btn-outline-secondary:hover { background: var(--bg-input); color: var(--text); border-color: var(--text-muted); }
+</style>
+
+<!-- Хлебные крошки -->
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Главная</a></li>
+        <li class="breadcrumb-item"><a href="/catalog">Каталог</a></li>
+        {% if category %}
+        <li class="breadcrumb-item active">{{ category.name }}</li>
+        {% endif %}
+    </ol>
+</nav>
+
+<div class="row">
+    <!-- Фильтры в стиле Яндекс Маркет -->
+    <div class="col-md-3">
+        {% set q = request.args.to_dict() %}
+        {% set q_filter = dict(q) %}
+        {% set _ = q_filter.pop('page', None) %}
+        {% macro catalog_url(params, with_category=true) %}
+            {%- if category and with_category -%}
+                {{ url_for('catalog', category_slug=category.slug, **params) }}
+            {%- else -%}
+                {{ url_for('catalog', **params) }}
+            {%- endif -%}
+        {% endmacro %}
+        <div class="catalog-filters">
+            <!-- Категории -->
+            <div class="filter-section">
+                <div class="filter-title" data-bs-toggle="collapse" data-bs-target="#filterCat" aria-expanded="true">
+                    Категории <span class="chevron">▼</span>
+                </div>
+                <div class="filter-body collapse show" id="filterCat">
+                    <a href="{{ catalog_url(q_filter, false) }}" class="filter-option {% if not category %}active{% endif %}">
+                        <span class="filter-check"></span> Все товары
+                    </a>
+                    {% for cat in categories %}
+                    <a href="{{ url_for('catalog', category_slug=cat.slug, **q_filter) }}" class="filter-option {% if category and category.id == cat.id %}active{% endif %}">
+                        <span class="filter-check"></span> {{ cat.name }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Цена: ползунок + поля ввода -->
+            <div class="filter-section">
+                <div class="filter-title" data-bs-toggle="collapse" data-bs-target="#filterPrice" aria-expanded="false">
+                    Цена <span class="chevron">▼</span>
+                </div>
+                <div class="filter-body collapse" id="filterPrice">
+                    <div class="price-filter">
+                        <div class="d-flex gap-2 align-items-center mb-2">
+                            <input type="number" id="priceMinInput" class="form-control form-control-sm" placeholder="От" min="{{ price_range_min }}" max="{{ price_range_max }}" value="{{ filters.price_min or price_range_min }}" style="width: 80px;">
+                            <span>–</span>
+                            <input type="number" id="priceMaxInput" class="form-control form-control-sm" placeholder="До" min="{{ price_range_min }}" max="{{ price_range_max }}" value="{{ filters.price_max or price_range_max }}" style="width: 80px;">
+                            <span class="small text-muted">₽</span>
+                        </div>
+                        <div class="price-slider-wrap mb-2">
+                            <div class="price-slider-row">
+                                <label>От</label>
+                                <input type="range" id="priceMinSlider" class="price-slider" min="{{ price_range_min }}" max="{{ price_range_max }}" value="{{ filters.price_min or price_range_min }}" step="50">
+                            </div>
+                            <div class="price-slider-row">
+                                <label>До</label>
+                                <input type="range" id="priceMaxSlider" class="price-slider" min="{{ price_range_min }}" max="{{ price_range_max }}" value="{{ filters.price_max or price_range_max }}" step="50">
+                            </div>
+                        </div>
+                        <button type="button" class="btn btn-sm btn-primary w-100" id="priceApplyBtn">Применить</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Модель -->
+            <div class="filter-section">
+                <div class="filter-title" data-bs-toggle="collapse" data-bs-target="#filterModel" aria-expanded="false">
+                    Модель <span class="chevron">▼</span>
+                </div>
+                <div class="filter-body collapse" id="filterModel">
+                    {% set q_no_model = dict(q_filter) %}
+                    {% set _ = q_no_model.pop('model', None) %}
+                    <a href="{{ catalog_url(q_no_model) }}" class="filter-option {% if not filters.model %}active{% endif %}">
+                        <span class="filter-check"></span> Любая
+                    </a>
+                    {% for m in filter_models %}
+                    {% set qm = dict(q_filter) %}
+                    {% set _ = qm.update({'model': m}) %}
+                    <a href="{{ catalog_url(qm) }}" class="filter-option {% if filters.model == m %}active{% endif %}">
+                        <span class="filter-check"></span> {{ m|upper }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Цвет -->
+            <div class="filter-section">
+                <div class="filter-title" data-bs-toggle="collapse" data-bs-target="#filterColor" aria-expanded="false">
+                    Цвет <span class="chevron">▼</span>
+                </div>
+                <div class="filter-body collapse" id="filterColor">
+                    {% set q_no_color = dict(q_filter) %}
+                    {% set _ = q_no_color.pop('color', None) %}
+                    <a href="{{ catalog_url(q_no_color) }}" class="filter-option {% if not filters.color %}active{% endif %}">
+                        <span class="filter-check"></span> Любой
+                    </a>
+                    {% for c in filter_colors %}
+                    {% set qc = dict(q_filter) %}
+                    {% set _ = qc.update({'color': c}) %}
+                    <a href="{{ catalog_url(qc) }}" class="filter-option {% if filters.color == c %}active{% endif %}">
+                        <span class="filter-check"></span> {{ c }}
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Показать -->
+            <div class="filter-section">
+                <div class="filter-title" data-bs-toggle="collapse" data-bs-target="#filterShow" aria-expanded="false">
+                    Показать <span class="chevron">▼</span>
+                </div>
+                <div class="filter-body collapse" id="filterShow">
+                    {% set q_excl = dict(q_filter) %}
+                    {% set _ = q_excl.update({'exclusive': '1'}) if not filters.exclusive else q_excl.pop('exclusive', None) %}
+                    <a href="{{ catalog_url(q_excl) }}" class="filter-option {% if filters.exclusive %}active{% endif %}">
+                        <span class="filter-check"></span> Эксклюзив
+                    </a>
+                    {% set q_hit = dict(q_filter) %}
+                    {% set _ = q_hit.update({'hit': '1'}) if not filters.hit else q_hit.pop('hit', None) %}
+                    <a href="{{ catalog_url(q_hit) }}" class="filter-option {% if filters.hit %}active{% endif %}">
+                        <span class="filter-check"></span> Хит продаж
+                    </a>
+                    {% set q_in = dict(q_filter) %}
+                    {% set _ = q_in.update({'in_stock': '1'}) if not filters.in_stock else q_in.pop('in_stock', None) %}
+                    <a href="{{ catalog_url(q_in) }}" class="filter-option {% if filters.in_stock %}active{% endif %}">
+                        <span class="filter-check"></span> Только в наличии
+                    </a>
+                    {% set q_sale = dict(q_filter) %}
+                    {% set _ = q_sale.update({'on_sale': '1'}) if not filters.on_sale else q_sale.pop('on_sale', None) %}
+                    <a href="{{ catalog_url(q_sale) }}" class="filter-option {% if filters.on_sale %}active{% endif %}">
+                        <span class="filter-check"></span> Со скидкой
+                    </a>
+                </div>
+            </div>
+            
+            <a href="{% if category %}{{ url_for('catalog', category_slug=category.slug) }}{% else %}{{ url_for('catalog') }}{% endif %}" class="btn btn-reset">Сбросить фильтры</a>
+        </div>
+    </div>
+    
+    <!-- Список товаров -->
+    <div class="col-md-9">
+        <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-4">
+            <h1 class="mb-0">{% if category %}{{ category.name }}{% else %}Все товары{% endif %}</h1>
+            <div class="d-flex align-items-center gap-2 catalog-toolbar-actions">
+                <button type="button" class="btn btn-outline-secondary btn-sm" id="catalogShareBtn" title="Копировать ссылку с фильтрами">
+                    <i class="fas fa-share-alt me-1"></i>Поделиться
+                </button>
+                <div class="dropdown">
+                    <button class="btn btn-outline-secondary btn-sm dropdown-toggle" type="button" id="sortDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                        {% if filters.sort == 'price_asc' %}Сначала дешевле
+                        {% elif filters.sort == 'price_desc' %}Сначала дороже
+                        {% elif filters.sort == 'newest' %}Новинки
+                        {% elif filters.sort == 'popular' %}По популярности
+                        {% else %}По умолчанию{% endif %}
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="sortDropdown">
+                        {% for val, label in [('default', 'По умолчанию'), ('price_asc', 'Сначала дешевле'), ('price_desc', 'Сначала дороже'), ('newest', 'Новинки'), ('popular', 'По популярности')] %}
+                        {% set q_sort = dict(q) %}
+                        {% set _ = q_sort.update({'sort': val}) if val != 'default' else q_sort.pop('sort', None) %}
+                        <li><a class="dropdown-item {% if filters.sort == val %}active{% endif %}" href="{{ catalog_url(q_sort) }}">{{ label }}</a></li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                <div class="btn-group view-switcher" role="group">
+                    {% set q_grid = dict(q) %}
+                    {% set _ = q_grid.update({'view': 'grid'}) %}
+                    {% set q_list = dict(q) %}
+                    {% set _ = q_list.update({'view': 'list'}) %}
+                    <a href="{{ catalog_url(q_grid) }}" class="btn btn-outline-secondary btn-sm {% if filters.view == 'grid' %}active{% endif %}" title="Плитка"><i class="fas fa-th-large"></i></a>
+                    <a href="{{ catalog_url(q_list) }}" class="btn btn-outline-secondary btn-sm {% if filters.view == 'list' %}active{% endif %}" title="Список"><i class="fas fa-list"></i></a>
+                </div>
+            </div>
+        </div>
+        {% if category and category.description %}
+        <div class="category-description text-muted mb-4">{{ category.description }}</div>
+        {% endif %}
+        
+        {% if products %}
+        <div class="row {% if filters.view == 'list' %}catalog-list{% endif %}">
+            {% for product in products %}
+            <div class="col-md-4 mb-4">
+                <div class="product-card position-relative">
+                    {% if product.is_hit %}<span class="badge bg-danger position-absolute top-0 start-0 m-2 product-badge-hit">Хит</span>{% endif %}
+                    {% include 'includes/compare_btn.html' %}
+                    {% include 'includes/favorite_btn.html' %}
+                    <a href="{{ product|product_url }}" class="product-card-link text-decoration-none text-dark">
+                        <div class="product-card-img-wrap">
+                            {% set first_img = product.all_images[0] if product.all_images else product.image %}
+                            {% if first_img %}
+                            <img src="{{ url_for('static', filename='images/products/' + first_img) }}" class="img-fluid" alt="{{ product|product_alt }}" loading="lazy">
+                            {% else %}
+                            <img src="https://via.placeholder.com/400" class="img-fluid" alt="{{ product|product_alt }}" loading="lazy">
+                            {% endif %}
+                        </div>
+                        <h5 class="product-title">{{ product.name }}</h5>
+                        {% if product.model %}<div class="product-model small text-muted mb-1">{{ product.model }}</div>{% endif %}
+                        <div class="product-price">
+                            {{ product.price }} ₽
+                            {% if product.old_price %}
+                            <span class="old-price">{{ product.old_price }} ₽</span>
+                            {% endif %}
+                        </div>
+                    </a>
+                    <div class="d-grid gap-2">
+                        <a href="{{ product|product_url }}" class="btn btn-primary">Подробнее</a>
+                        {% include 'includes/add_to_cart_widget.html' %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="alert alert-info">В этой категории пока нет товаров</p>
+        {% endif %}
+        
+        {% if pagination and pagination.pages > 1 %}
+        {% set pagination_args = request.args.to_dict(flat=True) %}
+        {% set _ = pagination_args.pop('page', None) %}
+        <nav aria-label="Пагинация каталога" class="mt-4">
+            <ul class="pagination justify-content-center flex-wrap">
+                <li class="page-item {% if not pagination.has_prev %}disabled{% endif %}">
+                    <a class="page-link" href="{% if pagination.has_prev %}{{ catalog_url(dict(pagination_args, page=pagination.prev_num)) }}{% else %}#{% endif %}">
+                        &laquo; Назад
+                    </a>
+                </li>
+                {% for p in pagination.iter_pages(left_edge=1, right_edge=1, left_current=2, right_current=2) %}
+                {% if p %}
+                <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                    <a class="page-link" href="{% if p != pagination.page %}{{ catalog_url(dict(pagination_args, page=p)) }}{% else %}#{% endif %}">{{ p }}</a>
+                </li>
+                {% else %}
+                <li class="page-item disabled"><span class="page-link">…</span></li>
+                {% endif %}
+                {% endfor %}
+                <li class="page-item {% if not pagination.has_next %}disabled{% endif %}">
+                    <a class="page-link" href="{% if pagination.has_next %}{{ catalog_url(dict(pagination_args, page=pagination.next_num)) }}{% else %}#{% endif %}">
+                        Вперёд &raquo;
+                    </a>
+                </li>
+            </ul>
+            <p class="text-center text-muted small">Страница {{ pagination.page }} из {{ pagination.pages }} (всего {{ pagination.total }} товаров)</p>
+        </nav>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    var shareBtn = document.getElementById('catalogShareBtn');
+    if (shareBtn) {
+        shareBtn.addEventListener('click', function() {
+            var url = window.location.href;
+            if (navigator.clipboard && navigator.clipboard.writeText) {
+                navigator.clipboard.writeText(url).then(function() {
+                    var orig = shareBtn.innerHTML;
+                    shareBtn.innerHTML = '<i class="fas fa-check me-1"></i>Скопировано';
+                    shareBtn.classList.add('btn-success');
+                    shareBtn.classList.remove('btn-outline-secondary');
+                    setTimeout(function() {
+                        shareBtn.innerHTML = orig;
+                        shareBtn.classList.remove('btn-success');
+                        shareBtn.classList.add('btn-outline-secondary');
+                    }, 1500);
+                });
+            } else {
+                var inp = document.createElement('input');
+                inp.value = url;
+                document.body.appendChild(inp);
+                inp.select();
+                document.execCommand('copy');
+                document.body.removeChild(inp);
+                shareBtn.innerHTML = '<i class="fas fa-check me-1"></i>Скопировано';
+                setTimeout(function() { shareBtn.innerHTML = '<i class="fas fa-share-alt me-1"></i>Поделиться'; }, 1500);
+            }
+        });
+    }
+})();
+</script>
+<script>
+(function() {
+    var priceMin = {{ price_range_min }};
+    var priceMax = {{ price_range_max }};
+    var baseUrl = "{% if category %}{{ url_for('catalog', category_slug=category.slug) }}{% else %}{{ url_for('catalog') }}{% endif %}";
+    var params = {{ request.args.to_dict() | tojson }};
+    
+    function buildUrl(pMin, pMax) {
+        var p = Object.assign({}, params);
+        if (pMin != null && pMin > priceMin) p.price_min = Math.round(pMin);
+        else delete p.price_min;
+        if (pMax != null && pMax < priceMax) p.price_max = Math.round(pMax);
+        else delete p.price_max;
+        var qs = Object.keys(p).map(function(k) { return encodeURIComponent(k) + '=' + encodeURIComponent(p[k]); }).join('&');
+        return baseUrl + (qs ? '?' + qs : '');
+    }
+    
+    var minInput = document.getElementById('priceMinInput');
+    var maxInput = document.getElementById('priceMaxInput');
+    var minSlider = document.getElementById('priceMinSlider');
+    var maxSlider = document.getElementById('priceMaxSlider');
+    var applyBtn = document.getElementById('priceApplyBtn');
+    
+    if (minInput && maxInput && minSlider && maxSlider && applyBtn) {
+        function syncFromSliders() {
+            var vMin = parseInt(minSlider.value, 10);
+            var vMax = parseInt(maxSlider.value, 10);
+            if (vMin > vMax) { minSlider.value = vMax; maxSlider.value = vMin; vMin = vMax; vMax = parseInt(maxSlider.value, 10); }
+            minInput.value = vMin;
+            maxInput.value = vMax;
+        }
+        function syncFromInputs() {
+            var vMin = Math.max(priceMin, Math.min(priceMax, parseInt(minInput.value, 10) || priceMin));
+            var vMax = Math.max(priceMin, Math.min(priceMax, parseInt(maxInput.value, 10) || priceMax));
+            if (vMin > vMax) { var t = vMin; vMin = vMax; vMax = t; }
+            minSlider.value = vMin;
+            maxSlider.value = vMax;
+            minInput.value = vMin;
+            maxInput.value = vMax;
+        }
+        minSlider.addEventListener('input', function() {
+            if (parseInt(minSlider.value, 10) > parseInt(maxSlider.value, 10)) maxSlider.value = minSlider.value;
+            syncFromSliders();
+        });
+        maxSlider.addEventListener('input', function() {
+            if (parseInt(maxSlider.value, 10) < parseInt(minSlider.value, 10)) minSlider.value = maxSlider.value;
+            syncFromSliders();
+        });
+        minInput.addEventListener('change', syncFromInputs);
+        maxInput.addEventListener('change', syncFromInputs);
+        applyBtn.addEventListener('click', function() {
+            syncFromInputs();
+            var vMin = parseInt(minInput.value, 10);
+            var vMax = parseInt(maxInput.value, 10);
+            location.href = buildUrl(vMin, vMax);
+        });
+    }
+})();
+</script>
+{% endblock %}

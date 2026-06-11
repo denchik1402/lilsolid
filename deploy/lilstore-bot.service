@@ -1,0 +1,16 @@
+[Unit]
+Description=LIL STORE Telegram Bot
+After=network.target lilstore.service
+
+[Service]
+Type=simple
+User=lilstore
+Group=lilstore
+WorkingDirectory=/home/lilstore/my_shop
+Environment="PATH=/home/lilstore/my_shop/venv/bin"
+ExecStart=/home/lilstore/my_shop/venv/bin/python TG/telegram_bot.py
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=multi-user.target

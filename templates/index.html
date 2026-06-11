@@ -1,0 +1,708 @@
+{% extends "base.html" %}
+
+{% block title %}LIL STORE — IQOS и стики TEREA. Оригинальная продукция{% endblock %}
+{% block meta_description %}LIL STORE — магазин оригинальных устройств IQOS и стиков TEREA. Бронь на сайте, доставка 1–2 дня по России. Работаем с 2020 года.{% endblock %}
+{% block meta_keywords %}IQOS, TEREA, ILUMA, стики, нагревательные устройства, купить IQOS, доставка IQOS{% endblock %}
+{% block og_title %}LIL STORE — IQOS и стики TEREA{% endblock %}
+{% block og_description %}Оригинальные устройства IQOS и стики TEREA. Бронь на сайте, доставка 1–2 дня.{% endblock %}
+{% block schema_ld %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Organization",
+  "name": "LIL STORE",
+  "url": "{{ request.url_root.rstrip('/') }}",
+  "description": "Магазин оригинальных устройств IQOS и стиков TEREA. Бронь на сайте, доставка 1–2 дня.",
+  "telephone": "+7 (985) 490-48-80",
+  "sameAs": ["https://t.me/iluma_prime_bot"],
+  "address": {"@type": "PostalAddress", "addressCountry": "RU"}
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": "LIL STORE",
+  "image": "{{ request.url_root.rstrip('/') }}{{ url_for('static', filename='LOGO3.png') }}",
+  "telephone": "+7 (985) 490-48-80",
+  "url": "{{ request.url_root.rstrip('/') }}",
+  "priceRange": "$$",
+  "openingHoursSpecification": [
+    {"@type": "OpeningHoursSpecification", "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday"], "opens": "09:00", "closes": "21:00"},
+    {"@type": "OpeningHoursSpecification", "dayOfWeek": ["Saturday","Sunday"], "opens": "10:00", "closes": "20:00"}
+  ]
+}
+</script>
+{% endblock %}
+
+{% block extra_css %}
+<style>
+.carousel-nav-wrapper { position: relative; padding: 0 5rem; overflow: visible; }
+/* Карусель: видно 4 товара / 3 отзыва, скролл по 1, бесконечный цикл, только целые карточки */
+.psc-wrap { position: relative; overflow: visible; }
+.psc-viewport {
+    width: 100%; min-width: 0; overflow: hidden;
+    container-type: inline-size;
+    container-name: psc;
+}
+.psc-viewport.psc-reviews-viewport { container-name: rsc; }
+.psc-track { display: flex; gap: 0.75rem; padding: 0.5rem 0; transition: transform 0.3s ease-out; width: max-content; will-change: transform; }
+/* Карточки ровно 4 в ряд — целые, без обрезки */
+.psc-item { flex: 0 0 calc((100cqw - 3 * 0.75rem) / 4); min-width: 0; flex-shrink: 0; }
+@container psc (max-width: 900px) { .psc-item { flex: 0 0 calc((100cqw - 2 * 0.75rem) / 3); } }
+@container psc (max-width: 600px) { .psc-item { flex: 0 0 calc((100cqw - 1 * 0.75rem) / 2); } }
+/* На узких экранах — 2 карточки, компактно (не 1 на всю ширину) */
+@container psc (max-width: 400px) { .psc-item { flex: 0 0 calc((100cqw - 0.75rem) / 2); } }
+/* Стрелки: заливка и свечение при наведении */
+.psc-prev, .psc-next {
+    position: absolute; top: 50%; transform: translateY(-50%); width: 56px; height: 56px;
+    border: 2px solid rgba(0,0,0,0.2); border-radius: 50%; background: transparent;
+    display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 20;
+    transition: background 0.25s, border-color 0.25s, box-shadow 0.25s;
+    touch-action: manipulation; -webkit-tap-highlight-color: transparent; user-select: none;
+}
+.psc-prev:hover, .psc-next:hover {
+    background: linear-gradient(135deg, rgba(13,110,253,0.2) 0%, rgba(13,110,253,0.35) 100%);
+    border-color: #0d6efd;
+    box-shadow: 0 0 20px rgba(13,110,253,0.4);
+}
+.psc-prev .carousel-control-prev-icon, .psc-next .carousel-control-next-icon {
+    background-size: 1.5rem; filter: brightness(0); opacity: 0.75;
+    transition: filter 0.25s, opacity 0.25s;
+}
+.psc-prev:hover .carousel-control-prev-icon, .psc-next:hover .carousel-control-next-icon {
+    filter: brightness(0) invert(1); opacity: 1;
+}
+.psc-prev:disabled, .psc-next:disabled {
+    background: rgba(0,0,0,0.06); border-color: rgba(0,0,0,0.15);
+    cursor: not-allowed; pointer-events: none;
+}
+.psc-prev { left: -4rem; }
+.psc-next { right: -4rem; }
+.psc-prev, .psc-next { pointer-events: auto; }
+/* Область viewport + стрелки — стрелки центрируются по высоте карточек */
+.psc-arrows-area { position: relative; }
+/* Индикаторы карусели товаров (как у promo-mini) */
+.psc-indicators {
+    display: flex; justify-content: center; gap: 8px; margin-top: 1rem; padding-bottom: 0.5rem;
+}
+.psc-reviews .psc-indicators { margin-top: 0.35rem; padding-bottom: 0.25rem; }
+.reviews-telegram-link { text-align: left; }
+.reviews-telegram-link a { color: inherit; text-decoration: underline; }
+.reviews-telegram-link a:hover { opacity: 0.9; }
+[data-theme="dark"] .reviews-telegram-link { color: var(--text-muted); }
+[data-theme="dark"] .reviews-telegram-link a { color: var(--text-muted); }
+[data-theme="dark"] .reviews-telegram-link a:hover { color: var(--text); }
+.psc-indicators button {
+    width: 8px; height: 8px; border-radius: 50%; border: none; padding: 0;
+    background-color: rgba(0,0,0,0.25); cursor: pointer; transition: background 0.2s;
+}
+.psc-indicators button.active { background-color: #0d6efd; }
+.psc-indicators button:hover:not(.active) { background-color: rgba(0,0,0,0.4); }
+[data-theme="dark"] .psc-indicators button { background-color: rgba(255,255,255,0.35); }
+[data-theme="dark"] .psc-indicators button.active { background-color: #6ea8fe; }
+[data-theme="dark"] .psc-indicators button:hover:not(.active) { background-color: rgba(255,255,255,0.5); }
+/* Reviews: видно 3 отзыва, целые карточки между стрелками */
+.rsc-track { padding: 1rem 0; }
+.psc-reviews-viewport { container-name: rsc; }
+.rsc-item { flex: 0 0 calc((100cqw - 2 * 1rem) / 3); min-width: 0; flex-shrink: 0; max-width: 100%; }
+@container rsc (max-width: 768px) { .rsc-item { flex: 0 0 100cqw; width: 100cqw; min-width: 100cqw; max-width: 100cqw; } }
+.product-carousel .carousel-control-prev,
+.product-carousel .carousel-control-next,
+.reviews-carousel .carousel-control-prev,
+.reviews-carousel .carousel-control-next {
+    width: 56px; height: 56px; top: 50%; transform: translateY(-50%);
+    border: 2px solid rgba(0,0,0,0.2); border-radius: 50%;
+    background: transparent !important; opacity: 1;
+    transition: background 0.2s, border-color 0.2s;
+}
+.product-carousel .carousel-control-prev:hover,
+.product-carousel .carousel-control-next:hover,
+.reviews-carousel .carousel-control-prev:hover,
+.reviews-carousel .carousel-control-next:hover {
+    background: rgba(0,0,0,0.05) !important; border-color: rgba(0,0,0,0.4);
+}
+.product-carousel .carousel-control-prev { left: -4rem; }
+.product-carousel .carousel-control-next { right: -4rem; }
+.reviews-carousel .carousel-control-prev { left: -4rem; }
+.reviews-carousel .carousel-control-next { right: -4rem; }
+.product-carousel .carousel-control-prev .carousel-control-prev-icon,
+.product-carousel .carousel-control-next .carousel-control-next-icon,
+.reviews-carousel .carousel-control-prev .carousel-control-prev-icon,
+.reviews-carousel .carousel-control-next .carousel-control-next-icon {
+    background-size: 1.5rem; width: 1.5rem; height: 1.5rem;
+    filter: brightness(0); opacity: 0.7;
+}
+.product-carousel .carousel-control-prev:hover .carousel-control-prev-icon,
+.product-carousel .carousel-control-next:hover .carousel-control-next-icon,
+.reviews-carousel .carousel-control-prev:hover .carousel-control-prev-icon,
+.reviews-carousel .carousel-control-next:hover .carousel-control-next-icon {
+    opacity: 1;
+}
+.reviews-carousel .carousel-inner { padding: 1rem 0; overflow: hidden; transition: transform 0.5s ease-in-out; }
+.reviews-carousel .carousel-item .row { align-items: stretch; justify-content: center; }
+.reviews-carousel .carousel-item .col-md-4 { display: flex; max-width: 380px; }
+.reviews-carousel .review-card {
+    flex: 1; min-height: 220px; display: flex; flex-direction: column;
+    border-radius: 16px; padding: 1.5rem 1.75rem; text-align: center;
+    background: var(--bg-card); border: 1px solid var(--border); box-shadow: 0 4px 20px var(--shadow);
+    transition: box-shadow 0.3s, transform 0.2s;
+}
+.reviews-carousel .review-card:hover { box-shadow: 0 8px 30px rgba(0,0,0,0.1); }
+.reviews-carousel .review-card .rating { font-size: 1.1rem; margin-bottom: 0.75rem; }
+.reviews-carousel .review-card p {
+    flex: 1; overflow: hidden; display: -webkit-box; -webkit-line-clamp: 4;
+    -webkit-box-orient: vertical; margin-bottom: 1rem; font-size: 0.95rem; line-height: 1.6; color: var(--text);
+}
+.reviews-carousel .review-card small { font-size: 0.85rem; color: var(--text-muted); }
+/* Сетка: левый 3:2, правые 2:1. Строка-прослойка 1rem между правыми блоками, нижние края выровнены. */
+.premium-blocks {
+    display: grid; column-gap: 1rem; margin-bottom: 2.5rem;
+    grid-template-columns: 3fr 2fr;
+    grid-template-rows: 1fr 1rem 1fr;
+    align-items: stretch;
+}
+.premium-blocks .block-left { grid-row: 1 / -1; aspect-ratio: 3/2; min-height: 0; width: 100%; align-self: stretch; }
+.premium-blocks .block:nth-child(2) { grid-row: 1; }
+.premium-blocks .block:nth-child(3) { grid-row: 3; }
+.premium-blocks .block:not(.block-left) { aspect-ratio: 2/1; min-height: 0; width: 100%; }
+.premium-blocks .block {
+    border-radius: 12px; overflow: hidden; position: relative; padding: 1.5rem;
+    display: flex; flex-direction: column; justify-content: flex-end; background-color: var(--premium-block-bg);
+}
+.premium-blocks .block-img-container {
+    position: absolute; inset: 0; z-index: 0; overflow: hidden;
+}
+.premium-blocks .block-img-container img {
+    width: 100%; height: 100%; object-fit: cover; object-position: center; display: block;
+    min-width: 0; min-height: 0; max-width: 100%; max-height: 100%;
+}
+.premium-blocks .block::before {
+    content: ''; position: absolute; inset: 0; z-index: 1;
+    background: linear-gradient(to top, rgba(0,0,0,0.75) 0%, rgba(0,0,0,0.3) 50%, transparent 100%);
+}
+.premium-blocks .block h4, .premium-blocks .block p, .premium-blocks .block a { position: relative; z-index: 2; color: white; margin: 0; text-shadow: 0 1px 3px rgba(0,0,0,0.5); }
+.premium-blocks .block h4 { font-weight: 700; margin-bottom: 0.5rem; }
+.premium-blocks .block .btn {
+    background: #fff !important; color: #212529 !important; border: 2px solid rgba(0,0,0,0.2);
+}
+.premium-blocks .block .btn:hover {
+    background: #f8f9fa !important; color: #212529 !important; border-color: rgba(0,0,0,0.3);
+}
+[data-theme="dark"] .premium-blocks .block .btn {
+    background: #212529 !important; color: white !important; border-color: rgba(255,255,255,0.9);
+}
+[data-theme="dark"] .premium-blocks .block .btn:hover {
+    background: #343a40 !important; color: white !important; border-color: white;
+}
+@media (max-width: 768px) {
+    .premium-blocks { grid-template-columns: 1fr; grid-template-rows: auto auto auto; }
+    .premium-blocks .block-left { grid-row: auto; }
+    .reviews-carousel .carousel-item .col-md-4 { max-width: 100%; }
+    .carousel-nav-wrapper { padding: 0 2.5rem; }
+}
+@media (max-width: 576px) {
+    /* Стрелки в padding-зоне: обёртка выходит за контейнер, стрелки не перекрывают карточки */
+    .carousel-nav-wrapper { margin-left: -0.75rem; margin-right: -0.75rem; padding: 0 3.5rem; overflow: visible; }
+    /* Отзывы: карточка = 100% viewport, полностью между стрелками */
+    .carousel-nav-wrapper-reviews { padding: 0 4rem !important; }
+    .psc-reviews .rsc-item { flex: 0 0 100cqw !important; width: 100cqw !important; min-width: 100cqw !important; max-width: 100cqw !important; box-sizing: border-box; }
+    .psc-reviews .review-card { box-sizing: border-box; width: 100%; max-width: 100%; overflow: hidden; }
+    .psc-reviews .review-card { min-height: 180px; padding: 1rem 1.25rem; }
+    .psc-reviews .review-card p { -webkit-line-clamp: 3; }
+    .psc-viewport { overflow: hidden; }
+    .psc-prev { left: -44px; width: 44px; height: 44px; min-width: 44px; }
+    .psc-next { right: -44px; width: 44px; height: 44px; min-width: 44px; }
+    .psc-prev .carousel-control-prev-icon, .psc-next .carousel-control-next-icon { background-size: 1.2rem; }
+    .psc-track { gap: 0.5rem; }
+    h2.mb-4 { font-size: 1.35rem; margin-bottom: 1rem !important; }
+    /* Фикс для мобильных: компактные карточки, 2 в ряд */
+    .psc-item { flex: 0 0 155px !important; min-width: 155px; width: 155px; }
+    .psc-item .product-card { padding: 8px; }
+    .psc-item .product-card-img-wrap { margin-bottom: 0.4rem; aspect-ratio: 1; min-height: 0 !important; }
+    .psc-item .product-card .product-title { font-size: 0.85rem; min-height: 2.2em; }
+    .psc-item .product-card .product-price { font-size: 1rem; }
+    .psc-item .product-card .btn-sm { padding: 0.25rem 0.4rem; font-size: 0.75rem; }
+}
+</style>
+{% endblock %}
+
+{% block content %}
+<!-- Карусель баннеров -->
+{% if promo_slides %}
+<div class="promo-carousel-wrapper mb-4">
+    <div id="promoCarousel" class="carousel slide carousel-fade promo-carousel" data-bs-ride="carousel" data-bs-interval="5000">
+        <div class="carousel-indicators promo-carousel-indicators">
+            {% for slide in promo_slides %}
+            <button type="button" data-bs-target="#promoCarousel" data-bs-slide-to="{{ loop.index0 }}" {% if loop.first %}class="active"{% endif %}></button>
+            {% endfor %}
+        </div>
+        <div class="carousel-inner rounded-3 overflow-hidden shadow">
+            {% for slide in promo_slides %}
+            {% if slide.__class__.__name__ == 'Banner' %}
+            {% set slide_img = slide.image %}
+            {% set slide_link = url_for('banner_click', banner_id=slide.id) %}
+            {% set slide_title = slide.title %}
+            {% set slide_subtitle = slide.subtitle or '' %}
+            {% set slide_btn = slide.button_text or 'Купить сейчас' %}
+            {% set img_path = 'images/' if slide.image.startswith('products/') else 'images/banners/' %}
+            {% set slide_bg = '' %}
+            {% set slide_badge = slide.badge_type or ('new' if slide.product_id else '') %}
+            {% set slide_product = slide.product if slide.product_id else none %}
+            {% else %}
+            {% set slide_img = slide.all_images[0] if slide.all_images else slide.image %}
+            {% set slide_link = slide|product_url %}
+            {% set slide_title = slide.name %}
+            {% set slide_subtitle = '' %}
+            {% set slide_btn = 'Купить сейчас' %}
+            {% set img_path = 'images/products/' %}
+            {% set slide_bg = '' %}
+            {% set slide_badge = 'hit' if slide.id in hit_product_ids else 'promo' %}
+            {% set slide_product = slide %}
+            {% endif %}
+            <div class="carousel-item {% if loop.first %}active{% endif %}">
+                <div class="promo-slide-inner {{ slide_bg }}{% if not slide_img and slide_badge == 'telegram' %} promo-slide-telegram-only{% endif %}">
+                    {% if slide_img %}
+                    <div class="promo-slide-bg" style="background-image: url('{{ url_for('static', filename=img_path + slide_img) }}');" role="img" aria-label="{{ slide_title }}"></div>
+                    <a href="{{ slide_link }}" class="promo-slide-bg-link" aria-label="{{ slide_title }}"></a>
+                    {% elif slide_badge != 'telegram' %}
+                    <div class="promo-slide-bg promo-slide-bg-placeholder">
+                        <i class="fab fa-telegram fa-5x opacity-50 me-3"></i>
+                        <span>{{ slide_title }}</span>
+                    </div>
+                    <a href="{{ slide_link }}" class="promo-slide-bg-link promo-slide-bg-link-placeholder" aria-label="{{ slide_title }}"></a>
+                    {% endif %}
+                    {% if slide_badge %}<span class="promo-slide-badge promo-badge-{{ slide_badge }}">{{ {'telegram':'Telegram','promo':'Акция','bonus':'Бонус','hit':'Хит','new':'Новинка'}[slide_badge] }}</span>{% endif %}
+                    <div class="promo-slide-caption-wrap">
+                        <h2>{{ slide_title }}</h2>
+                        {% if slide_product %}
+                        <p class="promo-price mb-0">
+                            {{ slide_product.price|format_price }} ₽
+                            {% if slide_product.old_price and slide_product.old_price > 0 %}
+                            <span class="promo-old-price">{{ slide_product.old_price|format_price }} ₽</span>
+                            {% endif %}
+                        </p>
+                        {% elif slide_subtitle %}
+                        <p class="promo-price mb-0">{{ slide_subtitle|replace('\n', '<br>')|safe }}</p>
+                        {% endif %}
+                        <a href="{{ slide_link }}" class="btn promo-slide-btn btn-lg">{{ slide_btn }}</a>
+                    </div>
+                    {% if not slide_img and slide_badge == 'telegram' %}<a href="{{ slide_link }}" class="promo-slide-bg-link" aria-label="{{ slide_title }}"></a>{% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="promo-carousel-nav">
+        <button class="promo-nav-btn" type="button" data-bs-target="#promoCarousel" data-bs-slide="prev" aria-label="Назад"><span class="carousel-control-prev-icon"></span></button>
+        <button class="promo-nav-btn" type="button" data-bs-target="#promoCarousel" data-bs-slide="next" aria-label="Вперёд"><span class="carousel-control-next-icon"></span></button>
+    </div>
+</div>
+<div class="d-block d-md-none text-center my-3">
+    <a href="{{ url_for('catalog') }}" class="btn btn-primary btn-lg w-100 catalog-entry-btn">В каталог</a>
+</div>
+{% endif %}
+
+<!-- Преимущества (доставка, оригинал, скидка за отзыв) -->
+<div class="row text-center my-4 py-3">
+    <div class="col-md-4 mb-3 mb-md-0">
+        <div class="p-3 rounded-3 bg-white shadow-sm h-100">
+            <i class="fas fa-truck fa-3x text-primary mb-3"></i>
+            <h5 class="fw-bold">Быстрая доставка</h5>
+            <p class="text-muted mb-0">Отправка в день заказа по всей России</p>
+        </div>
+    </div>
+    <div class="col-md-4 mb-3 mb-md-0">
+        <div class="p-3 rounded-3 bg-white shadow-sm h-100">
+            <i class="fas fa-shield-alt fa-3x text-success mb-3"></i>
+            <h5 class="fw-bold">100% оригинал</h5>
+            <p class="text-muted mb-0">Гарантия подлинности всех товаров</p>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="p-3 rounded-3 bg-white shadow-sm h-100">
+            <i class="fas fa-gift fa-3x text-warning mb-3"></i>
+            <h5 class="fw-bold">Скидка 500 ₽</h5>
+            <p class="text-muted mb-0">За честный отзыв о покупке</p>
+        </div>
+    </div>
+</div>
+
+<!-- Хит продаж — карусель (скролл по 1 карточке) -->
+{% if hit_products %}
+<h2 class="mb-4 fw-bold">Хит продаж</h2>
+<div class="carousel-nav-wrapper mb-5">
+<div class="psc-wrap" id="hitCarousel">
+    <div class="psc-viewport">
+    <div class="psc-track">
+        {% for product in hit_products %}
+        <div class="psc-item">
+            <div class="product-card position-relative h-100">
+                <span class="badge bg-danger position-absolute top-0 start-0 m-2 product-badge-hit">Хит</span>
+                {% include 'includes/favorite_btn.html' %}
+                <a href="{{ product|product_url }}" class="product-card-link text-decoration-none text-dark">
+                    <div class="product-card-img-wrap">
+                        {% set first_img = product.all_images[0] if product.all_images else product.image %}
+                        {% if first_img %}
+                        <img src="{{ url_for('static', filename='images/products/' + first_img) }}" class="img-fluid" alt="{{ product|product_alt }}" loading="lazy">
+                        {% else %}
+                        <img src="https://via.placeholder.com/400" class="img-fluid" alt="{{ product|product_alt }}" loading="lazy">
+                        {% endif %}
+                    </div>
+                    <h5 class="product-title">{{ product.name }}</h5>
+                    <div class="product-price mb-2">
+                        {{ product.price|format_price }} ₽
+                        {% if product.old_price %}
+                        <span class="old-price">{{ product.old_price|format_price }} ₽</span>
+                        {% endif %}
+                    </div>
+                </a>
+                <div class="d-grid gap-2">
+                    <a href="{{ product|product_url }}" class="btn btn-outline-primary btn-sm">Подробнее</a>
+                    {% include 'includes/add_to_cart_widget.html' %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    </div>
+    {% if hit_products|length > 1 %}
+    <button type="button" class="psc-prev" data-psc="hitCarousel" aria-label="Назад"><span class="carousel-control-prev-icon"></span></button>
+    <button type="button" class="psc-next" data-psc="hitCarousel" aria-label="Вперёд"><span class="carousel-control-next-icon"></span></button>
+    <div class="psc-indicators" id="hitCarouselIndicators"></div>
+    {% endif %}
+</div>
+</div>
+{% endif %}
+
+<!-- Новинки — карусель (скролл по 1 карточке) -->
+{% if new_products %}
+<h2 class="mb-4 fw-bold">Новинки</h2>
+<div class="carousel-nav-wrapper mb-5">
+<div class="psc-wrap" id="newCarousel">
+    <div class="psc-viewport">
+    <div class="psc-track">
+        {% for product in new_products %}
+        <div class="psc-item">
+            <div class="product-card position-relative h-100">
+                {% include 'includes/compare_btn.html' %}
+                {% include 'includes/favorite_btn.html' %}
+                <a href="{{ product|product_url }}" class="product-card-link text-decoration-none text-dark">
+                    <div class="product-card-img-wrap">
+                        {% set first_img = product.all_images[0] if product.all_images else product.image %}
+                        {% if first_img %}
+                        <img src="{{ url_for('static', filename='images/products/' + first_img) }}" class="img-fluid" alt="{{ product|product_alt }}" loading="lazy">
+                        {% else %}
+                        <img src="https://via.placeholder.com/400" class="img-fluid" alt="{{ product|product_alt }}" loading="lazy">
+                        {% endif %}
+                    </div>
+                    <h5 class="product-title">{{ product.name }}</h5>
+                    <div class="product-price mb-2">{{ product.price|format_price }} ₽</div>
+                </a>
+                <div class="d-grid gap-2">
+                    <a href="{{ product|product_url }}" class="btn btn-outline-primary btn-sm">Подробнее</a>
+                    {% include 'includes/add_to_cart_widget.html' %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    </div>
+    {% if new_products|length > 1 %}
+    <button type="button" class="psc-prev" data-psc="newCarousel" aria-label="Назад"><span class="carousel-control-prev-icon"></span></button>
+    <button type="button" class="psc-next" data-psc="newCarousel" aria-label="Вперёд"><span class="carousel-control-next-icon"></span></button>
+    <div class="psc-indicators" id="newCarouselIndicators"></div>
+    {% endif %}
+</div>
+</div>
+{% endif %}
+
+<!-- Премиальные устройства по доступным ценам -->
+{% set _bg = (hit_products or new_products or []) if not home_blocks else [] %}
+{% set _img1 = _bg[0].all_images[0] if _bg and _bg[0].all_images else (_bg[0].image if _bg else '') %}
+{% set _img2 = _bg[1].all_images[0] if _bg|length > 1 and _bg[1].all_images else (_bg[1].image if _bg|length > 1 else '') %}
+{% set _img3 = _bg[2].all_images[0] if _bg|length > 2 and _bg[2].all_images else (_bg[2].image if _bg|length > 2 else '') %}
+<div class="premium-blocks-wrapper mb-5">
+    <h2 class="mb-4 fw-bold">Премиальные устройства по доступным ценам</h2>
+    <div class="premium-blocks">
+        {% if home_blocks %}
+        {% for blk in home_blocks %}
+        <div class="block {% if blk.position == 1 %}block-left{% endif %}">
+            <div class="block-img-container">
+                <img src="{{ url_for('static', filename='images/banners/' + blk.image) }}" alt="{{ blk.title }}" loading="lazy">
+            </div>
+            <h4>{{ blk.title }}</h4>
+            {% if blk.description %}<p>{{ blk.description }}</p>{% endif %}
+            {% if blk.button_text and blk.button_url %}<a href="{{ blk.button_url }}" class="btn btn-light btn-sm mt-2">{{ blk.button_text }}</a>{% endif %}
+        </div>
+        {% endfor %}
+        {% else %}
+        <div class="block block-left">
+            <div class="block-img-container">
+                <img src="{% if _img1 %}{{ url_for('static', filename='images/products/' + _img1) }}{% else %}https://via.placeholder.com/600x400/1a1a2e/fff?text=IQOS{% endif %}" alt="{{ _bg[0].name if _bg and _bg|length > 0 else 'О нашем магазине' }}" loading="lazy">
+            </div>
+            <h4>О нашем магазине</h4>
+            <p>Мы радуем наших покупателей качественной оригинальной продукцией и приятным сервисом более 5 лет и продолжаем это делать с огромным удовольствием</p>
+        </div>
+        <div class="block">
+            <div class="block-img-container">
+                <img src="{% if _img2 %}{{ url_for('static', filename='images/products/' + _img2) }}{% else %}https://via.placeholder.com/400x200/16213e/fff?text=IQOS{% endif %}" alt="{{ _bg[1].name if _bg and _bg|length > 1 else 'Наша миссия' }}" loading="lazy">
+            </div>
+            <h4>Наша миссия</h4>
+            <p>Предоставить нашим клиентам лучший опыт покупки</p>
+        </div>
+        <div class="block">
+            <div class="block-img-container">
+                <img src="{% if _img3 %}{{ url_for('static', filename='images/products/' + _img3) }}{% else %}https://via.placeholder.com/400x200/0f3460/fff?text=IQOS{% endif %}" alt="{{ _bg[2].name if _bg and _bg|length > 2 else 'Наша цель' }}" loading="lazy">
+            </div>
+            <h4>Наша цель</h4>
+            <p>Стать вашим надёжным партнёром и проводником</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<!-- Почему нам доверяют — карусель (скролл по 1 карточке) -->
+<h2 class="mb-4 mt-5 fw-bold">Почему нам доверяют</h2>
+{% if recent_reviews %}
+<div class="carousel-nav-wrapper carousel-nav-wrapper-reviews mb-5">
+<div class="psc-wrap psc-reviews" id="reviewsCarousel">
+    <div class="psc-arrows-area">
+        <div class="psc-viewport psc-reviews-viewport">
+        <div class="psc-track rsc-track">
+            {% for review in recent_reviews %}
+            <div class="rsc-item">
+                <div class="review-card">
+                    <i class="fas fa-quote-left text-primary opacity-25 mb-2" style="font-size: 1.5rem;"></i>
+                    <div class="rating">
+                        {% for i in range(review.rating) %}★{% endfor %}
+                        {% for i in range(5 - review.rating) %}☆{% endfor %}
+                    </div>
+                    <p class="mt-2">{{ review.text }}</p>
+                    <small class="text-muted">
+                        {{ review.customer_name }} • {{ review.created_at.strftime('%d.%m.%Y') }}
+                    </small>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        </div>
+        {% if recent_reviews|length > 1 %}
+        <button type="button" class="psc-prev" data-psc="reviewsCarousel" aria-label="Назад"><span class="carousel-control-prev-icon"></span></button>
+        <button type="button" class="psc-next" data-psc="reviewsCarousel" aria-label="Вперёд"><span class="carousel-control-next-icon"></span></button>
+        {% endif %}
+    </div>
+    {% if recent_reviews|length > 1 %}
+    <div class="psc-indicators" id="reviewsCarouselIndicators"></div>
+    {% endif %}
+    <div class="reviews-telegram-link mt-2 small text-muted">
+        Больше отзывов в телеграм боте: <a href="{{ telegram_bot_url or 'https://t.me/iluma_prime_bot' }}" target="_blank" rel="noopener">@iluma_prime_bot</a>
+    </div>
+</div>
+</div>
+{% endif %}
+
+{% if blog_posts %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/cyber-blog-home.css') }}?v=1">
+<section class="cyber-blog-section" aria-label="Полезные статьи">
+    <header class="cyber-blog-header">
+        <div>
+            <span class="cyber-blog-label">Data stream</span>
+            <h2 class="cyber-blog-title">Полезные <span>статьи</span></h2>
+        </div>
+        <a href="{{ url_for('blog_index') }}" class="cyber-blog-all">Все статьи</a>
+    </header>
+    <div class="cyber-blog-grid">
+        {% for post in blog_posts %}
+        {% include 'includes/blog_card_cyber.html' %}
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script>
+(function() {
+    var carousels = {};
+    function initScrollCarousel(id) {
+        var wrap = document.getElementById(id);
+        if (!wrap) return;
+        var viewport = wrap.querySelector('.psc-viewport');
+        var track = wrap.querySelector('.psc-track');
+        var prevBtn = wrap.querySelector('.psc-prev');
+        var nextBtn = wrap.querySelector('.psc-next');
+        var itemClass = track && track.classList.contains('rsc-track') ? 'rsc-item' : 'psc-item';
+        var items = track ? track.querySelectorAll('.' + itemClass) : [];
+        var originalCount = items.length;
+        if (originalCount < 2) return;
+        var gap = 16;
+        var loop = true;
+        var isTransitioning = false;
+
+        function getScrollStep() {
+            if (items.length === 0) return 0;
+            var style = getComputedStyle(track);
+            var gapVal = parseFloat(style.gap) || gap;
+            return items[0].offsetWidth + gapVal;
+        }
+        function getVisibleCount() {
+            var w = (viewport || wrap).offsetWidth;
+            var step = getScrollStep();
+            return Math.max(1, Math.min(items.length - 1, Math.floor((w + gap) / step)));
+        }
+        function getMaxIndex() {
+            return Math.max(0, items.length - getVisibleCount());
+        }
+
+        var visibleCount = getVisibleCount();
+        for (var i = 0; i < visibleCount; i++) {
+            var clone = items[i].cloneNode(true);
+            clone.classList.add('psc-clone');
+            track.appendChild(clone);
+        }
+        items = track.querySelectorAll('.' + itemClass);
+        var startPrepend = Math.max(0, originalCount - visibleCount);
+        for (var j = originalCount - 1; j >= startPrepend; j--) {
+            var c = items[j].cloneNode(true);
+            c.classList.add('psc-clone');
+            track.insertBefore(c, track.firstChild);
+        }
+        items = track.querySelectorAll('.' + itemClass);
+        var index = visibleCount;
+
+        function update(noTransition) {
+            var step = getScrollStep();
+            var offset = index * step;
+            if (noTransition) {
+                track.style.transition = 'none';
+            }
+            track.style.transform = 'translateX(-' + offset + 'px)';
+            if (noTransition) {
+                track.offsetHeight;
+                track.style.transition = '';
+            }
+        }
+        function onTransitionEnd(e) {
+            if (!isTransitioning || (e && e.propertyName !== 'transform')) return;
+            isTransitioning = false;
+            if (index >= originalCount + visibleCount) {
+                index = visibleCount;
+                update(true);
+            }
+        }
+        track.addEventListener('transitionend', onTransitionEnd);
+
+        function getLogicalPage() {
+            var maxPage = Math.max(0, originalCount - visibleCount);
+            if (index >= visibleCount && index <= visibleCount + maxPage) {
+                return index - visibleCount;
+            }
+            return 0;
+        }
+        function updateIndicators() {
+            var ind = wrap.querySelector('.psc-indicators');
+            if (!ind) return;
+            var pg = getLogicalPage();
+            var btns = ind.querySelectorAll('button');
+            btns.forEach(function(b, i) { b.classList.toggle('active', i === pg); });
+        }
+        function doPrev() {
+            if (isTransitioning) return;
+            index--;
+            if (loop && index < visibleCount) {
+                index = Math.max(0, originalCount - visibleCount);
+                update(true);
+            } else if (index < 0) {
+                index = 0;
+            }
+            update();
+            updateIndicators();
+        }
+        function doNext() {
+            if (isTransitioning) return;
+            index++;
+            if (index > getMaxIndex()) {
+                if (loop) isTransitioning = true;
+                else index = getMaxIndex();
+            }
+            update();
+            updateIndicators();
+        }
+        function goToPage(pg) {
+            if (isTransitioning) return;
+            var maxPage = Math.max(0, originalCount - visibleCount);
+            var p = Math.max(0, Math.min(pg, maxPage));
+            index = visibleCount + p;
+            update();
+            updateIndicators();
+        }
+        carousels[id] = { doPrev: doPrev, doNext: doNext, goToPage: goToPage };
+
+        var indicatorsEl = wrap.querySelector('.psc-indicators');
+        if (indicatorsEl) {
+            var maxPage = Math.max(0, originalCount - visibleCount);
+            var numPages = maxPage + 1;
+            for (var p = 0; p < numPages; p++) {
+                var btn = document.createElement('button');
+                btn.type = 'button';
+                btn.setAttribute('aria-label', 'Слайд ' + (p + 1));
+                btn.addEventListener('click', (function(page) { return function() { goToPage(page); }; })(p));
+                indicatorsEl.appendChild(btn);
+            }
+        }
+
+        updateIndicators();
+
+        /* Свайп пальцем на мобильных */
+        var touchStartX = 0;
+        var touchEndX = 0;
+        var minSwipe = 50;
+        function onTouchStart(e) {
+            if (e.touches.length) touchStartX = e.touches[0].clientX;
+        }
+        function onTouchEnd(e) {
+            if (e.changedTouches.length) touchEndX = e.changedTouches[0].clientX;
+            var delta = touchStartX - touchEndX;
+            if (delta > minSwipe) doNext();
+            else if (delta < -minSwipe) doPrev();
+        }
+        if (viewport) {
+            viewport.addEventListener('touchstart', onTouchStart, { passive: true });
+            viewport.addEventListener('touchend', onTouchEnd, { passive: true });
+        }
+
+        window.addEventListener('resize', function() {
+            visibleCount = getVisibleCount();
+            var max = getMaxIndex();
+            if (index > max) index = Math.min(visibleCount, max);
+            update();
+            updateIndicators();
+        });
+        update();
+    }
+    function handleCarouselClick(e) {
+        var btn = e.target.closest('.psc-prev, .psc-next');
+        if (!btn) return;
+        var wrap = btn.closest('.psc-wrap');
+        if (!wrap || !wrap.id) return;
+        var c = carousels[wrap.id];
+        if (!c) return;
+        e.preventDefault();
+        e.stopPropagation();
+        if (btn.classList.contains('psc-prev')) c.doPrev();
+        else c.doNext();
+    }
+    function init() {
+        ['hitCarousel', 'newCarousel', 'reviewsCarousel'].forEach(initScrollCarousel);
+        document.addEventListener('mousedown', handleCarouselClick, true);
+        document.addEventListener('touchstart', handleCarouselClick, { passive: false, capture: true });
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        setTimeout(init, 0);
+    }
+})();
+</script>
+{% endblock %}

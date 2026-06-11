@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+
+{% block title %}Добавить модель{% endblock %}
+
+{% block content %}
+<div class="admin-panel">
+    <nav class="admin-breadcrumb mb-4">
+        <a href="{{ url_for('admin', tab='models') }}">← Модели устройств</a>
+    </nav>
+
+    <div class="card shadow-sm">
+        <div class="card-header bg-success text-white">
+            <h5 class="mb-0">➕ Новая модель устройства</h5>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Название *</label>
+                    <input type="text" name="name" class="form-control" required maxlength="100"
+                           placeholder="Например: LIL SOLID 4.0">
+                    <small class="text-muted">LIL в названии сохраняется заглавными (LIL SOLID). Используется в фильтре каталога и у товаров.</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Порядок сортировки</label>
+                    <input type="number" name="sort_order" class="form-control" value="{{ default_sort_order }}" min="0" step="1">
+                    <small class="text-muted">Меньшее число — выше в списке фильтров.</small>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Alt-текст (SEO)</label>
+                    <input type="text" name="image_alt" class="form-control" maxlength="200" placeholder="Если пусто — заполнится автоматически">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Meta Description (SEO)</label>
+                    <input type="text" name="meta_description" class="form-control" maxlength="300" placeholder="Если пусто — заполнится автоматически">
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Meta Keywords (SEO)</label>
+                    <input type="text" name="meta_keywords" class="form-control" maxlength="300" placeholder="RU + EN ключевые слова через запятую">
+                </div>
+                <hr>
+                <button type="submit" class="btn btn-success">➕ Создать</button>
+                <a href="{{ url_for('admin', tab='models') }}" class="btn btn-outline-secondary">Отмена</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

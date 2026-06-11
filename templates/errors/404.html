@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+
+{% block title %}Страница не найдена — LIL STORE{% endblock %}
+{% block meta_robots %}noindex, follow{% endblock %}
+
+{% block content %}
+<div class="text-center py-5">
+    <h1 class="display-1 fw-bold text-muted">404</h1>
+    <h2 class="mb-4">Страница не найдена</h2>
+    <p class="lead text-muted mb-4">Запрашиваемая страница не существует или была перемещена.</p>
+    <div class="d-flex flex-wrap justify-content-center gap-3">
+        <a href="{{ url_for('index') }}" class="btn btn-primary btn-lg"><i class="fas fa-home me-2"></i>На главную</a>
+        <a href="{{ url_for('catalog') }}" class="btn btn-outline-primary btn-lg"><i class="fas fa-th-large me-2"></i>Каталог</a>
+        <a href="{{ url_for('search') }}" class="btn btn-outline-secondary btn-lg"><i class="fas fa-search me-2"></i>Поиск</a>
+    </div>
+</div>
+{% endblock %}

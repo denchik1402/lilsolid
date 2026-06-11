@@ -1,0 +1,329 @@
+{% extends "base.html" %}
+
+{% block title %}{{ product.name }} — {{ product.price|format_price }} ₽ | LIL STORE{% endblock %}
+{% block meta_description %}{% if product.meta_description %}{{ product.meta_description }}{% else %}{{ product.name }} — {{ product.price|format_price }} ₽. {{ (product.get_intro_text() or product.description or product.name)|striptags|truncate(120) }}{% endif %}{% endblock %}
+{% block meta_keywords %}{% if product.meta_keywords %}{{ product.meta_keywords }}{% else %}{{ product.name }}, IQOS, TEREA, {{ product.category.name if product.category else '' }}, купить{% endif %}{% endblock %}
+{% block canonical_url %}{{ request.url_root.rstrip('/') }}{{ product|product_url }}{% endblock %}
+{% block og_title %}{{ product.name }} — LIL STORE{% endblock %}
+{% block og_description %}{{ product.name }} — {{ product.price|format_price }} ₽. Оригинальная продукция.{% endblock %}
+{% block twitter_title %}{{ product.name }} — LIL STORE{% endblock %}
+{% block twitter_description %}{{ product.name }} — {{ product.price|format_price }} ₽. Оригинальная продукция.{% endblock %}
+{% block twitter_image %}{% set _img = product.all_images[0] if product.all_images else product.image %}{% if _img %}{{ request.url_root.rstrip('/') }}{{ url_for('static', filename='images/products/' + _img) }}{% else %}{{ request.url_root.rstrip('/') }}{{ url_for('static', filename='LOGO3.png') }}{% endif %}{% endblock %}
+{% block og_type %}product{% endblock %}
+{% block og_url %}{{ request.url_root.rstrip('/') }}{{ product|product_url }}{% endblock %}
+{% block og_image %}{% set _img = product.all_images[0] if product.all_images else product.image %}{% if _img %}{{ request.url_root.rstrip('/') }}{{ url_for('static', filename='images/products/' + _img) }}{% else %}{{ request.url_root.rstrip('/') }}{{ url_for('static', filename='LOGO3.png') }}{% endif %}{% endblock %}
+{% block schema_ld %}
+{% set _base = request.url_root.rstrip('/') %}
+{% set _pimg = product.all_images[0] if product.all_images else product.image %}
+{% set _img_url = _base + url_for('static', filename=('images/products/' + _pimg if _pimg else 'LOGO3.png')) %}
+{% set _ns = namespace(imgs=[]) %}
+{% for _img in (product.all_images or ([product.image] if product.image else [])) %}
+{% set _ns.imgs = _ns.imgs + [_base + url_for('static', filename='images/products/' + _img)] %}
+{% endfor %}
+{% set _schema_images = _ns.imgs if _ns.imgs else [_img_url] %}
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Product",
+  "name": {{ product.name|tojson }},
+  "description": {{ (product.get_intro_text() or product.description or product.name)|striptags|truncate(300)|tojson }},
+  "image": {{ _schema_images|tojson }},
+  "sku": "{{ product.id }}",
+  "brand": {"@type": "Brand", "name": "IQOS"},
+  {% if product.model %}"model": {{ product.model|tojson }},{% endif %}
+  "category": {{ (product.category.name if product.category else 'Каталог')|tojson }},
+  "offers": {
+    "@type": "Offer",
+    "url": {{ (_base + (product|product_url))|tojson }},
+    "priceCurrency": "RUB",
+    "price": "{{ product.price }}",
+    {% if product.old_price and product.old_price > product.price %}"priceSpecification": {"@type": "PriceSpecification", "price": "{{ product.price }}", "priceCurrency": "RUB", "valueAddedTaxIncluded": true},
+    "oldPrice": "{{ product.old_price }}",{% endif %}
+    "priceValidUntil": "{{ price_valid_until|default('2026-12-31') }}",
+    "availability": "{% if product.in_stock %}https://schema.org/InStock{% else %}https://schema.org/OutOfStock{% endif %}",
+    "itemCondition": "https://schema.org/NewCondition"
+  }
+  {% if reviews %},
+  "aggregateRating": {
+    "@type": "AggregateRating",
+    "ratingValue": "{{ (reviews|map(attribute='rating')|sum / reviews|length)|round(1) }}",
+    "reviewCount": "{{ reviews|length }}",
+    "bestRating": 5
+  }
+  {% endif %}
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "BreadcrumbList",
+  "itemListElement": [
+    {"@type": "ListItem", "position": 1, "name": "Главная", "item": {{ (request.url_root.rstrip('/') + '/')|tojson }}},
+    {"@type": "ListItem", "position": 2, "name": "Каталог", "item": {{ (request.url_root.rstrip('/') + url_for('catalog'))|tojson }}},
+    {"@type": "ListItem", "position": 3, "name": {{ (product.category.name if product.category else 'Каталог')|tojson }}, "item": {{ (request.url_root.rstrip('/') + url_for('catalog', category_slug=product.category.slug) if product.category else request.url_root.rstrip('/') + url_for('catalog'))|tojson }}},
+    {"@type": "ListItem", "position": 4, "name": {{ product.name|tojson }}, "item": {{ (request.url_root.rstrip('/') + (product|product_url))|tojson }}}
+  ]
+}
+</script>
+{% endblock %}
+
+{% block content %}
+<!-- Хлебные крошки -->
+<nav aria-label="breadcrumb">
+    <ol class="breadcrumb">
+        <li class="breadcrumb-item"><a href="/">Главная</a></li>
+        <li class="breadcrumb-item"><a href="/catalog">Каталог</a></li>
+        <li class="breadcrumb-item"><a href="/catalog/{{ product.category.slug }}">{{ product.category.name }}</a></li>
+        <li class="breadcrumb-item active">{{ product.name }}</li>
+    </ol>
+</nav>
+
+<div class="row">
+    <!-- Галерея изображений товара -->
+    <div class="col-md-6">
+        <div class="product-gallery">
+            <div class="product-gallery-main mb-2">
+                {% set main_img = product.all_images[0] if product.all_images else none %}
+                {% if main_img %}
+                    <img id="productMainImage" src="{{ url_for('static', filename='images/products/' + main_img) }}" class="img-fluid rounded" alt="{{ product|product_alt }}">
+                {% else %}
+                    <img id="productMainImage" src="https://via.placeholder.com/400" class="img-fluid rounded" alt="{{ product|product_alt }}">
+                {% endif %}
+            </div>
+            {% if product.all_images|length > 1 %}
+            <div class="product-gallery-thumbs d-flex gap-2 flex-wrap">
+                {% for img in product.all_images %}
+                <div class="product-thumb {% if loop.first %}active{% endif %}" data-src="{{ url_for('static', filename='images/products/' + img) }}">
+                    <img src="{{ url_for('static', filename='images/products/' + img) }}" class="img-fluid rounded" alt="{{ product|product_alt }}" loading="lazy">
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Информация о товаре -->
+    <div class="col-md-6">
+        <h1>{{ product.name }}</h1>
+        {% if product.model %}<p class="text-muted mb-2">{{ product.model }}</p>{% endif %}
+        
+        <div class="mb-3">
+            <span class="h2 text-primary">{{ product.price }} ₽</span>
+            {% if product.old_price %}
+            <span class="h5 text-muted text-decoration-line-through ms-2">{{ product.old_price }} ₽</span>
+            {% endif %}
+        </div>
+        
+        <div class="mb-3">
+            {% if product.in_stock %}
+            <span class="badge bg-success">В наличии</span>
+            {% else %}
+            <span class="badge bg-danger">Нет в наличии</span>
+            {% endif %}
+        </div>
+
+        <div class="product-share mb-4 d-flex align-items-center flex-wrap gap-2">
+            {% set inline = true %}{% include 'includes/compare_btn.html' %}
+            {% set inline = true %}{% include 'includes/favorite_btn.html' %}
+            <span class="text-muted small me-2">Поделиться:</span>
+            <a href="https://t.me/share/url?url={{ request.url | urlencode }}&text={{ (product.name ~ ' — ' ~ product.price|format_price ~ ' ₽') | urlencode }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary me-1" title="Поделиться в Telegram">
+                <i class="fab fa-telegram"></i>
+            </a>
+            <a href="https://wa.me/?text={{ (product.name ~ ' — ' ~ product.price|format_price ~ ' ₽ ' ~ request.url) | urlencode }}" target="_blank" rel="noopener" class="btn btn-sm btn-outline-secondary me-1" title="Поделиться в WhatsApp">
+                <i class="fab fa-whatsapp"></i>
+            </a>
+            <button type="button" class="btn btn-sm btn-outline-secondary" id="shareCopyBtn" title="Скопировать ссылку">
+                <i class="fas fa-link"></i>
+            </button>
+        </div>
+        
+        {% set intro = product.get_intro_text() %}
+        {% set specs = product.get_characteristics() %}
+        {% if intro %}
+        <div class="product-intro mb-3">{{ intro|sanitize_html|safe }}</div>
+        {% endif %}
+        {% if specs %}
+        <div class="product-specs card mb-4">
+            <div class="card-header product-specs-header">
+                <h5 class="mb-0"><i class="fas fa-list-ul me-2"></i>Характеристики</h5>
+            </div>
+            <div class="card-body p-0">
+                <table class="table table-specs mb-0">
+                    <tbody>
+                        {% for key, value in specs %}
+                        <tr>
+                            <td class="spec-key">{{ key }}</td>
+                            <td class="spec-value">{{ value }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+        {% if not intro and not specs and product.description %}
+        <div class="product-description mb-3">{{ product.description|sanitize_html|safe }}</div>
+        {% endif %}
+        
+        <!-- Добавление в корзину (виджет в стиле Яндекс.Маркета) -->
+        <div class="mb-4 add-to-cart-widget-lg">
+            {% include 'includes/add_to_cart_widget.html' %}
+        </div>
+        
+    </div>
+</div>
+
+<!-- Отзывы -->
+<div class="row mt-5">
+    <div class="col-12">
+        <h3>Отзывы о товаре</h3>
+        
+        {% if reviews %}
+        <div class="row">
+            {% for review in reviews %}
+            <div class="col-md-6 mb-3">
+                <div class="review-card">
+                    <div class="rating">
+                        {% for i in range(review.rating) %}★{% endfor %}
+                        {% for i in range(5 - review.rating) %}☆{% endfor %}
+                    </div>
+                    <p class="mt-2">{{ review.text }}</p>
+                    <small class="text-muted">
+                        {{ review.customer_name }} • {{ review.created_at.strftime('%d.%m.%Y') }}
+                    </small>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+        {% else %}
+        <p class="alert alert-info">Пока нет отзывов. Будьте первым!</p>
+        {% endif %}
+        
+        <!-- Форма добавления отзыва -->
+        <div class="card mt-4">
+            <div class="card-header">
+                <h5>Оставить отзыв</h5>
+            </div>
+            <div class="card-body">
+                <form action="/add-review" method="post">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                    <input type="hidden" name="product_id" value="{{ product.id }}">
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Ваше имя</label>
+                        <input type="text" name="name" class="form-control" placeholder="Как к вам обращаться" required>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Email <span class="text-muted">(для проверки покупки)</span></label>
+                            <input type="email" name="email" class="form-control" placeholder="example@mail.ru">
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Телефон <span class="text-muted">(для проверки покупки)</span></label>
+                            <input type="tel" name="phone" class="form-control" placeholder="+7 (999) 123-45-67">
+                        </div>
+                    </div>
+                    <p class="text-muted small mb-3">Укажите email или телефон — тот, что использовали при заказе. Отзывы могут оставлять только покупатели.</p>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Оценка</label>
+                        <select name="rating" class="form-select">
+                            <option value="5">5 - Отлично</option>
+                            <option value="4">4 - Хорошо</option>
+                            <option value="3">3 - Нормально</option>
+                            <option value="2">2 - Плохо</option>
+                            <option value="1">1 - Ужасно</option>
+                        </select>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label class="form-label">Отзыв</label>
+                        <textarea name="text" class="form-control" rows="3" placeholder="Опишите ваши впечатления от товара" required></textarea>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary">Отправить отзыв</button>
+                    <p class="text-muted small mt-2 mb-0">Отзыв будет опубликован после модерации. Нужен email или телефон от заказа.</p>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Вы смотрели -->
+<div id="viewedSection" class="row mt-5" style="display:none">
+    <div class="col-12">
+        <h3 class="mb-3">Вы смотрели</h3>
+        <div class="viewed-products-inner"></div>
+    </div>
+</div>
+
+<!-- Похожие товары -->
+{% if similar_products %}
+<div class="row mt-5">
+    <div class="col-12">
+        <h3>Похожие товары</h3>
+        <div class="row">
+            {% for product in similar_products %}
+            <div class="col-md-3 mb-4">
+                <div class="product-card position-relative">
+                    {% if product.is_hit %}<span class="badge bg-danger position-absolute top-0 start-0 m-2 product-badge-hit">Хит</span>{% endif %}
+                    {% include 'includes/compare_btn.html' %}
+                    {% include 'includes/favorite_btn.html' %}
+                    <a href="{{ product|product_url }}" class="product-card-link text-decoration-none text-dark">
+                        <div class="product-card-img-wrap">
+                            {% set first_img = product.all_images[0] if product.all_images else product.image %}
+                            {% if first_img %}
+                            <img src="{{ url_for('static', filename='images/products/' + first_img) }}" class="img-fluid" alt="{{ product|product_alt }}" loading="lazy">
+                            {% else %}
+                            <img src="https://via.placeholder.com/400" class="img-fluid" alt="{{ product|product_alt }}" loading="lazy">
+                            {% endif %}
+                        </div>
+                        <h5 class="product-title">{{ product.name }}</h5>
+                        <div class="product-price mb-2">{{ product.price|format_price }} ₽</div>
+                    </a>
+                    <div class="d-grid gap-2">
+                        <a href="{{ product|product_url }}" class="btn btn-outline-primary">Подробнее</a>
+                        {% include 'includes/add_to_cart_widget.html' %}
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/viewed.js') }}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    var productId = {{ product.id }};
+    if (typeof viewedAdd === 'function') viewedAdd(productId);
+    if (typeof viewedRender === 'function') viewedRender('viewedSection', productId);
+    document.querySelectorAll('.product-thumb').forEach(function(thumb) {
+        thumb.addEventListener('click', function() {
+            var src = this.getAttribute('data-src');
+            if (src) {
+                document.getElementById('productMainImage').src = src;
+                document.querySelectorAll('.product-thumb').forEach(function(t) { t.classList.remove('active'); });
+                this.classList.add('active');
+            }
+        });
+    });
+    var shareCopyBtn = document.getElementById('shareCopyBtn');
+    if (shareCopyBtn) {
+        shareCopyBtn.addEventListener('click', function() {
+            navigator.clipboard.writeText(window.location.href).then(function() {
+                var icon = shareCopyBtn.querySelector('i');
+                var orig = icon.className;
+                icon.className = 'fas fa-check text-success';
+                setTimeout(function() { icon.className = orig; }, 1500);
+            });
+        });
+    }
+});
+</script>
+{% endblock %}
