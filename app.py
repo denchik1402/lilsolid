@@ -1152,6 +1152,10 @@ def products_by_ids_api():
     return jsonify({'products': items})
 
 
+import telegram_mini_app
+telegram_mini_app.register(app, csrf, db, Product, Category, Order, OrderItem, PromoCode, _get_cart_products, logger)
+
+
 @app.route('/api/cart-items')
 def cart_items_api():
     """API для боковой корзины — список товаров и сумма"""
