@@ -25,7 +25,8 @@ SITE_PHONE = '+7 (993) 596-82-25'
 SITE_ADDRESS = 'Москва, Ленинградское шоссе, 16А'
 SITE_CITY = 'Москва'
 
-# Яндекс.Метрика: номер счётчика (только цифры) из https://metrika.yandex.ru
+# Яндекс.Метрика — ОТДЕЛЬНЫЙ счётчик только для https://lilsolid.ru
+# Создайте в https://metrika.yandex.ru → «Добавить счётчик» → домен lilsolid.ru
 YANDEX_METRIKA_ID = ''
 
 ILUMA_XLSX_PATH = ''
