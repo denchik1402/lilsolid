@@ -12,33 +12,53 @@ import json
 
 
 def get_config():
-    """Получает token и chat_id. Chat_id — из БД (куда добавлен бот) или config."""
+    """Token и chat_id для уведомлений (config.py или BotSetting на этом сайте)."""
     token = os.environ.get('TELEGRAM_BOT_TOKEN')
     chat_id = os.environ.get('TELEGRAM_CHAT_ID')
-    if not token and os.path.exists('config.py'):
+    if os.path.exists('config.py'):
         try:
             import config
-            token = getattr(config, 'TELEGRAM_BOT_TOKEN', None)
-            chat_id = getattr(config, 'TELEGRAM_CHAT_ID', None)
+            token = token or getattr(config, 'TELEGRAM_BOT_TOKEN', None)
+            chat_id = chat_id or getattr(config, 'TELEGRAM_CHAT_ID', None) or None
         except ImportError:
             pass
-    # Chat_id из БД (установлен ботом при добавлении в группу или /set_notify)
     try:
-        from app import app
+        from flask import has_request_context
         from models import BotSetting
-        with app.app_context():
+        if has_request_context():
             s = BotSetting.query.filter_by(key='notification_chat_id').first()
             if s and s.value:
                 chat_id = s.value
+        else:
+            from app import app
+            with app.app_context():
+                s = BotSetting.query.filter_by(key='notification_chat_id').first()
+                if s and s.value:
+                    chat_id = s.value
     except Exception:
         pass
     return token, chat_id
 
 
+def _site_order_label():
+    try:
+        import config
+        url = (getattr(config, 'SITE_URL', None) or '').lower()
+    except ImportError:
+        url = ''
+    if 'iqos-store' in url:
+        return 'АЙКОС СТОР · iqos-store.ru'
+    if 'lilsolid' in url:
+        return 'LIL SOLID · lilsolid.ru'
+    if 'lilstore' in url:
+        return 'LIL STORE · lilstore.ru'
+    return url.replace('https://', '').replace('http://', '') or 'Сайт'
+
+
 def format_order_message(order):
     """Форматирует заказ для красивого отображения в Telegram"""
     lines = [
-        "🛒 <b>НОВЫЙ ЗАКАЗ</b>",
+        f"🛒 <b>НОВЫЙ ЗАКАЗ</b> — {_site_order_label()}",
         "",
         f"📋 Номер: <code>{order.order_number}</code>",
         f"👤 Клиент: {order.customer_name}",

@@ -825,59 +825,69 @@ def checkout():
     promo_code = ''
     
     if request.method == 'POST':
-        # Сумма считается только из корзины на сервере
-        _, server_subtotal = _get_cart_products(session.get('cart', {}))
-        if server_subtotal <= 0:
-            return redirect(url_for('cart'))
-        promo_code = (request.form.get('promo_code') or '').strip().upper()
-        server_discount, server_total = 0, server_subtotal
-        if promo_code:
-            promo = PromoCode.query.filter_by(code=promo_code).first()
-            if promo and promo.is_valid():
-                server_discount, server_total = promo.apply_discount(server_subtotal)
-                if server_discount > 0:
-                    promo.used_count += 1
-
-        order = Order(
-            customer_name=request.form.get('name', '').strip()[:100],
-            customer_phone=request.form.get('phone', '').strip()[:20],
-            customer_email=request.form.get('email', '').strip()[:100],
-            delivery_address=request.form.get('address', '').strip()[:500],
-            delivery_method=request.form.get('delivery', 'pickup')[:50],
-            payment_method=request.form.get('payment', 'store')[:50],
-            comment=request.form.get('comment', '')[:500],
-            total_amount=server_total,
-            promo_code=promo_code if server_discount > 0 else None,
-            discount_amount=server_discount
-        )
-        db.session.add(order)
-        db.session.flush()
-
-        for product_id, quantity in session.get('cart', {}).items():
-            product = db.session.get(Product, int(product_id))
-            if product and quantity > 0:
-                db.session.add(OrderItem(
-                    order_id=order.id,
-                    product_id=product.id,
-                    quantity=min(int(quantity), 99),
-                    price=product.price
-                ))
-
-        db.session.commit()
-
         try:
-            from telegram_notify import send_order_to_telegram
-            ok, err = send_order_to_telegram(order)
-            if not ok and err != "Telegram не настроен (TELEGRAM_BOT_TOKEN, TELEGRAM_CHAT_ID)":
-                print(f"[Telegram] Ошибка: {err}")
+            _, server_subtotal = _get_cart_products(session.get('cart', {}))
+            if server_subtotal <= 0:
+                return redirect(url_for('cart'))
+            promo_code = (request.form.get('promo_code') or '').strip().upper()
+            server_discount, server_total = 0, server_subtotal
+            if promo_code:
+                promo = PromoCode.query.filter_by(code=promo_code).first()
+                if promo and promo.is_valid():
+                    server_discount, server_total = promo.apply_discount(server_subtotal)
+                    if server_discount > 0:
+                        promo.used_count += 1
+
+            order = Order(
+                customer_name=request.form.get('name', '').strip()[:100],
+                customer_phone=request.form.get('phone', '').strip()[:20],
+                customer_email=request.form.get('email', '').strip()[:100],
+                delivery_address=request.form.get('address', '').strip()[:500],
+                delivery_method=request.form.get('delivery', 'pickup')[:50],
+                payment_method=request.form.get('payment', 'store')[:50],
+                comment=request.form.get('comment', '')[:500],
+                total_amount=server_total,
+                promo_code=promo_code if server_discount > 0 else None,
+                discount_amount=server_discount
+            )
+            db.session.add(order)
+            db.session.flush()
+
+            for product_id, quantity in session.get('cart', {}).items():
+                try:
+                    pid = int(product_id)
+                except (TypeError, ValueError):
+                    continue
+                product = db.session.get(Product, pid)
+                if product and quantity > 0:
+                    db.session.add(OrderItem(
+                        order_id=order.id,
+                        product_id=product.id,
+                        quantity=min(int(quantity), 99),
+                        price=product.price
+                    ))
+
+            db.session.commit()
+            order = db.session.get(Order, order.id)
+
+            try:
+                from telegram_notify import send_order_to_telegram
+                ok, err = send_order_to_telegram(order)
+                if not ok:
+                    logger.warning('[Telegram] Заказ %s: %s', order.order_number, err)
+            except Exception as e:
+                logger.warning('[Telegram] Заказ %s: %s', order.order_number, e)
+
+            session['cart'] = {}
+            session['last_order_id'] = order.id
+            session.modified = True
+
+            return redirect(url_for('order_success', order_id=order.id))
         except Exception as e:
-            print(f"[Telegram] Исключение: {e}")
-
-        session['cart'] = {}
-        session['last_order_id'] = order.id  # для проверки доступа к order_success
-        session.modified = True
-
-        return redirect(url_for('order_success', order_id=order.id))
+            db.session.rollback()
+            logger.exception('Checkout failed: %s', e)
+            flash('Не удалось оформить заказ. Попробуйте ещё раз или напишите нам в Telegram.', 'danger')
+            return redirect(url_for('checkout'))
     
     return render_template('checkout.html', cart_items=cart_items, total=total, subtotal=subtotal, discount=discount)
 

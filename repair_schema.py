@@ -51,6 +51,23 @@ def repair() -> int:
         if _add_column_if_missing('device_model', 'seo_text', 'seo_text TEXT'):
             changed += 1
 
+        for col, ddl in (
+            ('promo_code', 'promo_code VARCHAR(50)'),
+            ('discount_amount', 'discount_amount FLOAT DEFAULT 0'),
+            ('courier_telegram_id', 'courier_telegram_id BIGINT'),
+            ('status', "status VARCHAR(50) DEFAULT 'new'"),
+        ):
+            if _add_column_if_missing('order', col, ddl):
+                changed += 1
+
+        if _add_column_if_missing('review', 'status', "status VARCHAR(20) DEFAULT 'pending'"):
+            changed += 1
+
+        if 'bot_setting' not in tables or 'promo_code' not in tables:
+            db.create_all()
+            print('[repair] create_all() for missing tables (bot_setting, promo_code, …)')
+            changed += 1
+
         db.session.commit()
 
         try:

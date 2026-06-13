@@ -5,6 +5,7 @@
 TELEGRAM_BOT_TOKEN = ''
 TELEGRAM_BOT_USERNAME = 'iluma_prime_bot'
 TELEGRAM_RUN_POLLING = False
+# ID чата для уведомлений — тот же, что в my_shop config.py (группа менеджеров)
 TELEGRAM_CHAT_ID = ''
 TELEGRAM_ADMIN_IDS = ''
 TELEGRAM_DEFAULT_ADMIN = 'denchik1402'
