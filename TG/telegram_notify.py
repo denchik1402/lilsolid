@@ -37,6 +37,24 @@ def get_config():
                     chat_id = s.value
     except Exception:
         pass
+    if not chat_id and token:
+        try:
+            from notify_sync import sync_notification_chat_to_local_db
+            if sync_notification_chat_to_local_db():
+                from flask import has_request_context
+                from models import BotSetting
+                if has_request_context():
+                    s = BotSetting.query.filter_by(key='notification_chat_id').first()
+                    if s and s.value:
+                        chat_id = s.value
+                else:
+                    from app import app
+                    with app.app_context():
+                        s = BotSetting.query.filter_by(key='notification_chat_id').first()
+                        if s and s.value:
+                            chat_id = s.value
+        except Exception:
+            pass
     return token, chat_id
 
 
