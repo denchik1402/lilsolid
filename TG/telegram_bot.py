@@ -540,12 +540,14 @@ async def show_courier_orders(update_or_query, context, is_callback: bool, page=
         if start + PAGE_SIZE < total:
             nav.append(InlineKeyboardButton("▶️", callback_data=f"courier_page_{page + 1}_{show_my_only or ''}"))
         keyboard.append(nav)
-        filter_btn = InlineKeyboardButton("📋 Мои заказы", callback_data="courier_page_0_my") if show_my_only != 'my' else InlineKeyboardButton("📋 Все заказы", callback_data="courier_page_0")
-        keyboard.append([filter_btn])
+        filter_btn = InlineKeyboardButton("📋 Мои", callback_data="courier_page_0_my") if show_my_only != 'my' else InlineKeyboardButton("📋 Все", callback_data="courier_page_0")
         route_count = len(route_ids)
         route_btn = InlineKeyboardButton(f"🗺 Маршрут ({route_count})" if route_count else "🗺 Маршрут", callback_data="courier_route")
-        keyboard.append([route_btn])
-        keyboard.append([InlineKeyboardButton("🔄 Обновить", callback_data="menu_courier_orders")])
+        keyboard.append([
+            route_btn,
+            filter_btn,
+            InlineKeyboardButton("🔄 Обновить", callback_data="menu_courier_orders"),
+        ])
         keyboard.append([InlineKeyboardButton("◀️ В меню", callback_data="menu_main")])
         await send(text, InlineKeyboardMarkup(keyboard))
 
