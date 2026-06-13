@@ -135,11 +135,13 @@ def role_can_access(role: str, menu: str) -> bool:
 
 def _build_main_menu_keyboard(role: str) -> InlineKeyboardMarkup:
     """Собирает клавиатуру главного меню по роли."""
-    keyboard = []
-    keyboard.append([InlineKeyboardButton("🛒 Каталог", callback_data="menu_catalog")])
-    keyboard.append([InlineKeyboardButton("🛍 Корзина", callback_data="menu_cart")])
-    keyboard.append([InlineKeyboardButton("📦 Оформить заказ", callback_data="menu_checkout")])
-    keyboard.append([InlineKeyboardButton("💬 Задать вопрос", callback_data="menu_ask_question")])
+    keyboard = [
+        [
+            InlineKeyboardButton("🛒 Каталог", callback_data="menu_catalog"),
+            InlineKeyboardButton("🛍 Корзина", callback_data="menu_cart"),
+        ],
+        [InlineKeyboardButton("💬 Задать вопрос", callback_data="menu_ask_question")],
+    ]
     site_url = get_site_url()
     if site_url.startswith('https://'):
         keyboard.append([InlineKeyboardButton("🚀 Запустить приложение", web_app=WebAppInfo(url=site_url))])
@@ -185,6 +187,17 @@ async def cmd_start(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # ==================== USER: КАТАЛОГ ====================
 
+def _catalog_nav_keyboard(in_products_view: bool = False) -> list:
+    """Корзина и оформление — над кнопкой «Назад»."""
+    rows = [[
+        InlineKeyboardButton("🛍 Корзина", callback_data="menu_cart"),
+        InlineKeyboardButton("📦 Оформить заказ", callback_data="menu_checkout"),
+    ]]
+    back_cb = "menu_catalog" if in_products_view else "menu_main"
+    rows.append([InlineKeyboardButton("◀️ Назад", callback_data=back_cb)])
+    return rows
+
+
 async def show_product_detail(query, context, product_id: int):
     """Показывает товар с фото и описанием."""
     app, db, Product, Category, Review, Order, OrderItem, TelegramUser, *_ = get_db()
@@ -224,7 +237,7 @@ async def show_product_detail(query, context, product_id: int):
                 photo_source.close()
 
 
-async def show_catalog(update_or_query, context, is_callback: bool, category_id=None):
+async def show_catalog(update_or_query, context, is_callback: bool, category_id=None, show_all: bool = False):
     app, db, Product, Category, Review, Order, OrderItem, TelegramUser, *_ = get_db()
     if is_callback:
         obj = update_or_query
@@ -238,39 +251,56 @@ async def show_catalog(update_or_query, context, is_callback: bool, category_id=
             await obj.message.reply_text(t, reply_markup=kb, parse_mode='HTML')
 
     context.user_data['last_catalog_category'] = category_id
+    context.user_data['last_catalog_show_all'] = show_all
     cart = get_cart(context, user_id)
     cart_count = sum(cart.values()) if cart else 0
 
     with app.app_context():
-        categories = Category.query.all()
-        if category_id:
-            cat = Category.query.get(category_id)
-            products = Product.query.filter_by(category_id=category_id, in_stock=True).all() if cat else []
-        else:
+        categories = Category.query.order_by(Category.name).all()
+
+        if category_id is None and not show_all:
+            cart_line = f"\n\n🛒 В корзине: {cart_count} шт." if cart_count else ""
+            if categories:
+                text = f"🛒 <b>Каталог</b>{cart_line}\n\nВыберите категорию:"
+                keyboard = [[InlineKeyboardButton(f"📁 {c.name}", callback_data=f"cat_{c.id}")] for c in categories]
+                keyboard.append([InlineKeyboardButton("📋 Все товары", callback_data="cat_all")])
+            else:
+                text = f"🛒 <b>Каталог</b>{cart_line}\n\nКатегории пока не добавлены."
+                keyboard = []
+            keyboard.extend(_catalog_nav_keyboard(in_products_view=False))
+            await send(text, InlineKeyboardMarkup(keyboard))
+            return
+
+        if show_all:
             cat = None
-            products = Product.query.filter_by(in_stock=True).all()
+            products = Product.query.filter_by(in_stock=True).order_by(Product.name).all()
+            header = " — Все товары"
+        else:
+            cat = Category.query.get(category_id)
+            products = (
+                Product.query.filter_by(category_id=category_id, in_stock=True).order_by(Product.name).all()
+                if cat else []
+            )
+            header = f" — {cat.name}" if cat else ""
 
+        cart_line = f" | В корзине: {cart_count}" if cart_count else ""
         keyboard = []
-        for c in categories:
-            keyboard.append([InlineKeyboardButton(f"📁 {c.name}", callback_data=f"cat_{c.id}")])
-        keyboard.append([InlineKeyboardButton("📋 Все товары", callback_data="cat_all")])
-
-        if cat or products:
-            cart_line = f" | В корзине: {cart_count}" if cart_count else ""
-            text = f"🛒 <b>Каталог</b>" + (f" — {cat.name}" if cat else " — Все товары") + cart_line + "\n\n"
+        if not products:
+            text = f"🛒 <b>Каталог</b>{header}{cart_line}\n\nВ этой категории пока нет товаров."
+        else:
+            text = f"🛒 <b>Каталог</b>{header}{cart_line}\n\n"
             for p in products[:15]:
                 in_cart = cart.get(str(p.id), 0)
                 qty_str = f" (×{in_cart})" if in_cart else ""
                 text += f"• <b>{p.name}</b> — {p.price:,.0f} ₽{qty_str}\n".replace(",", " ")
-                row = [
+                keyboard.append([
                     InlineKeyboardButton(f"➕ {p.name[:25]}", callback_data=f"add_{p.id}"),
-                    InlineKeyboardButton("📷", callback_data=f"detail_{p.id}")
-                ]
-                keyboard.append(row)
-        else:
-            text = "🛒 Каталог пуст."
+                    InlineKeyboardButton("📷", callback_data=f"detail_{p.id}"),
+                ])
+            if len(products) > 15:
+                text += f"\n<i>Показаны первые 15 из {len(products)}</i>"
 
-        keyboard.append([InlineKeyboardButton("◀️ Назад", callback_data="menu_main")])
+        keyboard.extend(_catalog_nav_keyboard(in_products_view=True))
         await send(text, InlineKeyboardMarkup(keyboard))
 
 
@@ -1022,7 +1052,10 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         return
     if data.startswith("cat_"):
         cid = data.replace("cat_", "")
-        await show_catalog(query, context, True, None if cid == "all" else int(cid))
+        if cid == "all":
+            await show_catalog(query, context, True, show_all=True)
+        else:
+            await show_catalog(query, context, True, category_id=int(cid))
         return
 
     # Подробнее о товаре (фото + описание)
@@ -1037,7 +1070,8 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         cart = get_cart(context, user_id)
         cart[str(pid)] = cart.get(str(pid), 0) + 1
         cat_id = context.user_data.get('last_catalog_category')
-        await show_catalog(query, context, True, cat_id)
+        show_all = context.user_data.get('last_catalog_show_all', False)
+        await show_catalog(query, context, True, category_id=cat_id, show_all=show_all)
         return
 
     # Корзина
