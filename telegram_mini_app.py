@@ -37,6 +37,25 @@ def register(app, csrf, db, Product, Category, Order, OrderItem, PromoCode, get_
             return None
         return "{:,.0f}".format(float(value)).replace(",", " ")
 
+    def _parse_for_categories():
+        raw = (request.args.get('for_categories') or '').strip()
+        if not raw:
+            return None
+        return [s.strip() for s in raw.split(',') if s.strip()]
+
+    def _category_ids_for_slugs(slugs):
+        if not slugs:
+            return None
+        ids = []
+        for slug in slugs:
+            cat = Category.query.filter_by(slug=slug).first()
+            if cat:
+                ids.append(cat.id)
+        return ids or None
+
+    def _product_in_scope(product, allowed_ids):
+        return not allowed_ids or product.category_id in allowed_ids
+
     def _telegram_product_payload(product, *, detailed=False):
         img = product.all_images[0] if product.all_images else product.image
         payload = {
@@ -159,9 +178,13 @@ def register(app, csrf, db, Product, Category, Order, OrderItem, PromoCode, get_
 
     @app.route('/api/telegram-app/bootstrap')
     def telegram_app_bootstrap():
+        allowed_slugs = _parse_for_categories()
+        allowed_ids = _category_ids_for_slugs(allowed_slugs)
         categories = Category.query.order_by(Category.name).all()
         cat_payload = []
         for cat in categories:
+            if allowed_ids and cat.id not in allowed_ids:
+                continue
             count = Product.query.filter_by(category_id=cat.id, in_stock=True).count()
             if count == 0:
                 continue
@@ -171,9 +194,15 @@ def register(app, csrf, db, Product, Category, Order, OrderItem, PromoCode, get_
                 'name': cat.name,
                 'product_count': count,
             })
-        hits = Product.query.filter_by(is_hit=True, in_stock=True).order_by(Product.views.desc()).limit(8).all()
+        hits_q = Product.query.filter_by(is_hit=True, in_stock=True)
+        if allowed_ids:
+            hits_q = hits_q.filter(Product.category_id.in_(allowed_ids))
+        hits = hits_q.order_by(Product.views.desc()).limit(8).all()
         if not hits:
-            hits = Product.query.filter_by(in_stock=True).order_by(Product.views.desc()).limit(8).all()
+            fallback_q = Product.query.filter_by(in_stock=True)
+            if allowed_ids:
+                fallback_q = fallback_q.filter(Product.category_id.in_(allowed_ids))
+            hits = fallback_q.order_by(Product.views.desc()).limit(8).all()
         return jsonify({
             'categories': cat_payload,
             'portals': [],
@@ -183,6 +212,8 @@ def register(app, csrf, db, Product, Category, Order, OrderItem, PromoCode, get_
 
     @app.route('/api/telegram-app/products')
     def telegram_app_products():
+        allowed_slugs = _parse_for_categories()
+        allowed_ids = _category_ids_for_slugs(allowed_slugs)
         category_slug = (request.args.get('category') or '').strip()
         page = max(1, request.args.get('page', 1, type=int))
         per_page = min(24, max(6, request.args.get('per_page', 12, type=int)))
@@ -191,8 +222,12 @@ def register(app, csrf, db, Product, Category, Order, OrderItem, PromoCode, get_
             cat = Category.query.filter_by(slug=category_slug).first()
             if not cat and category_slug.isdigit():
                 cat = Category.query.get(int(category_slug))
-            if cat:
+            if cat and (not allowed_ids or cat.id in allowed_ids):
                 q = q.filter_by(category_id=cat.id)
+            elif allowed_ids:
+                q = q.filter(Product.id == -1)
+        elif allowed_ids:
+            q = q.filter(Product.category_id.in_(allowed_ids))
         q = q.order_by(Product.is_hit.desc(), Product.name)
         pagination = q.paginate(page=page, per_page=per_page, error_out=False)
         return jsonify({
@@ -206,6 +241,9 @@ def register(app, csrf, db, Product, Category, Order, OrderItem, PromoCode, get_
     @app.route('/api/telegram-app/product/<int:product_id>')
     def telegram_app_product_detail(product_id):
         product = Product.query.get_or_404(product_id)
+        allowed_ids = _category_ids_for_slugs(_parse_for_categories())
+        if not _product_in_scope(product, allowed_ids):
+            return jsonify({'error': 'Товар не найден'}), 404
         return jsonify(_telegram_product_payload(product, detailed=True))
 
     @app.route('/api/telegram-app/cart')
