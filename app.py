@@ -1064,16 +1064,17 @@ def clear_cart_api():
 
 @app.route('/api/search-suggestions')
 def search_suggestions_api():
-    """API для автодополнения при поиске — товары по части названия (параметризовано)"""
+    """API для автодополнения при поиске"""
+    from models import Product
+    from search_utils import product_search_filter
+
     q = (request.args.get('q') or '').strip()
     if len(q) < 2:
         return jsonify({'suggestions': []})
-    pattern = f'%{_escape_like(q)}%'
-    from sqlalchemy import or_
-    products = Product.query.filter(
-        Product.in_stock == True,
-        or_(Product.name.ilike(pattern, escape='\\'), Product.description.ilike(pattern, escape='\\'))
-    ).limit(10).all()
+    filt = product_search_filter(q, Product, in_stock_only=True)
+    if filt is None:
+        return jsonify({'suggestions': []})
+    products = Product.query.filter(filt).order_by(Product.is_hit.desc(), Product.name).limit(10).all()
     suggestions = [
         {'name': p.name, 'url': url_for('product', product_slug=p.get_url_slug()), 'price': p.price}
         for p in products
@@ -2354,15 +2355,17 @@ def _escape_like(value):
 
 @app.route('/search')
 def search():
-    """Поиск товаров (параметризованный запрос, экранирование LIKE)"""
+    """Поиск товаров (с синонимами: илюма → iluma и т.д.)"""
+    from models import Product
+    from search_utils import product_search_filter
+
     query = (request.args.get('q') or '').strip()
     if query:
-        from sqlalchemy import or_
-        pattern = f'%{_escape_like(query)}%'
-        products = Product.query.filter(
-            or_(Product.name.ilike(pattern, escape='\\'),
-                Product.description.ilike(pattern, escape='\\'))
-        ).all()
+        filt = product_search_filter(query, Product)
+        products = (
+            Product.query.filter(filt).order_by(Product.is_hit.desc(), Product.name).all()
+            if filt is not None else []
+        )
     else:
         products = []
     return render_template('search.html', products=products, query=query)

@@ -44,6 +44,7 @@ jobs:
             echo "=== 5. SEO scripts ==="
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 update_product_galleries.py" 2>/dev/null || true
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 fill_seo_meta.py" 2>/dev/null || true
+            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 fill_seo_meta.py --refresh-keywords" 2>/dev/null || true
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 normalize_product_names.py" 2>/dev/null || true
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 seed_seo_blog.py" 2>/dev/null || true
 
