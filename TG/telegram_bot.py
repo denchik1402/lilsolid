@@ -501,6 +501,7 @@ async def show_courier_orders(update_or_query, context, is_callback: bool, page=
         start = page * PAGE_SIZE
         page_orders = orders[start:start + PAGE_SIZE]
         em = {"new": "🆕", "processing": "⏳", "completed": "✅", "cancelled": "❌"}
+        from bot_utils import format_order_items_brief, format_price
 
         total_pages = max(1, (total + PAGE_SIZE - 1) // PAGE_SIZE)
         text = f"🚚 <b>Заказы курьера</b> (стр. {page + 1}/{total_pages})\n"
@@ -509,20 +510,23 @@ async def show_courier_orders(update_or_query, context, is_callback: bool, page=
         if not page_orders:
             text += "Нет заказов." if show_my_only == 'my' else "Нет заказов со статусом «новый» или «в работе»."
         else:
-            for o in page_orders:
+            for idx, o in enumerate(page_orders):
+                num = start + idx + 1
                 e = em.get(o.status, "•")
                 is_mine = o.courier_telegram_id == user_id
-                items_str = ", ".join([f"{i.product.name[:15] if i.product else '?'}×{i.quantity}" for i in o.items[:3]])
-                text += f"{e} <b>{o.order_number}</b>" + (" (мой)" if is_mine else "") + "\n"
+                text += f"{e} <b>{num}. Заказ: {o.order_number}</b>" + (" (мой)" if is_mine else "") + "\n"
                 text += f"   {o.customer_name} | {o.customer_phone or '—'}\n"
                 text += f"   📍 {o.delivery_address or '—'}\n"
-                text += f"   📦 {items_str} — {o.total_amount:,.0f} ₽\n\n".replace(",", " ")
+                for item_line in format_order_items_brief(o.items):
+                    text += f"   📦 {item_line}\n"
+                text += f"   💰 Итого: {format_price(o.total_amount)} ₽\n\n"
 
         raw_route = context.user_data.get('courier_route_orders') or set()
         route_ids = set(str(x) for x in raw_route) if raw_route else set()
         keyboard = []
-        for o in page_orders:
-            row = []
+        for idx, o in enumerate(page_orders):
+            num = start + idx + 1
+            row = [InlineKeyboardButton(str(num), callback_data="noop")]
             if o.courier_telegram_id != user_id:
                 row.append(InlineKeyboardButton("📌 Взять", callback_data=f"courier_take_{o.id}"))
             in_route = str(o.id) in route_ids
@@ -973,6 +977,7 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
     # noop
     if data == "noop":
+        await query.answer()
         return
 
     # Главное меню

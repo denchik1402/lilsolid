@@ -57,3 +57,13 @@ def format_price(val):
     if val is None:
         return '0'
     return "{:,.0f}".format(float(val)).replace(",", " ")
+
+
+def format_order_item_brief(item):
+    """Строка товара для списков курьера/boss (полное название, с цветом)."""
+    name = item.product.name if item.product else f"Товар #{item.product_id}"
+    return f"{name} ×{item.quantity} — {format_price(item.price * item.quantity)} ₽"
+
+
+def format_order_items_brief(items, limit=3):
+    return [format_order_item_brief(i) for i in (items or [])[:limit]]
