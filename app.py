@@ -79,6 +79,8 @@ def enforce_canonical_site_url():
     """
     if request.method not in ('GET', 'HEAD'):
         return None
+    if request.path.startswith('/api/telegram-app/'):
+        return None
     site_url = None
     if os.path.exists(_config_path):
         try:
