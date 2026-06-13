@@ -820,12 +820,26 @@ def update_cart(product_id):
 @app.route('/checkout', methods=['GET', 'POST'])
 def checkout():
     """Оформление заказа"""
+    from sqlalchemy.exc import IntegrityError
+    from checkout_idempotency import (
+        ensure_checkout_idempotency_key,
+        get_submitted_idempotency_key,
+        find_existing_order,
+        finalize_checkout_session,
+    )
+
     cart_items, subtotal = _get_cart_products(session.get('cart', {}))
     discount, total = 0, subtotal
     promo_code = ''
     
     if request.method == 'POST':
         try:
+            idempotency_key = get_submitted_idempotency_key(request.form) or ensure_checkout_idempotency_key(session)
+            existing = find_existing_order(Order, idempotency_key)
+            if existing:
+                finalize_checkout_session(session, existing.id)
+                return redirect(url_for('order_success', order_id=existing.id))
+
             _, server_subtotal = _get_cart_products(session.get('cart', {}))
             if server_subtotal <= 0:
                 return redirect(url_for('cart'))
@@ -848,7 +862,8 @@ def checkout():
                 comment=request.form.get('comment', '')[:500],
                 total_amount=server_total,
                 promo_code=promo_code if server_discount > 0 else None,
-                discount_amount=server_discount
+                discount_amount=server_discount,
+                idempotency_key=idempotency_key,
             )
             db.session.add(order)
             db.session.flush()
@@ -867,7 +882,15 @@ def checkout():
                         price=product.price
                     ))
 
-            db.session.commit()
+            try:
+                db.session.commit()
+            except IntegrityError:
+                db.session.rollback()
+                existing = find_existing_order(Order, idempotency_key)
+                if existing:
+                    finalize_checkout_session(session, existing.id)
+                    return redirect(url_for('order_success', order_id=existing.id))
+                raise
             order = db.session.get(Order, order.id)
 
             try:
@@ -878,9 +901,7 @@ def checkout():
             except Exception as e:
                 logger.warning('[Telegram] Заказ %s: %s', order.order_number, e)
 
-            session['cart'] = {}
-            session['last_order_id'] = order.id
-            session.modified = True
+            finalize_checkout_session(session, order.id)
 
             return redirect(url_for('order_success', order_id=order.id))
         except Exception as e:
@@ -889,7 +910,15 @@ def checkout():
             flash('Не удалось оформить заказ. Попробуйте ещё раз или напишите нам в Telegram.', 'danger')
             return redirect(url_for('checkout'))
     
-    return render_template('checkout.html', cart_items=cart_items, total=total, subtotal=subtotal, discount=discount)
+    checkout_key = ensure_checkout_idempotency_key(session)
+    return render_template(
+        'checkout.html',
+        cart_items=cart_items,
+        total=total,
+        subtotal=subtotal,
+        discount=discount,
+        checkout_idempotency_key=checkout_key,
+    )
 
 def _normalize_phone(s):
     """Нормализация телефона для сравнения"""

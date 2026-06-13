@@ -72,6 +72,15 @@ def repair() -> int:
             print('[repair] create_all() for missing tables (bot_setting, promo_code, …)')
             changed += 1
 
+        if _add_column_if_missing('order', 'idempotency_key', 'idempotency_key VARCHAR(64)'):
+            changed += 1
+        try:
+            db.session.execute(text(
+                'CREATE UNIQUE INDEX IF NOT EXISTS ix_order_idempotency_key ON "order" (idempotency_key)'
+            ))
+        except Exception as e:
+            print(f'[repair] idempotency index warning: {e}')
+
         db.session.commit()
 
         try:

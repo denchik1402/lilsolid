@@ -9,6 +9,7 @@
 
 <form action="/checkout" method="post" id="checkoutForm">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+    <input type="hidden" name="idempotency_key" value="{{ checkout_idempotency_key }}">
 <input type="hidden" name="total" id="totalAmount">
 
 <div class="row">
@@ -180,8 +181,18 @@
 })();
 </script>
 <script>
-document.getElementById('checkoutForm').onsubmit = function() {
+document.getElementById('checkoutForm').onsubmit = function(e) {
     document.getElementById('totalAmount').value = document.getElementById('checkoutTotal').textContent.replace(/\s/g,'').replace('₽','');
+    if (this.dataset.submitting === '1') {
+        e.preventDefault();
+        return false;
+    }
+    this.dataset.submitting = '1';
+    var btn = this.querySelector('button[type="submit"]');
+    if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Оформляем…';
+    }
     return true;
 };
 (function() {

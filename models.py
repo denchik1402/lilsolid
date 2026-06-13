@@ -171,6 +171,7 @@ class Order(db.Model):
     total_amount = db.Column(db.Float, nullable=False)
     promo_code = db.Column(db.String(50))  # применённый промокод
     discount_amount = db.Column(db.Float, default=0)  # сумма скидки
+    idempotency_key = db.Column(db.String(64), unique=True, nullable=True, index=True)
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     
     items = db.relationship('OrderItem', backref='order', lazy=True, cascade='all, delete-orphan')
