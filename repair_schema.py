@@ -18,13 +18,17 @@ def _table_columns(insp, table: str) -> set[str]:
     return {c['name'] for c in insp.get_columns(table)}
 
 
+def _sql_table(table: str) -> str:
+    return f'"{table}"' if table == 'order' else table
+
+
 def _add_column_if_missing(table: str, column: str, ddl: str) -> bool:
     insp = inspect(db.engine)
     if table not in insp.get_table_names():
         return False
     if column in _table_columns(insp, table):
         return False
-    db.session.execute(text(f'ALTER TABLE {table} ADD COLUMN {ddl}'))
+    db.session.execute(text(f'ALTER TABLE {_sql_table(table)} ADD COLUMN {ddl}'))
     print(f'[repair] ADD COLUMN {table}.{column}')
     return True
 
