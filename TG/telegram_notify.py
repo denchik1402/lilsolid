@@ -10,6 +10,8 @@ import urllib.request
 import urllib.parse
 import json
 
+from staff_notify import send_telegram_messages
+
 
 def get_config():
     """Token и chat_id для уведомлений (config.py или BotSetting на этом сайте)."""
@@ -107,32 +109,10 @@ def format_order_message(order):
 
 
 def send_order_to_telegram(order):
-    """Отправляет уведомление о заказе в Telegram"""
-    token, chat_id = get_config()
-    if not token:
-        return False, "Telegram не настроен (TELEGRAM_BOT_TOKEN)"
-    if not chat_id:
-        return False, "Добавьте бота в группу и напишите /start или /set_notify в чате"
-    
+    """Отправляет уведомление о заказе всем staff и в группу."""
     text = format_order_message(order)
-    url = f"https://api.telegram.org/bot{token}/sendMessage"
-    data = urllib.parse.urlencode({
-        'chat_id': chat_id,
-        'text': text,
-        'parse_mode': 'HTML',
-        'disable_web_page_preview': True,
-    }).encode()
-    
-    try:
-        req = urllib.request.Request(url, data=data, method='POST')
-        req.add_header('Content-Type', 'application/x-www-form-urlencoded')
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            result = json.loads(resp.read().decode())
-            if result.get('ok'):
-                return True, None
-            return False, result.get('description', 'Unknown error')
-    except Exception as e:
-        return False, str(e)
+    return send_telegram_messages(text)
+
 
 
 def format_review_pending_message(review):
@@ -154,13 +134,7 @@ def format_review_pending_message(review):
 
 
 def send_review_pending_to_telegram(review):
-    """Отправляет уведомление об отзыве на модерации с кнопками одобрения/отклонения"""
-    token, chat_id = get_config()
-    if not token:
-        return False, "Telegram не настроен (TELEGRAM_BOT_TOKEN)"
-    if not chat_id:
-        return False, "Добавьте бота в группу и напишите /start или /set_notify"
-    
+    """Отправляет уведомление об отзыве всем staff."""
     text = format_review_pending_message(review)
     reply_markup = {
         "inline_keyboard": [[
@@ -168,20 +142,4 @@ def send_review_pending_to_telegram(review):
             {"text": "❌ Отклонить", "callback_data": f"review_reject_{review.id}"}
         ]]
     }
-    
-    url = f"https://api.telegram.org/bot{token}/sendMessage"
-    data = urllib.parse.urlencode({
-        'chat_id': chat_id,
-        'text': text,
-        'parse_mode': 'HTML',
-        'reply_markup': json.dumps(reply_markup),
-    }).encode()
-    
-    try:
-        req = urllib.request.Request(url, data=data, method='POST')
-        req.add_header('Content-Type', 'application/x-www-form-urlencoded')
-        with urllib.request.urlopen(req, timeout=10) as resp:
-            result = json.loads(resp.read().decode())
-            return result.get('ok', False), result.get('description')
-    except Exception as e:
-        return False, str(e)
+    return send_telegram_messages(text, reply_markup=reply_markup)
