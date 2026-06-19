@@ -73,7 +73,7 @@ def fetch_remote_staff_telegram_ids(bot_token: str, roles=STAFF_ROLES) -> list[i
         },
     )
     try:
-        with urllib.request.urlopen(req, timeout=12) as resp:
+        with urllib.request.urlopen(req, timeout=6) as resp:
             data = json.loads(resp.read().decode())
             ids = []
             for raw in data.get('telegram_ids') or []:
@@ -169,7 +169,7 @@ def send_telegram_messages(text: str, *, reply_markup: dict | None = None,
         try:
             req = urllib.request.Request(url, data=data, method='POST')
             req.add_header('Content-Type', 'application/x-www-form-urlencoded')
-            with urllib.request.urlopen(req, timeout=10) as resp:
+            with urllib.request.urlopen(req, timeout=5) as resp:
                 result = json.loads(resp.read().decode())
                 if result.get('ok'):
                     sent += 1

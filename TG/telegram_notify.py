@@ -9,9 +9,13 @@ import os
 import urllib.request
 import urllib.parse
 import json
+import logging
+import threading
 
 from staff_notify import send_telegram_messages
 from order_notify import order_take_button_markup, register_order_notify_messages
+
+_logger = logging.getLogger(__name__)
 
 
 def get_config():
@@ -122,6 +126,29 @@ def send_order_to_telegram(order):
 
 
 
+
+
+def send_order_to_telegram_async(order_id: int) -> None:
+    """Отправка в Telegram в фоне — checkout не ждёт (избегаем 504 nginx)."""
+    def _worker():
+        try:
+            from app import app
+            from models import Order
+            with app.app_context():
+                order = Order.query.get(order_id)
+                if not order:
+                    return
+                ok, err = send_order_to_telegram(order)
+                if not ok:
+                    _logger.warning('[Telegram] Заказ %s: %s', order.order_number, err)
+        except Exception as exc:
+            _logger.warning('[Telegram] async order_id=%s: %s', order_id, exc)
+
+    threading.Thread(
+        target=_worker,
+        daemon=True,
+        name=f'tg-order-{order_id}',
+    ).start()
 
 def format_review_pending_message(review):
     """Форматирует отзыв на модерации для Telegram"""

@@ -98,7 +98,7 @@ def _register_remote(order_number: str, placements: list[list[int]]) -> bool:
         },
     )
     try:
-        with urllib.request.urlopen(req, timeout=12) as resp:
+        with urllib.request.urlopen(req, timeout=8) as resp:
             return 200 <= resp.status < 300
     except (urllib.error.URLError, urllib.error.HTTPError, TimeoutError, OSError):
         return False
