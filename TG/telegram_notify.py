@@ -11,6 +11,7 @@ import urllib.parse
 import json
 
 from staff_notify import send_telegram_messages
+from order_notify import order_take_button_markup, register_order_notify_messages
 
 
 def get_config():
@@ -109,9 +110,16 @@ def format_order_message(order):
 
 
 def send_order_to_telegram(order):
-    """Отправляет уведомление о заказе всем staff и в группу."""
+    """Отправляет уведомление о заказе всем staff с кнопкой «Взять в работу!»."""
     text = format_order_message(order)
-    return send_telegram_messages(text)
+    markup = order_take_button_markup(order.order_number)
+    ok, err, placements = send_telegram_messages(
+        text, reply_markup=markup, return_placements=True,
+    )
+    if ok and placements:
+        register_order_notify_messages(order.order_number, placements)
+    return ok, err
+
 
 
 

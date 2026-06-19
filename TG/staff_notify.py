@@ -131,22 +131,31 @@ def collect_notification_chat_ids(roles=STAFF_ROLES, include_group=True) -> list
 
 
 def send_telegram_messages(text: str, *, reply_markup: dict | None = None,
-                           roles=STAFF_ROLES, include_group=True) -> tuple[bool, str | None]:
+                           roles=STAFF_ROLES, include_group=True,
+                           exclude_telegram_ids=None,
+                           return_placements: bool = False):
     """
     Отправляет сообщение всем staff и в групповой чат (если есть).
-    Возвращает (успех хотя бы одной отправки, описание ошибки).
+    Возвращает (успех, ошибка) или (успех, ошибка, placements) если return_placements=True.
     """
     token = get_bot_token()
     if not token:
+        if return_placements:
+            return False, 'Telegram не настроен (TELEGRAM_BOT_TOKEN)', []
         return False, 'Telegram не настроен (TELEGRAM_BOT_TOKEN)'
 
+    exclude = {str(x) for x in (exclude_telegram_ids or [])}
     chat_ids = collect_notification_chat_ids(roles=roles, include_group=include_group)
+    chat_ids = [cid for cid in chat_ids if str(cid) not in exclude]
     if not chat_ids:
+        if return_placements:
+            return False, 'Нет получателей: назначьте роли admin/boss/courier и напишите боту /start', []
         return False, 'Нет получателей: назначьте роли admin/boss/courier и напишите боту /start'
 
     url = f'https://api.telegram.org/bot{token}/sendMessage'
     errors = []
     sent = 0
+    placements: list[tuple[int | str, int]] = []
     for chat_id in chat_ids:
         payload = {
             'chat_id': chat_id,
@@ -164,11 +173,16 @@ def send_telegram_messages(text: str, *, reply_markup: dict | None = None,
                 result = json.loads(resp.read().decode())
                 if result.get('ok'):
                     sent += 1
+                    if return_placements:
+                        msg_id = result.get('result', {}).get('message_id')
+                        if msg_id is not None:
+                            placements.append((chat_id, int(msg_id)))
                 else:
                     errors.append(str(result.get('description', chat_id)))
         except Exception as exc:
             errors.append(str(exc))
 
-    if sent:
-        return True, None
-    return False, '; '.join(errors[:3]) if errors else 'Не удалось отправить'
+    err = None if sent else ('; '.join(errors[:3]) if errors else 'Не удалось отправить')
+    if return_placements:
+        return bool(sent), err, placements
+    return bool(sent), err
