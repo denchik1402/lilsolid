@@ -86,12 +86,32 @@ def repair() -> int:
             if _add_column_if_missing('banner', col, ddl):
                 changed += 1
 
-        if _add_column_if_missing('product', 'is_hit', 'is_hit BOOLEAN DEFAULT 0'):
-            changed += 1
-        if _add_column_if_missing('product', 'is_exclusive', 'is_exclusive BOOLEAN DEFAULT 0'):
-            changed += 1
-        if _add_column_if_missing('product', 'in_stock', 'in_stock BOOLEAN DEFAULT 1'):
-            changed += 1
+        for col, ddl in (
+            ('slug', 'slug VARCHAR(200)'),
+            ('image_alt', 'image_alt VARCHAR(200)'),
+            ('meta_description', 'meta_description VARCHAR(300)'),
+            ('meta_keywords', 'meta_keywords VARCHAR(300)'),
+            ('old_price', 'old_price FLOAT'),
+            ('cost', 'cost FLOAT'),
+            ('images', 'images TEXT'),
+            ('model', 'model VARCHAR(50)'),
+            ('color', 'color VARCHAR(50)'),
+            ('views', 'views INTEGER DEFAULT 0'),
+            ('is_hit', 'is_hit BOOLEAN DEFAULT 0'),
+            ('is_exclusive', 'is_exclusive BOOLEAN DEFAULT 0'),
+            ('in_stock', 'in_stock BOOLEAN DEFAULT 1'),
+        ):
+            if _add_column_if_missing('product', col, ddl):
+                changed += 1
+
+        for col, ddl in (
+            ('slug', 'slug VARCHAR(100)'),
+            ('meta_description', 'meta_description VARCHAR(300)'),
+            ('meta_keywords', 'meta_keywords VARCHAR(300)'),
+            ('image', 'image VARCHAR(200)'),
+        ):
+            if _add_column_if_missing('category', col, ddl):
+                changed += 1
 
         if 'home_block' not in tables:
             db.create_all()
