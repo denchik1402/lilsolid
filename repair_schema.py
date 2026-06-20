@@ -54,6 +54,18 @@ def repair() -> int:
             changed += 1
         if _add_column_if_missing('device_model', 'seo_text', 'seo_text TEXT'):
             changed += 1
+        if _add_column_if_missing('device_model', 'sort_order', 'sort_order INTEGER DEFAULT 0'):
+            changed += 1
+        if _add_column_if_missing('device_model', 'image_alt', 'image_alt VARCHAR(200)'):
+            changed += 1
+        if _add_column_if_missing('device_model', 'meta_description', 'meta_description VARCHAR(300)'):
+            changed += 1
+        if _add_column_if_missing('device_model', 'meta_keywords', 'meta_keywords VARCHAR(300)'):
+            changed += 1
+        if 'device_model' not in tables:
+            db.create_all()
+            print('[repair] created device_model table')
+            changed += 1
 
         for col, ddl in (
             ('promo_code', 'promo_code VARCHAR(50)'),
@@ -75,6 +87,10 @@ def repair() -> int:
                 changed += 1
 
         if _add_column_if_missing('product', 'is_hit', 'is_hit BOOLEAN DEFAULT 0'):
+            changed += 1
+        if _add_column_if_missing('product', 'is_exclusive', 'is_exclusive BOOLEAN DEFAULT 0'):
+            changed += 1
+        if _add_column_if_missing('product', 'in_stock', 'in_stock BOOLEAN DEFAULT 1'):
             changed += 1
 
         if 'home_block' not in tables:

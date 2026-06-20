@@ -1388,7 +1388,15 @@ def _admin_or_login(template, **kwargs):
 
 
 def _query_device_models():
-    return DeviceModel.query.order_by(DeviceModel.sort_order, DeviceModel.name).all()
+    try:
+        return DeviceModel.query.order_by(DeviceModel.sort_order, DeviceModel.name).all()
+    except Exception as exc:
+        logger.warning('DeviceModel query failed: %s', exc)
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        return []
 
 
 def _device_model_product_counts():
