@@ -10,7 +10,7 @@ def main() -> int:
     failed = []
     with app.test_client() as client:
         for path in ('/', '/catalog', '/delivery', '/health'):
-            resp = client.get(path, follow_redirects=True)
+            resp = client.get(path, follow_redirects=False)
             print(f'{path} -> {resp.status_code}')
             if resp.status_code >= 500:
                 failed.append(path)

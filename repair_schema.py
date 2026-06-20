@@ -39,6 +39,49 @@ def repair() -> int:
         insp = inspect(db.engine)
         tables = set(insp.get_table_names())
 
+        # Sync columns from SQLAlchemy models (covers gaps in manual list)
+        try:
+            from models import (
+                Banner, BlogPost, Category, DeviceModel, HomeBlock, Order, Product, Review,
+            )
+            model_tables = [
+                ('product', Product),
+                ('category', Category),
+                ('banner', Banner),
+                ('review', Review),
+                ('home_block', HomeBlock),
+                ('device_model', DeviceModel),
+                ('blog_post', BlogPost),
+                ('order', Order),
+            ]
+            for table, model in model_tables:
+                if table not in tables:
+                    continue
+                existing = _table_columns(insp, table)
+                for col in model.__table__.columns:
+                    if col.name in existing:
+                        continue
+                    ctype = col.type.compile(db.engine.dialect)
+                    nullable = col.nullable
+                    default = col.default.arg if col.default is not None and not callable(col.default.arg) else None
+                    ddl = f'{col.name} {ctype}'
+                    if default is not None:
+                        if isinstance(default, bool):
+                            ddl += f' DEFAULT {1 if default else 0}'
+                        elif isinstance(default, (int, float)):
+                            ddl += f' DEFAULT {default}'
+                        elif isinstance(default, str):
+                            ddl += f" DEFAULT '{default}'"
+                    if not nullable and default is None:
+                        ddl += ' DEFAULT NULL'
+                    if _add_column_if_missing(table, col.name, ddl):
+                        changed += 1
+        except Exception as exc:
+            print(f'[repair] model sync warning: {exc}')
+
+        insp = inspect(db.engine)
+        tables = set(insp.get_table_names())
+
         if 'blog_post' not in tables:
             db.create_all()
             insp = inspect(db.engine)
@@ -105,6 +148,7 @@ def repair() -> int:
             ('updated_at', 'updated_at DATETIME'),
             ('created_at', 'created_at DATETIME'),
             ('category_id', 'category_id INTEGER'),
+            ('image', 'image VARCHAR(200)'),
         ):
             if _add_column_if_missing('product', col, ddl):
                 changed += 1
