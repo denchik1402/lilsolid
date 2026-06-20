@@ -32,7 +32,11 @@ jobs:
             echo "=== 3. pip install ==="
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && pip install -r requirements.txt --quiet"
 
-            echo "=== 4. repair_db (integrity + seed) ==="
+            echo "=== 4. stop for DB repair ==="
+            systemctl stop "$SERVICE" || true
+            rm -rf "$APP_DIR/cache/"* 2>/dev/null || true
+
+            echo "=== 4b. repair_db (integrity + seed) ==="
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 repair_db.py" || true
 
             echo "=== 4b. migrations ==="
@@ -79,6 +83,10 @@ jobs:
 
             echo "=== 8. restart site (NO telegram bot on this server) ==="
             systemctl restart "$SERVICE"
+            echo "=== 8a. diag ==="
+            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 diag_db_queries.py" || true
+            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && APP_DIR=$APP_DIR python3 test_prod_urls.py" || true
+
             echo "=== 8b. smoke test ==="
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 smoke_test.py" || true
 
