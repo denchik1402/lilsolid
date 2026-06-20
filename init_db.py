@@ -21,8 +21,16 @@ with app.app_context():
     migrate_default_banners()
     migrate_special_banners()
     if Category.query.count() == 0:
-        from create_test_data import create_test_data
-        create_test_data()
-        print("Созданы тестовые данные.")
+        try:
+            import config
+            site = getattr(config, 'SITE_URL', '') or ''
+        except ImportError:
+            site = ''
+        if 'lilsolid.ru' in site:
+            print("lilsolid.ru: пропуск тестовых данных (ожидается full_update).")
+        else:
+            from create_test_data import create_test_data
+            create_test_data()
+            print("Созданы тестовые данные.")
     populate_promo_and_hits()
     print("База данных инициализирована.")
