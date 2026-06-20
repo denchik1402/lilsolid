@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 Проверка и восстановление схемы БД после деплоя.
-Добавляет отсутствующие таблицы/колонки (blog_post, cover_image, slug моделей).
+Добавляет отсутствующие таблицы/колонки.
 """
 import sys
 
@@ -64,7 +64,7 @@ def repair() -> int:
             if _add_column_if_missing('order', col, ddl):
                 changed += 1
 
-                for col, ddl in (
+        for col, ddl in (
             ('impressions', 'impressions INTEGER DEFAULT 0'),
             ('clicks', 'clicks INTEGER DEFAULT 0'),
             ('ab_test_group', 'ab_test_group VARCHAR(50)'),
@@ -82,7 +82,7 @@ def repair() -> int:
             print('[repair] created home_block table')
             changed += 1
 
-if _add_column_if_missing('review', 'status', "status VARCHAR(20) DEFAULT 'pending'"):
+        if _add_column_if_missing('review', 'status', "status VARCHAR(20) DEFAULT 'pending'"):
             changed += 1
 
         if 'bot_setting' not in tables or 'promo_code' not in tables:
