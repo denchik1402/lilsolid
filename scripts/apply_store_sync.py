@@ -5,12 +5,14 @@ from __future__ import annotations
 
 import json
 import os
-import re
 import sys
 import urllib.error
 import urllib.request
+from datetime import date, datetime
 from pathlib import Path
 from urllib.parse import quote
+
+from sqlalchemy import Boolean, Date, DateTime
 
 ROOT = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(ROOT))
@@ -109,14 +111,55 @@ def _download_asset(rel: str) -> bool:
     return False
 
 
+def _parse_dt(value):
+    if value is None or isinstance(value, (datetime, date)):
+        return value
+    if not isinstance(value, str):
+        return value
+    text = value.strip()
+    if not text:
+        return value
+    if text.endswith('Z'):
+        text = text[:-1] + '+00:00'
+    try:
+        return datetime.fromisoformat(text)
+    except ValueError:
+        pass
+    for fmt in ('%Y-%m-%d %H:%M:%S.%f', '%Y-%m-%d %H:%M:%S'):
+        try:
+            return datetime.strptime(value.strip(), fmt)
+        except ValueError:
+            continue
+    return value
+
+
+def _coerce_row(row: dict, model) -> dict:
+    clean: dict = {}
+    for key, val in row.items():
+        if not hasattr(model, key):
+            continue
+        col = model.__table__.columns.get(key)
+        if col is not None:
+            if isinstance(col.type, DateTime):
+                val = _parse_dt(val)
+            elif isinstance(col.type, Date) and isinstance(val, str):
+                try:
+                    val = date.fromisoformat(val[:10])
+                except ValueError:
+                    pass
+            elif isinstance(col.type, Boolean) and isinstance(val, int):
+                val = bool(val)
+        clean[key] = val
+    return clean
+
+
 def _apply_rows(model, rows: list[dict], clear: bool = True) -> None:
     from extensions import db
     if clear:
         db.session.query(model).delete()
         db.session.flush()
     for row in rows:
-        clean = {k: v for k, v in row.items() if k != 'id' and hasattr(model, k)}
-        db.session.add(model(**clean))
+        db.session.add(model(**_coerce_row(row, model)))
 
 
 def main() -> int:
@@ -153,26 +196,35 @@ def main() -> int:
     print(f'[sync] assets ok: {downloaded}/{len(assets)}')
 
     with app.app_context():
-        db.session.query(Banner).delete()
-        db.session.query(Product).delete()
-        db.session.query(HomeBlock).delete()
-        db.session.query(BlogPost).delete()
-        db.session.query(Category).delete()
-        db.session.flush()
-        for row in payload.get('categories', []):
-            db.session.add(Category(**{k: v for k, v in row.items() if hasattr(Category, k)}))
-        db.session.flush()
-        for row in payload.get('products', []):
-            db.session.add(Product(**{k: v for k, v in row.items() if hasattr(Product, k)}))
-        for row in payload.get('banners', []):
-            db.session.add(Banner(**{k: v for k, v in row.items() if hasattr(Banner, k)}))
-        for row in payload.get('home_blocks', []):
-            db.session.add(HomeBlock(**{k: v for k, v in row.items() if hasattr(HomeBlock, k)}))
-        for row in payload.get('blog_posts', []):
-            db.session.add(BlogPost(**{k: v for k, v in row.items() if hasattr(BlogPost, k)}))
-        db.session.commit()
-        print(f'[sync] DB: {Product.query.count()} products, {Banner.query.count()} banners, '
-              f'{BlogPost.query.count()} blog posts')
+        from sqlalchemy import text
+        db.session.execute(text('PRAGMA foreign_keys=OFF'))
+        try:
+            db.session.query(Banner).delete()
+            db.session.query(Product).delete()
+            db.session.query(HomeBlock).delete()
+            db.session.query(BlogPost).delete()
+            db.session.query(Category).delete()
+            db.session.flush()
+            for row in payload.get('categories', []):
+                db.session.add(Category(**_coerce_row(row, Category)))
+            db.session.flush()
+            for row in payload.get('products', []):
+                db.session.add(Product(**_coerce_row(row, Product)))
+            for row in payload.get('banners', []):
+                db.session.add(Banner(**_coerce_row(row, Banner)))
+            for row in payload.get('home_blocks', []):
+                db.session.add(HomeBlock(**_coerce_row(row, HomeBlock)))
+            for row in payload.get('blog_posts', []):
+                db.session.add(BlogPost(**_coerce_row(row, BlogPost)))
+            db.session.commit()
+            print(f'[sync] DB: {Product.query.count()} products, {Banner.query.count()} banners, '
+                  f'{BlogPost.query.count()} blog posts')
+        except Exception as exc:
+            db.session.rollback()
+            print(f'[sync] DB commit failed: {exc}')
+            raise
+        finally:
+            db.session.execute(text('PRAGMA foreign_keys=ON'))
     return 0
 
 

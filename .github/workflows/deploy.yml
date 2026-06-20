@@ -48,21 +48,20 @@ jobs:
             \" || python3 init_db.py" || true
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 repair_schema.py" || true
 
-            echo "=== 4c. sync from lilstore ==="
-            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 scripts/apply_store_sync.py" || true
-            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 fix_product_images.py" || true
-
-            echo "=== 4b. sync notify chat_id from lilstore.ru ==="
-            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 sync_notify_chat.py" || true
-
-            echo "=== 5. SEO scripts ==="
+            echo "=== 4c. SEO scripts (before catalog sync) ==="
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 update_product_galleries.py" 2>/dev/null || true
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 fill_seo_meta.py" 2>/dev/null || true
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 fill_seo_meta.py --refresh-keywords" 2>/dev/null || true
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 normalize_product_names.py" 2>/dev/null || true
-            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 seed_seo_blog.py" 2>/dev/null || true
 
-            echo "=== 6. static permissions ==="
+            echo "=== 4d. sync from lilstore (catalog, banners, blog — last) ==="
+            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 scripts/apply_store_sync.py"
+            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 fix_product_images.py" || true
+
+            echo "=== 4e. sync notify chat_id from lilstore.ru ==="
+            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 sync_notify_chat.py" || true
+
+            echo "=== 5. skip seed_seo_blog on lilsolid (blog from store_sync) ==="
             chown -R www-data:www-data "$APP_DIR/static"
             find "$APP_DIR/static" -type d -exec chmod 755 {} \;
             find "$APP_DIR/static" -type f -exec chmod 644 {} \;

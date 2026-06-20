@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-20T20:35:31.366539Z",
+  "generated_at": "2026-06-20T20:45:47.267484Z",
   "source": "lilstore.ru",
   "categories": [
     {
@@ -577,13 +577,13 @@
       "images": "[\"Devices/IQOS Iluma i Standard Leaf Green/iqos-iluma-i-leaf-green-2_400w.webp\", \"Devices/IQOS Iluma i Standard Leaf Green/iqos-iluma-i-leaf-green-2_800w.webp\", \"Devices/IQOS Iluma i Standard Leaf Green/iqos-iluma-i-leaf-green-7.webp\", \"Devices/IQOS Iluma i Standard Leaf Green/iqos-iluma-i-leaf-green-7_400w.webp\", \"Devices/IQOS Iluma i Standard Leaf Green/iqos-iluma-i-leaf-green-7_800w.webp\", \"Devices/IQOS Iluma i Standard Leaf Green/iqos-iluma-i-leaf-green.webp\", \"Devices/IQOS Iluma i Standard Leaf Green/iqos-iluma-i-leaf-green_400w.webp\", \"Devices/IQOS Iluma i Standard Leaf Green/iqos-iluma-i-leaf-green_800w.webp\"]",
       "in_stock": 1,
       "category_id": 1,
-      "views": 95,
+      "views": 96,
       "created_at": "2026-03-13 19:44:46.470467",
       "cost": null,
       "image_alt": "Устройство IQOS ILUMA i Standart Leaf Green, цвет Leaf Green — фото IQOS ILUMA, оригинал, LIL STORE",
       "meta_description": "IQOS ILUMA i Standart Leaf Green — оригинальное устройство IQOS Iluma i Standard без лезвия, SMARTCORE, цвет Leaf Green. LIL STORE, Москва. 14 000 ₽. Бронь на сайте, доставка 1–2 дня.",
       "meta_keywords": "IQOS ILUMA i Standart Leaf Green, купить IQOS ILUMA i Standart Leaf Green, buy IQOS ILUMA i Standart Leaf Green, IQOS Iluma i Standard, IQOS ILUMA, IQOS Iluma i, ILUMA, купить IQOS, buy IQOS ILUMA, нагреватель IQOS, IQOS без лезвия, SMARTCORE, original IQOS, оригинал IQOS, LIL STORE, Москва…",
-      "updated_at": "2026-06-20 19:43:06.200670",
+      "updated_at": "2026-06-20 20:38:23.364659",
       "is_exclusive": 0,
       "is_hit": 0,
       "model": "IQOS Iluma i Standart",
@@ -1083,7 +1083,7 @@
       "sort_order": 1,
       "is_active": 1,
       "created_at": null,
-      "impressions": 56935,
+      "impressions": 56938,
       "clicks": 129,
       "ab_test_group": null
     },
@@ -1099,7 +1099,7 @@
       "sort_order": 2,
       "is_active": 1,
       "created_at": null,
-      "impressions": 56935,
+      "impressions": 56938,
       "clicks": 114,
       "ab_test_group": null
     },
@@ -1115,7 +1115,7 @@
       "sort_order": 3,
       "is_active": 1,
       "created_at": null,
-      "impressions": 56935,
+      "impressions": 56938,
       "clicks": 108,
       "ab_test_group": null
     },
@@ -1131,7 +1131,7 @@
       "sort_order": 4,
       "is_active": 1,
       "created_at": null,
-      "impressions": 56935,
+      "impressions": 56938,
       "clicks": 110,
       "ab_test_group": null
     },
@@ -1147,7 +1147,7 @@
       "sort_order": 5,
       "is_active": 1,
       "created_at": null,
-      "impressions": 56935,
+      "impressions": 56938,
       "clicks": 108,
       "ab_test_group": null
     },
@@ -1163,7 +1163,7 @@
       "sort_order": 6,
       "is_active": 1,
       "created_at": null,
-      "impressions": 56935,
+      "impressions": 56938,
       "clicks": 111,
       "ab_test_group": null
     },
@@ -1179,7 +1179,7 @@
       "sort_order": 7,
       "is_active": 1,
       "created_at": null,
-      "impressions": 56935,
+      "impressions": 56938,
       "clicks": 108,
       "ab_test_group": null
     },
@@ -1195,7 +1195,7 @@
       "sort_order": 8,
       "is_active": 1,
       "created_at": null,
-      "impressions": 56935,
+      "impressions": 56938,
       "clicks": 103,
       "ab_test_group": null
     },
@@ -1211,7 +1211,7 @@
       "sort_order": 9,
       "is_active": 1,
       "created_at": "2026-05-29 14:50:43.904959",
-      "impressions": 7028,
+      "impressions": 7031,
       "clicks": 28,
       "ab_test_group": null
     },
@@ -1227,8 +1227,8 @@
       "sort_order": 0,
       "is_active": 1,
       "created_at": "2026-05-29 14:52:34.122610",
-      "impressions": 7025,
-      "clicks": 82,
+      "impressions": 7028,
+      "clicks": 83,
       "ab_test_group": null
     }
   ],
