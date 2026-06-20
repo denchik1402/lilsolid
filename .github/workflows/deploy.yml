@@ -48,11 +48,10 @@ jobs:
             \" || python3 init_db.py" || true
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 repair_schema.py" || true
 
-            echo "=== 4c. fix product images ==="
-            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 scripts/ensure_real_catalog.py" || true
-            bash "$APP_DIR/scripts/sync_product_images_from_lilstore.sh" 2>/dev/null || true
-            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 fix_product_images.py" || true
+            echo "=== 4c. catalog + images ==="
+            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 full_update.py" || true
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 scripts/apply_product_images_map.py" || true
+            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 fix_product_images.py" || true
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 update_product_galleries.py" 2>/dev/null || true
 
             echo "=== 4b. sync notify chat_id from lilstore.ru ==="
