@@ -21,8 +21,57 @@ IMAGES = ROOT / 'static' / 'images'
 SOURCE = os.environ.get('LILSTORE_IMAGES_URL', 'https://lilstore.ru/static/images')
 
 
+def _norm_product_image(path: str | None) -> str | None:
+    if not path:
+        return path
+    p = path.strip().replace('\\', '/').lstrip('/')
+    if p.startswith('images/'):
+        p = p[7:]
+    if p.startswith('product_') and '/' not in p:
+        return f'products/{p}'
+    return p
+
+
+def _norm_banner_image(path: str | None) -> str | None:
+    if not path:
+        return path
+    p = path.strip().replace('\\', '/').lstrip('/')
+    if p.startswith('images/'):
+        p = p[7:]
+    if p.startswith('banner_') and not p.startswith('banners/') and not p.startswith('products/'):
+        return f'banners/{p}'
+    return p
+
+
+def _asset_candidates(rel: str) -> list[str]:
+    rel = rel.strip().replace('\\', '/').lstrip('/')
+    if rel.startswith('images/'):
+        rel = rel[7:]
+    out: list[str] = []
+    seen: set[str] = set()
+
+    def add(p: str) -> None:
+        if p and p not in seen:
+            seen.add(p)
+            out.append(p)
+
+    add(rel)
+    if rel.startswith('banners/'):
+        add(rel[8:])
+    elif rel.startswith('banner_'):
+        add(f'banners/{rel}')
+    if rel.startswith('products/'):
+        add(rel[9:])
+    elif rel.startswith('product_'):
+        add(f'products/{rel}')
+    if rel.startswith('blog/covers/'):
+        add(rel)
+    return out
+
+
 def _load_payload() -> dict | None:
-    for src in (SYNC_URL, str(LOCAL_SYNC)):
+    # Bundled file first — URL often 404 on lilstore static.
+    for src in (str(LOCAL_SYNC), SYNC_URL):
         try:
             if src.startswith('http'):
                 req = urllib.request.Request(src, headers={'User-Agent': 'lilsolid-sync/1.0'})
@@ -39,24 +88,25 @@ def _load_payload() -> dict | None:
 
 
 def _download_asset(rel: str) -> bool:
-    rel = rel.strip().lstrip('/')
+    rel = rel.strip().replace('\\', '/').lstrip('/')
     if rel.startswith('images/'):
         rel = rel[7:]
-    dest = IMAGES / rel
-    if dest.is_file() and dest.stat().st_size > 400:
-        return True
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    url = f'{SOURCE.rstrip("/")}/{quote(rel, safe="/")}'
-    try:
-        req = urllib.request.Request(url, headers={'User-Agent': 'lilsolid-sync/1.0'})
-        with urllib.request.urlopen(req, timeout=45) as resp:
-            body = resp.read()
-        if len(body) < 200:
-            return False
-        dest.write_bytes(body)
-        return True
-    except (urllib.error.URLError, OSError, TimeoutError):
-        return False
+    for candidate in _asset_candidates(rel):
+        dest = IMAGES / candidate
+        if dest.is_file() and dest.stat().st_size > 400:
+            return True
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        url = f'{SOURCE.rstrip("/")}/{quote(candidate, safe="/")}'
+        try:
+            req = urllib.request.Request(url, headers={'User-Agent': 'lilsolid-sync/1.0'})
+            with urllib.request.urlopen(req, timeout=45) as resp:
+                body = resp.read()
+            if len(body) >= 200:
+                dest.write_bytes(body)
+                return True
+        except (urllib.error.URLError, OSError, TimeoutError):
+            continue
+    return False
 
 
 def _apply_rows(model, rows: list[dict], clear: bool = True) -> None:
@@ -78,16 +128,26 @@ def main() -> int:
     from app import app, db
     from models import Banner, BlogPost, Category, HomeBlock, Product
 
+    for p in payload.get('products', []):
+        if p.get('image'):
+            p['image'] = _norm_product_image(p['image'])
+    for b in payload.get('banners', []):
+        if b.get('image'):
+            b['image'] = _norm_banner_image(b['image'])
+
     assets = set(payload.get('assets') or [])
     for p in payload.get('products', []):
         if p.get('image'):
-            assets.add(p['image'])
+            for c in _asset_candidates(p['image']):
+                assets.add(c)
     for b in payload.get('banners', []):
         if b.get('image'):
-            assets.add(b['image'])
+            for c in _asset_candidates(b['image']):
+                assets.add(c)
     for post in payload.get('blog_posts', []):
         if post.get('cover_image'):
-            assets.add(post['cover_image'])
+            for c in _asset_candidates(post['cover_image']):
+                assets.add(c)
 
     downloaded = sum(1 for a in assets if _download_asset(a))
     print(f'[sync] assets ok: {downloaded}/{len(assets)}')

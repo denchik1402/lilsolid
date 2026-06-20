@@ -103,7 +103,7 @@ def main() -> int:
         print(f'[repair_db] categories={cat_n} products={prod_n}')
         if cat_n == 0 or prod_n == 0:
             _run('init_db.py')
-            _run('full_update.py', timeout=180)
+            _run('scripts/apply_store_sync.py', timeout=300)
             try:
                 cat_n = Category.query.count()
                 prod_n = Product.query.count()
@@ -127,7 +127,7 @@ def main() -> int:
             from repair_schema import repair
             repair()
             _run('init_db.py')
-            _run('full_update.py', timeout=180)
+            _run('scripts/apply_store_sync.py', timeout=300)
             if smoke_main() != 0:
                 print('[repair_db] smoke test still failing after rebuild')
                 return 1
