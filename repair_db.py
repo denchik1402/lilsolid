@@ -114,6 +114,26 @@ def main() -> int:
 
     ok, msg = _integrity(DB)
     print(f'[repair_db] final integrity: {msg}')
+
+    # Smoke test — if pages still 500, rebuild DB from scratch once
+    try:
+        from smoke_test import main as smoke_main
+        if smoke_main() != 0:
+            print('[repair_db] smoke test failed, rebuilding shop.db')
+            if DB.exists():
+                ts = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
+                shutil.move(DB, ROOT / f'shop.db.failed_smoke.{ts}')
+            sqlite3.connect(str(DB)).close()
+            from repair_schema import repair
+            repair()
+            _run('init_db.py')
+            _run('full_update.py', timeout=180)
+            if smoke_main() != 0:
+                print('[repair_db] smoke test still failing after rebuild')
+                return 1
+    except Exception as exc:
+        print(f'[repair_db] smoke test warning: {exc}')
+
     return 0
 
 

@@ -10,11 +10,11 @@ def main() -> int:
     failed = []
     with app.test_client() as client:
         for path in ('/', '/catalog', '/delivery', '/health'):
-            resp = client.get(path)
+            resp = client.get(path, follow_redirects=True)
             print(f'{path} -> {resp.status_code}')
             if resp.status_code >= 500:
                 failed.append(path)
-                body = (resp.get_data(as_text=True) or '')[:800]
+                body = (resp.get_data(as_text=True) or '')[:1200]
                 print(body)
     if failed:
         print('FAILED:', ', '.join(failed))

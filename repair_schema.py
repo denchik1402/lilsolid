@@ -100,6 +100,11 @@ def repair() -> int:
             ('is_hit', 'is_hit BOOLEAN DEFAULT 0'),
             ('is_exclusive', 'is_exclusive BOOLEAN DEFAULT 0'),
             ('in_stock', 'in_stock BOOLEAN DEFAULT 1'),
+            ('characteristics', 'characteristics TEXT'),
+            ('description', 'description TEXT'),
+            ('updated_at', 'updated_at DATETIME'),
+            ('created_at', 'created_at DATETIME'),
+            ('category_id', 'category_id INTEGER'),
         ):
             if _add_column_if_missing('product', col, ddl):
                 changed += 1
@@ -109,8 +114,43 @@ def repair() -> int:
             ('meta_description', 'meta_description VARCHAR(300)'),
             ('meta_keywords', 'meta_keywords VARCHAR(300)'),
             ('image', 'image VARCHAR(200)'),
+            ('description', 'description TEXT'),
+            ('created_at', 'created_at DATETIME'),
+            ('updated_at', 'updated_at DATETIME'),
         ):
             if _add_column_if_missing('category', col, ddl):
+                changed += 1
+
+        for col, ddl in (
+            ('sort_order', 'sort_order INTEGER DEFAULT 0'),
+            ('is_active', 'is_active BOOLEAN DEFAULT 1'),
+            ('title', 'title VARCHAR(200)'),
+            ('subtitle', 'subtitle VARCHAR(300)'),
+            ('link_url', 'link_url VARCHAR(300)'),
+            ('image', 'image VARCHAR(200)'),
+        ):
+            if _add_column_if_missing('banner', col, ddl):
+                changed += 1
+
+        for col, ddl in (
+            ('created_at', 'created_at DATETIME'),
+            ('product_id', 'product_id INTEGER'),
+            ('rating', 'rating INTEGER DEFAULT 5'),
+            ('text', 'text TEXT'),
+            ('author_name', 'author_name VARCHAR(100)'),
+        ):
+            if _add_column_if_missing('review', col, ddl):
+                changed += 1
+
+        for col, ddl in (
+            ('title', 'title VARCHAR(200)'),
+            ('subtitle', 'subtitle VARCHAR(300)'),
+            ('link_url', 'link_url VARCHAR(300)'),
+            ('image', 'image VARCHAR(200)'),
+            ('position', 'position INTEGER DEFAULT 0'),
+            ('is_active', 'is_active BOOLEAN DEFAULT 1'),
+        ):
+            if _add_column_if_missing('home_block', col, ddl):
                 changed += 1
 
         if 'home_block' not in tables:

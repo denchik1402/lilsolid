@@ -446,6 +446,21 @@ def _get_index_cached_data():
     data = cache.get('index_data')
     if data is not None:
         return data
+    try:
+        return _load_index_cached_data()
+    except Exception as exc:
+        logger.warning('index_data load failed: %s', exc)
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        return {
+            'new_products': [], 'popular_products': [], 'promo_products': [],
+            'hit_products': [], 'recent_reviews': [], 'home_blocks': [],
+        }
+
+
+def _load_index_cached_data():
     new_products = Product.query.order_by(Product.created_at.desc()).limit(8).all()
     popular_products = Product.query.order_by(Product.views.desc()).limit(4).all()
     promo_products = Product.query.filter(Product.old_price.isnot(None), Product.old_price > 0)\
@@ -466,6 +481,7 @@ def _get_index_cached_data():
     }
     cache.set('index_data', data, timeout=120)
     return data
+
 
 @app.route('/')
 def index():
