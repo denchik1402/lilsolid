@@ -40,9 +40,15 @@ def _norm_banner_image(path: str | None) -> str | None:
     p = path.strip().replace('\\', '/').lstrip('/')
     if p.startswith('images/'):
         p = p[7:]
-    if p.startswith('banner_') and not p.startswith('banners/') and not p.startswith('products/'):
+    if p.startswith('products/') or p.startswith('banners/'):
+        return p
+    if '/' not in p:
         return f'banners/{p}'
     return p
+
+
+def _norm_home_block_image(path: str | None) -> str | None:
+    return _norm_banner_image(path)
 
 
 def _asset_candidates(rel: str) -> list[str]:
@@ -60,7 +66,7 @@ def _asset_candidates(rel: str) -> list[str]:
     add(rel)
     if rel.startswith('banners/'):
         add(rel[8:])
-    elif rel.startswith('banner_'):
+    elif rel.startswith('banner_') or rel.startswith('telegram_') or rel.startswith('block_'):
         add(f'banners/{rel}')
     if rel.startswith('products/'):
         add(rel[9:])
@@ -177,6 +183,9 @@ def main() -> int:
     for b in payload.get('banners', []):
         if b.get('image'):
             b['image'] = _norm_banner_image(b['image'])
+    for h in payload.get('home_blocks', []):
+        if h.get('image'):
+            h['image'] = _norm_home_block_image(h['image'])
 
     assets = set(payload.get('assets') or [])
     for p in payload.get('products', []):
@@ -186,6 +195,10 @@ def main() -> int:
     for b in payload.get('banners', []):
         if b.get('image'):
             for c in _asset_candidates(b['image']):
+                assets.add(c)
+    for h in payload.get('home_blocks', []):
+        if h.get('image'):
+            for c in _asset_candidates(h['image']):
                 assets.add(c)
     for post in payload.get('blog_posts', []):
         if post.get('cover_image'):

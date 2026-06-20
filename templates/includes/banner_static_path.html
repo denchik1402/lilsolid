@@ -1,0 +1,8 @@
+{# Путь к файлу баннера/блока в static. image — значение из БД #}
+{% macro banner_static_path(image) -%}
+{%- if image.startswith('products/') or image.startswith('banners/') -%}
+images/{{ image }}
+{%- else -%}
+images/banners/{{ image }}
+{%- endif -%}
+{%- endmacro %}

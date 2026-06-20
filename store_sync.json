@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-06-20T20:45:47.267484Z",
+  "generated_at": "2026-06-20T20:56:48.556662Z",
   "source": "lilstore.ru",
   "categories": [
     {
@@ -1185,7 +1185,7 @@
     },
     {
       "id": 8,
-      "image": "telegram_bot.png",
+      "image": "banners/telegram_bot.png",
       "title": "ИСПОЛЬЗУЙ TELEGRAM БОТ!",
       "subtitle": "• Актуальные цены и оперативная поддержка\n• Быстро, удобно, круглосуточно",
       "button_text": "Перейти в бот",
@@ -1236,7 +1236,7 @@
     {
       "id": 1,
       "position": 1,
-      "image": "block_1780434324_8744.jpg",
+      "image": "banners/block_1780434324_8744.jpg",
       "title": "О нашем магазине",
       "description": "Мы радуем наших покупателей качественной оригинальной продукцией и приятным сервисом более 5 лет и продолжаем это делать с огромным удовольствием",
       "button_text": "Подробнее",
@@ -1247,7 +1247,7 @@
     {
       "id": 2,
       "position": 2,
-      "image": "block_1773832893_6755.jpg",
+      "image": "banners/block_1773832893_6755.jpg",
       "title": "Наша миссия",
       "description": "Предоставить нашим клиентам лучший опыт покупки",
       "button_text": null,
@@ -1258,7 +1258,7 @@
     {
       "id": 3,
       "position": 3,
-      "image": "block_1773832923_2451.png",
+      "image": "banners/block_1773832923_2451.png",
       "title": "Наша цель",
       "description": "Стать вашим надёжным партнёром и проводником",
       "button_text": null,
@@ -1648,9 +1648,6 @@
     "banners/telegram_bot_1200w.webp",
     "banners/telegram_bot_400w.webp",
     "banners/telegram_bot_800w.webp",
-    "block_1773832893_6755.jpg",
-    "block_1773832923_2451.png",
-    "block_1780434324_8744.jpg",
     "blog/covers/cover_1780438218_3147.png",
     "blog/covers/cover_1780438799_8663.png",
     "blog/covers/iqos-iluma-seletti.webp",
@@ -1665,7 +1662,6 @@
     "products/product_40_34664.png",
     "products/product_41_95905.png",
     "products/product_42_86723.png",
-    "products/product_43_41487.png",
-    "telegram_bot.png"
+    "products/product_43_41487.png"
   ]
 }

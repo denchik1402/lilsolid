@@ -228,6 +228,7 @@
 {% endblock %}
 
 {% block content %}
+{% from 'includes/banner_static_path.html' import banner_static_path %}
 <!-- Карусель баннеров -->
 {% if promo_slides %}
 <div class="promo-carousel-wrapper mb-4">
@@ -245,7 +246,7 @@
             {% set slide_title = slide.title %}
             {% set slide_subtitle = slide.subtitle or '' %}
             {% set slide_btn = slide.button_text or 'Купить сейчас' %}
-            {% set img_path = 'images/' if slide.image.startswith('products/') else 'images/banners/' %}
+            {% set slide_static = banner_static_path(slide.image) %}
             {% set slide_bg = '' %}
             {% set slide_badge = slide.badge_type or ('new' if slide.product_id else '') %}
             {% set slide_product = slide.product if slide.product_id else none %}
@@ -263,7 +264,7 @@
             <div class="carousel-item {% if loop.first %}active{% endif %}">
                 <div class="promo-slide-inner {{ slide_bg }}{% if not slide_img and slide_badge == 'telegram' %} promo-slide-telegram-only{% endif %}">
                     {% if slide_img %}
-                    <div class="promo-slide-bg" style="background-image: url('{{ url_for('static', filename=img_path + slide_img) }}');" role="img" aria-label="{{ slide_title }}"></div>
+                    <div class="promo-slide-bg" style="background-image: url('{{ url_for('static', filename=slide_static) }}');" role="img" aria-label="{{ slide_title }}"></div>
                     <a href="{{ slide_link }}" class="promo-slide-bg-link" aria-label="{{ slide_title }}"></a>
                     {% elif slide_badge != 'telegram' %}
                     <div class="promo-slide-bg promo-slide-bg-placeholder">
@@ -429,7 +430,7 @@
         {% for blk in home_blocks %}
         <div class="block {% if blk.position == 1 %}block-left{% endif %}">
             <div class="block-img-container">
-                <img src="{{ url_for('static', filename='images/banners/' + blk.image) }}" alt="{{ blk.title }}" loading="lazy">
+                <img src="{{ url_for('static', filename=banner_static_path(blk.image)) }}" alt="{{ blk.title }}" loading="lazy">
             </div>
             <h4>{{ blk.title }}</h4>
             {% if blk.description %}<p>{{ blk.description }}</p>{% endif %}
