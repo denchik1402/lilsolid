@@ -6,7 +6,8 @@
 {% block canonical_url %}{{ request.url_root.rstrip('/') }}{{ url_for('blog_post', slug=post.slug) }}{% endblock %}
 
 {% block extra_css %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/blog.css') }}?v=18">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/blog.css') }}?v=19">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/blog-cyber.css') }}?v=1">
 {% endblock %}
 
 {% block schema_ld %}
@@ -78,7 +79,7 @@
         {% for p in other_posts %}
         <div class="col-md-4">
             {% with post=p, title_tag='h3', title_class='h6', show_excerpt=false, compact=true, extra_class='h-100' %}
-            {% include 'includes/blog_card.html' %}
+            {% include 'includes/blog_card_cyber.html' %}
             {% endwith %}
         </div>
         {% endfor %}

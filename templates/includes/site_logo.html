@@ -1,4 +1,8 @@
-{# Текстовый логотип «ЛИЛ СОЛИД» — navbar / footer #}
+{# Логотип ЛИЛ СОЛИД — текст, без background-clip #}
 <a href="{{ url_for('index') }}" class="site-logo {{ extra_class|default('navbar-brand') }}" aria-label="ЛИЛ СОЛИД — на главную">
-    <span class="site-logo-text">ЛИЛ&nbsp;СОЛИД</span>
+    <span class="site-logo-mark" aria-hidden="true"></span>
+    <span class="site-logo-label">
+        <span class="site-logo-top">ЛИЛ</span>
+        <span class="site-logo-bottom">СОЛИД</span>
+    </span>
 </a>

@@ -1,0 +1,59 @@
+/* Блог — cyberpunk (lilsolid.ru) */
+[data-theme="cyberpunk"] .blog-hero,
+[data-theme="dark"] .blog-hero {
+    background: linear-gradient(135deg, rgba(0,245,255,0.12) 0%, rgba(26,26,46,0.95) 45%, #0a0a12 100%);
+    border: 1px solid rgba(0, 245, 255, 0.28);
+    box-shadow: 0 0 24px rgba(0, 245, 255, 0.08);
+    color: var(--text);
+}
+[data-theme="cyberpunk"] .blog-hero h1,
+[data-theme="dark"] .blog-hero h1 {
+    font-family: 'Orbitron', sans-serif;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--neon-cyan, #00f5ff);
+    text-shadow: 0 0 14px rgba(0, 245, 255, 0.35);
+}
+[data-theme="cyberpunk"] .blog-hero p { color: var(--text-muted); }
+
+[data-theme="cyberpunk"] .blog-card,
+[data-theme="dark"] .blog-card {
+    background: var(--bg-card);
+    border-color: rgba(0, 245, 255, 0.22);
+}
+[data-theme="cyberpunk"] .blog-card:hover,
+[data-theme="dark"] .blog-card:hover {
+    border-color: rgba(57, 255, 20, 0.45);
+    box-shadow: 0 0 24px rgba(0, 245, 255, 0.12);
+}
+[data-theme="cyberpunk"] .blog-card-title { color: var(--text); }
+[data-theme="cyberpunk"] .blog-card-read { color: var(--neon-cyan, #00f5ff); }
+
+[data-theme="cyberpunk"] .article-hero,
+[data-theme="dark"] .article-hero {
+    background: var(--bg-card);
+    border: 1px solid rgba(0, 245, 255, 0.22);
+    border-radius: 12px;
+}
+[data-theme="cyberpunk"] .article-content {
+    color: var(--text);
+}
+[data-theme="cyberpunk"] .article-content h2,
+[data-theme="cyberpunk"] .article-content h3 {
+    color: var(--neon-cyan, #00f5ff);
+    font-family: 'Orbitron', sans-serif;
+}
+[data-theme="cyberpunk"] .article-cta {
+    border: 1px solid rgba(0, 245, 255, 0.2);
+    background: rgba(0, 245, 255, 0.04);
+    border-radius: 12px;
+    padding: 1.5rem;
+}
+[data-theme="cyberpunk"] .breadcrumb-item a { color: var(--neon-cyan, #00f5ff); }
+[data-theme="cyberpunk"] .breadcrumb-item.active { color: var(--text-muted); }
+
+.blog-page-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 1.15rem;
+}

@@ -56,7 +56,8 @@
     <!-- Font Awesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <!-- Киберпанк-шрифты -->
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet" media="print" onload="this.media='all'">
+    <noscript><link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;600;700;800&family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet"></noscript>
     
     <style>
         :root, [data-theme="light"] {
@@ -136,43 +137,60 @@
         .logo-dark { display: none; }
         [data-theme="dark"], [data-theme="cyberpunk"] .logo-light { display: none; }
         [data-theme="dark"], [data-theme="cyberpunk"] .logo-dark { display: block; }
-        /* Текстовый логотип ЛИЛ СОЛИД */
+        /* Логотип ЛИЛ СОЛИД */
         .site-logo {
             display: inline-flex;
             align-items: center;
+            gap: 0.55rem;
             text-decoration: none !important;
             line-height: 1;
         }
-        .site-logo-text {
+        .site-logo-mark {
+            width: 34px;
+            height: 34px;
+            border-radius: 4px;
+            border: 2px solid var(--neon-cyan, #00f5ff);
+            background: linear-gradient(135deg, rgba(0,245,255,0.15) 0%, rgba(191,0,255,0.12) 100%);
+            box-shadow: 0 0 12px rgba(0, 245, 255, 0.35), inset 0 0 8px rgba(0, 245, 255, 0.08);
+            flex-shrink: 0;
+            position: relative;
+            animation: logo-mark-pulse 2.8s ease-in-out infinite;
+        }
+        .site-logo-mark::after {
+            content: '';
+            position: absolute;
+            inset: 7px;
+            border: 1px solid rgba(57, 255, 20, 0.55);
+            border-radius: 2px;
+        }
+        .site-logo-label {
+            display: flex;
+            flex-direction: column;
+            line-height: 1.05;
+        }
+        .site-logo-top {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 0.62rem;
+            letter-spacing: 0.28em;
+            color: var(--neon-cyan, #00f5ff);
+            text-shadow: 0 0 8px rgba(0, 245, 255, 0.45);
+        }
+        .site-logo-bottom {
             font-family: 'Orbitron', sans-serif;
             font-weight: 800;
-            font-size: 1.25rem;
-            letter-spacing: 0.14em;
-            text-transform: uppercase;
-            white-space: nowrap;
-            background: linear-gradient(90deg, #0d6efd 0%, #6f42c1 50%, #0d6efd 100%);
-            background-size: 200% auto;
-            -webkit-background-clip: text;
-            background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: logo-shimmer 4s linear infinite;
+            font-size: 1.05rem;
+            letter-spacing: 0.12em;
+            color: var(--text, #e8e8e8);
+            text-shadow: 0 0 10px rgba(0, 245, 255, 0.2);
         }
-        [data-theme="cyberpunk"] .site-logo-text {
-            background: linear-gradient(90deg, var(--neon-cyan) 0%, var(--neon-purple) 45%, var(--neon-green) 70%, var(--neon-cyan) 100%);
-            background-size: 250% auto;
-            animation: logo-shimmer 3s linear infinite, logo-glow 2.2s ease-in-out infinite alternate;
+        .site-logo--footer .site-logo-mark { width: 42px; height: 42px; }
+        .site-logo--footer .site-logo-bottom { font-size: 1.25rem; }
+        @keyframes logo-mark-pulse {
+            0%, 100% { box-shadow: 0 0 10px rgba(0, 245, 255, 0.3), inset 0 0 6px rgba(0, 245, 255, 0.06); }
+            50% { box-shadow: 0 0 18px rgba(0, 245, 255, 0.55), inset 0 0 10px rgba(57, 255, 20, 0.12); }
         }
-        .site-logo--footer .site-logo-text { font-size: 1.5rem; }
-        @keyframes logo-shimmer {
-            to { background-position: 250% center; }
-        }
-        @keyframes logo-glow {
-            from { filter: drop-shadow(0 0 3px rgba(0, 245, 255, 0.35)); }
-            to { filter: drop-shadow(0 0 14px rgba(0, 245, 255, 0.85)); }
-        }
-        .site-logo:hover .site-logo-text {
-            animation-duration: 1.5s, 1s;
-        }
+        .site-logo:hover .site-logo-bottom { color: var(--neon-green, #39ff14); }
         .navbar .nav-link:hover { color: #0d6efd !important; }
         [data-theme="cyberpunk"] .navbar .nav-link:hover { color: var(--neon-cyan) !important; text-shadow: 0 0 10px var(--neon-cyan); }
         [data-theme="cyberpunk"] .btn-primary {
