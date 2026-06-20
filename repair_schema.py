@@ -64,7 +64,25 @@ def repair() -> int:
             if _add_column_if_missing('order', col, ddl):
                 changed += 1
 
-        if _add_column_if_missing('review', 'status', "status VARCHAR(20) DEFAULT 'pending'"):
+                for col, ddl in (
+            ('impressions', 'impressions INTEGER DEFAULT 0'),
+            ('clicks', 'clicks INTEGER DEFAULT 0'),
+            ('ab_test_group', 'ab_test_group VARCHAR(50)'),
+            ('badge_type', 'badge_type VARCHAR(20)'),
+            ('product_id', 'product_id INTEGER'),
+        ):
+            if _add_column_if_missing('banner', col, ddl):
+                changed += 1
+
+        if _add_column_if_missing('product', 'is_hit', 'is_hit BOOLEAN DEFAULT 0'):
+            changed += 1
+
+        if 'home_block' not in tables:
+            db.create_all()
+            print('[repair] created home_block table')
+            changed += 1
+
+if _add_column_if_missing('review', 'status', "status VARCHAR(20) DEFAULT 'pending'"):
             changed += 1
 
         if 'bot_setting' not in tables or 'promo_code' not in tables:

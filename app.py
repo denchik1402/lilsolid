@@ -205,11 +205,19 @@ def _get_nav_categories():
 @app.context_processor
 def inject_nav_categories():
     """Категории для выпадающего меню «Каталог» в шапке."""
-    categories = cache.get('nav_categories')
-    if categories is None:
-        categories = _get_nav_categories()
-        cache.set('nav_categories', categories, timeout=300)
-    return {'nav_categories': categories}
+    try:
+        categories = cache.get('nav_categories')
+        if categories is None:
+            categories = _get_nav_categories()
+            cache.set('nav_categories', categories, timeout=300)
+        return {'nav_categories': categories}
+    except Exception as exc:
+        logger.warning('nav_categories failed: %s', exc)
+        try:
+            db.session.rollback()
+        except Exception:
+            pass
+        return {'nav_categories': []}
 
 SITE_PHONE_DEFAULT = '+7 (993) 596-82-25'
 SITE_ADDRESS_DEFAULT = 'Москва, Ленинградское шоссе, 16А'
