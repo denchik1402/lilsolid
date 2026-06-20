@@ -2246,7 +2246,7 @@ def manifest():
     return jsonify({
         'name': 'LIL STORE',
         'short_name': 'LIL STORE',
-        'description': 'IQOS и стики TEREA. Оригинальная продукция, доставка 1–2 дня.',
+        'description': 'IQOS и стики TEREA. Оригинальная продукция, доставка по Москве 0–2 дня.',
         'start_url': base + '/',
         'display': 'standalone',
         'background_color': '#f8f9fa',
