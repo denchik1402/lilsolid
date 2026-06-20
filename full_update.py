@@ -644,10 +644,6 @@ def full_update():
     from app import app, db
     
     db_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'shop.db')
-    if os.path.exists(db_path):
-        os.remove(db_path)
-        print("  [OK] Старая БД удалена (свежая схема)")
-    
     with app.app_context():
         try:
             from alembic_runner import run_alembic
@@ -655,7 +651,7 @@ def full_update():
         except Exception as e:
             print(f"  [INFO] Alembic: {e}, используем db.create_all()")
             db.create_all()
-    print("  [OK] Таблицы созданы")
+    print("  [OK] Схема БД актуальна")
     
     conn = sqlite3.connect('shop.db')
     cursor = conn.cursor()
