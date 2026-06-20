@@ -136,6 +136,43 @@
         .logo-dark { display: none; }
         [data-theme="dark"], [data-theme="cyberpunk"] .logo-light { display: none; }
         [data-theme="dark"], [data-theme="cyberpunk"] .logo-dark { display: block; }
+        /* Текстовый логотип ЛИЛ СОЛИД */
+        .site-logo {
+            display: inline-flex;
+            align-items: center;
+            text-decoration: none !important;
+            line-height: 1;
+        }
+        .site-logo-text {
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 800;
+            font-size: 1.25rem;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            white-space: nowrap;
+            background: linear-gradient(90deg, #0d6efd 0%, #6f42c1 50%, #0d6efd 100%);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: logo-shimmer 4s linear infinite;
+        }
+        [data-theme="cyberpunk"] .site-logo-text {
+            background: linear-gradient(90deg, var(--neon-cyan) 0%, var(--neon-purple) 45%, var(--neon-green) 70%, var(--neon-cyan) 100%);
+            background-size: 250% auto;
+            animation: logo-shimmer 3s linear infinite, logo-glow 2.2s ease-in-out infinite alternate;
+        }
+        .site-logo--footer .site-logo-text { font-size: 1.5rem; }
+        @keyframes logo-shimmer {
+            to { background-position: 250% center; }
+        }
+        @keyframes logo-glow {
+            from { filter: drop-shadow(0 0 3px rgba(0, 245, 255, 0.35)); }
+            to { filter: drop-shadow(0 0 14px rgba(0, 245, 255, 0.85)); }
+        }
+        .site-logo:hover .site-logo-text {
+            animation-duration: 1.5s, 1s;
+        }
         .navbar .nav-link:hover { color: #0d6efd !important; }
         [data-theme="cyberpunk"] .navbar .nav-link:hover { color: var(--neon-cyan) !important; text-shadow: 0 0 10px var(--neon-cyan); }
         [data-theme="cyberpunk"] .btn-primary {
@@ -746,6 +783,7 @@
             opacity: 1;
         }
         [data-theme="dark"], [data-theme="cyberpunk"] .footer a:hover { color: #6ea8fe; }
+        [data-theme="cyberpunk"] .footer a:hover { color: var(--neon-cyan); text-shadow: 0 0 8px rgba(0,245,255,0.4); }
         .footer-logo {
             height: 48px;
             width: auto;
@@ -755,6 +793,14 @@
         .footer .logo-dark { display: none; }
         [data-theme="dark"], [data-theme="cyberpunk"] .footer .logo-light { display: none; }
         [data-theme="dark"], [data-theme="cyberpunk"] .footer .logo-dark { display: block; }
+        .footer-info-cols {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.25rem 1.5rem;
+        }
+        @media (max-width: 575.98px) {
+            .footer-info-cols { grid-template-columns: 1fr; }
+        }
         .admin-panel { max-width: 1200px; margin: 0 auto; padding: 1rem 0; }
         .admin-breadcrumb a { color: #0d6efd; text-decoration: none; }
         .admin-breadcrumb a:hover { text-decoration: underline; }
@@ -1352,10 +1398,7 @@
     <!-- Шапка -->
     <nav class="navbar navbar-expand-lg navbar-light bg-white">
         <div class="container">
-            <a class="navbar-brand d-flex align-items-center" href="{{ url_for('index') }}">
-                <img src="{{ url_for('static', filename='LOGO3.png') }}" alt="LIL STORE" class="navbar-logo logo-light" height="40">
-                <img src="{{ url_for('static', filename='LOGO4.png') }}" alt="LIL STORE" class="navbar-logo logo-dark" height="40">
-            </a>
+            {% include 'includes/site_logo.html' %}
             
             <div class="d-flex align-items-center gap-2">
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain">
@@ -1456,16 +1499,18 @@
     <footer class="footer">
         <div class="container">
             <div class="row align-items-start mb-4">
-                <div class="col-md-4 mb-4 mb-md-0">
-                    <a href="{{ url_for('index') }}" class="d-inline-block mb-3">
-                        <img src="{{ url_for('static', filename='LOGO3.png') }}" alt="LIL STORE" class="footer-logo logo-light">
-                        <img src="{{ url_for('static', filename='LOGO4.png') }}" alt="LIL STORE" class="footer-logo logo-dark">
-                    </a>
-                    <p class="mb-0 small">Оригинальные устройства IQOS и стики TEREA. Бронь на сайте, доставка по Москве 0–2 дня. Работаем с 2020 года.</p>
+                <div class="col-lg-6 mb-4 mb-lg-0">
+                    {% with extra_class='site-logo--footer mb-3' %}
+                    {% include 'includes/site_logo.html' %}
+                    {% endwith %}
+                    <p class="mb-3 small">Оригинальные устройства IQOS и стики TEREA. Бронь на сайте, доставка по Москве 0–2 дня. Работаем с 2020 года.</p>
+                    <h5>Контакты</h5>
+                    <p class="mb-1">+7 (985) 490-48-80</p>
+                    <p class="mb-0"><a href="https://t.me/iluma_prime_bot" target="_blank" rel="noopener">@iluma_prime_bot</a></p>
                 </div>
-                <div class="col-md-4 mb-4 mb-md-0">
+                <div class="col-lg-6">
                     <h5>Информация</h5>
-                    <ul class="list-unstyled mb-0">
+                    <ul class="list-unstyled mb-0 footer-info-cols">
                         <li class="mb-2"><a href="{{ url_for('about') }}">О нас</a></li>
                         <li class="mb-2"><a href="{{ url_for('compare') }}">Сравнение</a></li>
                         <li class="mb-2"><a href="{{ url_for('favorites') }}">Избранное</a></li>
@@ -1474,18 +1519,13 @@
                         <li class="mb-2"><a href="{{ url_for('contacts') }}">Контакты</a></li>
                         <li class="mb-2"><a href="{{ url_for('faq') }}">FAQ</a></li>
                         <li class="mb-2"><a href="{{ url_for('blog_index') }}">Блог</a></li>
-                        <li><a href="{{ url_for('privacy') }}">Политика конфиденциальности</a></li>
+                        <li class="mb-2"><a href="{{ url_for('privacy') }}">Политика конфиденциальности</a></li>
                     </ul>
-                </div>
-                <div class="col-md-4">
-                    <h5>Контакты</h5>
-                    <p class="mb-1">+7 (985) 490-48-80</p>
-                    <p class="mb-0"><a href="https://t.me/iluma_prime_bot" target="_blank" rel="noopener">@iluma_prime_bot</a></p>
                 </div>
             </div>
             <hr class="my-4" style="border-color: var(--border);">
             <div class="text-center">
-                <small class="text-muted">&copy; 2026 LIL STORE. Все права защищены.</small>
+                <small class="text-muted">&copy; 2026 ЛИЛ СОЛИД. Все права защищены.</small>
             </div>
             <div class="footer-legal">
                 <p class="mb-0">* Информация, размещённая на сайте, представлена для ознакомления и не является публичной офертой. Продажа табачной продукции онлайн не осуществляется: на сайте возможна только бронь товара, доставка по Москве 0–2 дня. Оплата при получении в соответствии с действующим законодательством РФ.</p>

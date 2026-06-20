@@ -64,22 +64,23 @@ index, follow
 
 {% block content %}
 <style>
-/* Фильтры в стиле Яндекс Маркет */
+/* Фильтры каталога — на CSS-переменных темы */
 .catalog-filters {
-    background: #f7f8fa;
+    background: var(--bg-card);
     border-radius: 12px;
     padding: 16px 0;
-    border: 1px solid #e8e8e8;
+    border: 1px solid var(--border);
+    box-shadow: 0 4px 24px var(--shadow);
 }
 .catalog-filters .filter-section {
-    border-bottom: 1px solid #e8e8e8;
+    border-bottom: 1px solid var(--border);
     padding: 0 16px;
 }
 .catalog-filters .filter-section:last-child { border-bottom: none; }
 .catalog-filters .filter-title {
     font-size: 13px;
     font-weight: 600;
-    color: #333;
+    color: var(--text);
     padding: 12px 0 8px;
     margin: 0;
     display: flex;
@@ -90,7 +91,7 @@ index, follow
 }
 .catalog-filters .filter-title .chevron {
     font-size: 10px;
-    color: #999;
+    color: var(--text-muted);
     transition: transform 0.2s;
 }
 .catalog-filters .filter-title[aria-expanded="false"] .chevron { transform: rotate(-90deg); }
@@ -101,23 +102,29 @@ index, follow
     align-items: center;
     padding: 6px 0;
     font-size: 14px;
-    color: #333;
+    color: var(--text);
     text-decoration: none;
     border-radius: 6px;
     transition: background 0.15s, color 0.15s;
 }
-.catalog-filters .filter-option:hover { background: #eef0f2; color: #333; }
+.catalog-filters .filter-option:hover { background: var(--bg-input); color: var(--text); }
 .catalog-filters .filter-option.active {
     color: #0d6efd;
     font-weight: 500;
-    background: rgba(13, 110, 253, 0.06);
+    background: rgba(13, 110, 253, 0.08);
+}
+[data-theme="cyberpunk"] .catalog-filters .filter-option.active {
+    color: var(--neon-cyan);
+    background: rgba(0, 245, 255, 0.1);
+    text-shadow: 0 0 8px rgba(0, 245, 255, 0.35);
 }
 .catalog-filters .filter-option.active:hover { color: #0a58ca; }
+[data-theme="cyberpunk"] .catalog-filters .filter-option.active:hover { color: var(--neon-green); }
 .catalog-filters .filter-check {
     width: 18px;
     height: 18px;
     margin-right: 10px;
-    border: 2px solid #ccc;
+    border: 2px solid var(--border);
     border-radius: 4px;
     display: inline-flex;
     align-items: center;
@@ -128,28 +135,49 @@ index, follow
     background: #0d6efd;
     border-color: #0d6efd;
 }
+[data-theme="cyberpunk"] .catalog-filters .filter-option.active .filter-check {
+    background: var(--neon-cyan);
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 8px rgba(0, 245, 255, 0.5);
+}
 .catalog-filters .filter-option.active .filter-check::after {
     content: "✓";
     color: #fff;
     font-size: 11px;
     font-weight: bold;
 }
+[data-theme="cyberpunk"] .catalog-filters .filter-option.active .filter-check::after { color: #0a0a12; }
 .catalog-filters .btn-reset {
     margin: 12px 16px 0;
     font-size: 13px;
-    color: #666;
+    color: var(--text-muted);
     background: transparent;
-    border: 1px solid #ddd;
+    border: 1px solid var(--border);
     padding: 8px 16px;
     border-radius: 8px;
     width: calc(100% - 32px);
     transition: all 0.2s;
 }
 .catalog-filters .btn-reset:hover {
-    background: #fff;
-    border-color: #ccc;
-    color: #333;
+    background: var(--bg-input);
+    border-color: var(--text-muted);
+    color: var(--text);
 }
+[data-theme="cyberpunk"] .catalog-filters {
+    border-color: rgba(0, 245, 255, 0.25);
+    box-shadow: 0 0 20px rgba(0, 245, 255, 0.06);
+}
+[data-theme="cyberpunk"] .catalog-filters .btn-reset:hover {
+    border-color: var(--neon-cyan);
+    color: var(--neon-cyan);
+}
+.catalog-filters .form-control,
+.catalog-filters .form-select {
+    background: var(--bg-input);
+    border-color: var(--border);
+    color: var(--text);
+}
+.catalog-filters .form-control::placeholder { color: var(--text-muted); }
 /* Ползунок цены (два range в два ряда) */
 .price-slider-wrap {
     display: flex;
@@ -172,7 +200,7 @@ index, follow
     height: 6px;
     -webkit-appearance: none;
     appearance: none;
-    background: #dee2e6;
+    background: var(--border);
     border-radius: 3px;
 }
 .price-slider-wrap input[type="range"]::-webkit-slider-thumb {
@@ -182,8 +210,12 @@ index, follow
     border-radius: 50%;
     background: #0d6efd;
     cursor: pointer;
-    border: 2px solid #fff;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    border: 2px solid var(--bg-card);
+    box-shadow: 0 1px 3px var(--shadow);
+}
+[data-theme="cyberpunk"] .price-slider-wrap input[type="range"]::-webkit-slider-thumb {
+    background: var(--neon-cyan);
+    box-shadow: 0 0 10px rgba(0, 245, 255, 0.5);
 }
 .price-slider-wrap input[type="range"]::-moz-range-thumb {
     width: 18px;
@@ -191,9 +223,27 @@ index, follow
     border-radius: 50%;
     background: #0d6efd;
     cursor: pointer;
-    border: 2px solid #fff;
-    box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+    border: 2px solid var(--bg-card);
+    box-shadow: 0 1px 3px var(--shadow);
 }
+[data-theme="cyberpunk"] .price-slider-wrap input[type="range"]::-moz-range-thumb {
+    background: var(--neon-cyan);
+}
+.view-switcher .btn.active { background: #0d6efd; color: #fff !important; border-color: #0d6efd; }
+[data-theme="cyberpunk"] .view-switcher .btn.active {
+    background: rgba(0, 245, 255, 0.2);
+    color: var(--neon-cyan) !important;
+    border-color: var(--neon-cyan);
+    box-shadow: 0 0 12px rgba(0, 245, 255, 0.25);
+}
+.view-switcher .btn { padding: 0 0.6rem; border-color: var(--border); color: var(--text); }
+.catalog-toolbar-actions .btn-outline-secondary { border-color: var(--border); color: var(--text); }
+.catalog-toolbar-actions .btn-outline-secondary:hover { background: var(--bg-input); color: var(--text); }
+.breadcrumb { background: transparent; }
+.breadcrumb-item a { color: #0d6efd; }
+[data-theme="cyberpunk"] .breadcrumb-item a { color: var(--neon-cyan); }
+.breadcrumb-item.active { color: var(--text-muted); }
+.form-select { background: var(--bg-input); border-color: var(--border); color: var(--text); }
 /* Панель: поделиться, сортировка, вид — одинаковая высота, выровнены */
 .catalog-toolbar-actions {
     display: flex; align-items: center; flex-wrap: wrap; gap: 0.5rem;
@@ -207,9 +257,6 @@ index, follow
     line-height: 1;
 }
 .catalog-toolbar-actions .dropdown .btn { min-width: 140px; justify-content: space-between; }
-/* Переключатель вида */
-.view-switcher .btn.active { background: #0d6efd; color: #fff !important; border-color: #0d6efd; }
-.view-switcher .btn { padding: 0 0.6rem; }
 /* Вид списком */
 .catalog-list .product-card {
     display: flex;
@@ -256,31 +303,6 @@ index, follow
     -webkit-appearance: none;
     margin: 0;
 }
-/* Тёмная тема для фильтров */
-[data-theme="dark"] .catalog-filters {
-    background: var(--bg-card);
-    border-color: var(--border);
-}
-[data-theme="dark"] .catalog-filters .filter-section { border-color: var(--border); }
-[data-theme="dark"] .catalog-filters .filter-title { color: var(--text); }
-[data-theme="dark"] .catalog-filters .filter-title .chevron { color: var(--text-muted); }
-[data-theme="dark"] .catalog-filters .filter-option { color: var(--text); }
-[data-theme="dark"] .catalog-filters .filter-option:hover { background: var(--bg-input); color: var(--text); }
-[data-theme="dark"] .catalog-filters .filter-option.active { color: #6ea8fe; background: rgba(110, 168, 254, 0.15); }
-[data-theme="dark"] .catalog-filters .filter-option.active:hover { color: #8bb4ff; }
-[data-theme="dark"] .catalog-filters .filter-check { border-color: var(--border); }
-[data-theme="dark"] .catalog-filters .filter-option.active .filter-check { background: #6ea8fe; border-color: #6ea8fe; }
-[data-theme="dark"] .catalog-filters .btn-reset { color: var(--text-muted); border-color: var(--border); }
-[data-theme="dark"] .catalog-filters .btn-reset:hover { background: var(--bg-input); border-color: var(--text-muted); color: var(--text); }
-[data-theme="dark"] .price-slider-wrap input[type="range"] { background: var(--border); }
-[data-theme="dark"] .view-switcher .btn { border-color: var(--border); color: var(--text); }
-[data-theme="dark"] .view-switcher .btn.active { background: #6ea8fe; border-color: #6ea8fe; }
-[data-theme="dark"] .breadcrumb { background: transparent; }
-[data-theme="dark"] .breadcrumb-item a { color: #6ea8fe; }
-[data-theme="dark"] .breadcrumb-item.active { color: var(--text-muted); }
-[data-theme="dark"] .form-select { background: var(--bg-input); border-color: var(--border); color: var(--text); }
-[data-theme="dark"] .catalog-toolbar-actions .btn-outline-secondary { border-color: var(--border); color: var(--text); }
-[data-theme="dark"] .catalog-toolbar-actions .btn-outline-secondary:hover { background: var(--bg-input); color: var(--text); border-color: var(--text-muted); }
 </style>
 
 <!-- Хлебные крошки -->
