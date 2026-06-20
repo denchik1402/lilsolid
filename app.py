@@ -896,11 +896,10 @@ def checkout():
             order = db.session.get(Order, order.id)
 
             try:
-                try:
-            from telegram_notify import send_order_to_telegram_async
-            send_order_to_telegram_async(order.id)
-        except Exception as e:
-            logger.warning('[Telegram async] order_id=%s: %s', order.id, e)
+                from telegram_notify import send_order_to_telegram_async
+                send_order_to_telegram_async(order.id)
+            except Exception as e:
+                logger.warning('[Telegram async] order_id=%s: %s', order.id, e)
 
             finalize_checkout_session(session, order.id)
 
