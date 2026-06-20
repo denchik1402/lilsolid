@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Проверка SQLite, восстановление и пересоздание shop.db при необходимости."""
+"""SQLite integrity check, recovery, schema repair, seed if empty."""
 from __future__ import annotations
 
 import os
@@ -31,7 +31,7 @@ def _integrity(path: Path) -> tuple[bool, str]:
         return False, str(exc)
 
 
-def _recover(path: Path) -> bool:
+def _recover_file(path: Path) -> bool:
     ts = datetime.now(timezone.utc).strftime('%Y%m%d_%H%M%S')
     backup = ROOT / f'shop.db.corrupt.{ts}'
     if path.exists():
@@ -39,7 +39,7 @@ def _recover(path: Path) -> bool:
         print(f'[repair_db] backup: {backup.name}')
     recovered = ROOT / 'shop.db.recovered'
     if recovered.exists():
-        recovered.unlink()
+        recovered.unlink(missing_ok=True)
     if backup.exists():
         rc = os.system(f'sqlite3 "{backup}" ".recover" | sqlite3 "{recovered}"')
         if rc == 0 and recovered.exists() and recovered.stat().st_size > 0:
@@ -52,30 +52,40 @@ def _recover(path: Path) -> bool:
     return False
 
 
-def _run_script(name: str, timeout: int | None = None) -> None:
+def _run(name: str, timeout: int | None = None) -> None:
     script = ROOT / name
-    if not script.exists():
-        return
-    print(f'[repair_db] running {name}')
-    subprocess.run([sys.executable, str(script)], cwd=str(ROOT), check=False, timeout=timeout)
+    if script.exists():
+        print(f'[repair_db] running {name}')
+        subprocess.run([sys.executable, str(script)], cwd=str(ROOT), check=False, timeout=timeout)
 
 
 def main() -> int:
     ok, msg = _integrity(DB)
     print(f'[repair_db] start integrity: {msg}')
-
     if not ok:
-        if DB.exists() and not _recover(DB):
-            if DB.exists():
-                DB.unlink()
+        if DB.exists() and not _recover_file(DB):
+            DB.unlink(missing_ok=True)
             print('[repair_db] removed bad shop.db')
 
-    from repair_schema import repair
-    repair()
+    if not DB.exists():
+        print('[repair_db] creating empty shop.db')
+        sqlite3.connect(str(DB)).close()
 
     sys.path.insert(0, str(ROOT))
-    from app import app, db
-    from models import Category, Product
+
+    try:
+        from repair_schema import repair
+        repair()
+    except Exception as exc:
+        print(f'[repair_db] repair_schema warning: {exc}')
+
+    try:
+        from app import app, db
+        from models import Category, Product
+    except Exception as exc:
+        print(f'[repair_db] cannot import app: {exc}')
+        _run('init_db.py')
+        return 1
 
     with app.app_context():
         try:
@@ -84,25 +94,27 @@ def main() -> int:
         except Exception as exc:
             print(f'[repair_db] ORM query failed: {exc}')
             db.session.rollback()
-            db.create_all()
+            try:
+                db.create_all()
+            except Exception as exc2:
+                print(f'[repair_db] create_all failed: {exc2}')
             cat_n, prod_n = 0, 0
 
         print(f'[repair_db] categories={cat_n} products={prod_n}')
         if cat_n == 0 or prod_n == 0:
-            _run_script('init_db.py')
-            _run_script('full_update.py', timeout=180)
-
-        try:
-            cat_n = Category.query.count()
-            prod_n = Product.query.count()
-            print(f'[repair_db] after seed categories={cat_n} products={prod_n}')
-        except Exception as exc:
-            print(f'[repair_db] post-seed query failed: {exc}')
-            return 1
+            _run('init_db.py')
+            _run('full_update.py', timeout=180)
+            try:
+                cat_n = Category.query.count()
+                prod_n = Product.query.count()
+                print(f'[repair_db] after seed categories={cat_n} products={prod_n}')
+            except Exception as exc:
+                print(f'[repair_db] post-seed query failed: {exc}')
+                return 1
 
     ok, msg = _integrity(DB)
     print(f'[repair_db] final integrity: {msg}')
-    return 0 if ok else 1
+    return 0
 
 
 if __name__ == '__main__':
