@@ -51,6 +51,7 @@ jobs:
             echo "=== 4c. fix product images ==="
             bash "$APP_DIR/scripts/sync_product_images_from_lilstore.sh" 2>/dev/null || true
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 fix_product_images.py" || true
+            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 scripts/pull_images_from_lilstore.py" || true
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 update_product_galleries.py" 2>/dev/null || true
 
             echo "=== 4b. sync notify chat_id from lilstore.ru ==="
