@@ -54,7 +54,12 @@ index, follow
   "numberOfItems": {{ products|length }},
   "itemListElement": [
     {% for product in products %}
-    {% include 'includes/product_list_schema_item.html' %}
+    {% set _purl = _base + (product|product_url) %}
+    {% set _pimg = product.all_images[0] if product.all_images else product.image %}
+    {% set _img_url = _base + url_for('static', filename=('images/products/' + _pimg if _pimg else 'LOGO3.png')) %}
+    {% set _desc = (product.meta_description or product.description or product.name)|striptags|truncate(300) %}
+    {% set _brand = 'TEREA' if 'TEREA' in (product.name|upper) else 'IQOS' %}
+    {"@type": "ListItem", "position": {{ loop.index }}, "item": {"@type": "Product", "name": {{ product.name|tojson }}, "description": {{ _desc|tojson }}, "image": {{ [_img_url]|tojson }}, "sku": "{{ product.id }}", "brand": {"@type": "Brand", "name": {{ _brand|tojson }}}, "url": {{ _purl|tojson }}, "offers": {"@type": "Offer", "url": {{ _purl|tojson }}, "priceCurrency": "RUB", "price": {{ (product.price or 0)|float }}, "priceValidUntil": "2027-12-31", "availability": "{{ 'https://schema.org/InStock' if product.in_stock else 'https://schema.org/OutOfStock' }}", "itemCondition": "https://schema.org/NewCondition", "shippingDetails": {"@type": "OfferShippingDetails", "shippingRate": {"@type": "MonetaryAmount", "value": "0", "currency": "RUB"}, "deliveryTime": {"@type": "ShippingDeliveryTime", "handlingTime": {"@type": "QuantitativeValue", "minValue": 0, "maxValue": 1, "unitCode": "DAY"}, "transitTime": {"@type": "QuantitativeValue", "minValue": 0, "maxValue": 2, "unitCode": "DAY"}}}, "hasMerchantReturnPolicy": {"@type": "MerchantReturnPolicy", "applicableCountry": "RU", "returnPolicyCategory": "https://schema.org/MerchantReturnNotPermitted"}}}}{% if not loop.last %},{% endif %}
     {% endfor %}
   ]
 }
