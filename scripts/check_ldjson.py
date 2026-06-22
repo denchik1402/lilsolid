@@ -20,6 +20,7 @@ for i, b in enumerate(blocks):
                 item = el.get('item', {})
                 if isinstance(item, dict) and item.get('@type') == 'Product':
                     print('  list product keys:', list(item.keys()))
+                    print('  image:', item.get('image'))
     except json.JSONDecodeError as e:
         print(f'--- block {i} INVALID JSON:', e)
         print(b[:500])
