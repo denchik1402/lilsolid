@@ -54,7 +54,7 @@ index, follow
   "numberOfItems": {{ products|length }},
   "itemListElement": [
     {% for product in products %}
-    {"@type": "ListItem", "position": {{ loop.index }}, "item": {"@type": "Product", "name": {{ product.name|tojson }}, "url": {{ (_base + (product|product_url))|tojson }}}}{% if not loop.last %},{% endif %}
+    {"@type": "ListItem", "position": {{ loop.index }}, "item": {"@type": "Product", "name": {{ product.name|tojson }}, "url": {{ (_base + (product|product_url))|tojson }}, "offers": {"@type": "Offer", "url": {{ (_base + (product|product_url))|tojson }}, "priceCurrency": "RUB", "price": {{ product.price|float }}, "availability": "{{ 'https://schema.org/InStock' if product.in_stock else 'https://schema.org/OutOfStock' }}", "itemCondition": "https://schema.org/NewCondition"}}}{% if not loop.last %},{% endif %}
     {% endfor %}
   ]
 }

@@ -36,7 +36,7 @@
     "@type": "Offer",
     "url": {{ (_base + (product|product_url))|tojson }},
     "priceCurrency": "RUB",
-    "price": "{{ product.price }}",
+    "price": {{ product.price|float }},
     {% if product.old_price and product.old_price > product.price %}"priceSpecification": {"@type": "PriceSpecification", "price": "{{ product.price }}", "priceCurrency": "RUB", "valueAddedTaxIncluded": true},
     "oldPrice": "{{ product.old_price }}",{% endif %}
     "priceValidUntil": "{{ price_valid_until|default('2026-12-31') }}",
