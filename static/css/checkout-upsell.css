@@ -2,7 +2,11 @@
 .checkout-stick-upsell {
     border: 1px solid var(--border, #dee2e6);
     background: var(--bg-card, #fff);
-    overflow: hidden;
+    overflow: visible;
+}
+
+.checkout-stick-upsell .card-body {
+    overflow: visible;
 }
 
 .checkout-stick-upsell__title {
@@ -33,10 +37,9 @@
     border-color: var(--border, #3c4043) !important;
 }
 
-/* Карусель как на главной — одна строка */
 .checkout-stick-carousel-wrap {
     position: relative;
-    padding: 0 3rem;
+    padding: 0 5rem;
     overflow: visible;
     margin-bottom: 0.25rem;
 }
@@ -86,9 +89,9 @@
     position: absolute;
     top: 50%;
     transform: translateY(-50%);
-    width: 44px;
-    height: 44px;
-    border: 2px solid rgba(0, 0, 0, 0.15);
+    width: 56px;
+    height: 56px;
+    border: 2px solid rgba(0, 0, 0, 0.2);
     border-radius: 50%;
     background: var(--bg-card, #fff);
     display: flex;
@@ -96,35 +99,50 @@
     justify-content: center;
     cursor: pointer;
     z-index: 20;
-    transition: background 0.2s, border-color 0.2s, box-shadow 0.2s;
+    transition: background 0.25s, border-color 0.25s, box-shadow 0.25s;
+    touch-action: manipulation;
 }
 
-.checkout-stick-upsell .psc-prev { left: 0; }
-.checkout-stick-upsell .psc-next { right: 0; }
+.checkout-stick-upsell .psc-prev { left: -4rem; }
+.checkout-stick-upsell .psc-next { right: -4rem; }
 
 .checkout-stick-upsell .psc-prev:hover,
 .checkout-stick-upsell .psc-next:hover {
     border-color: #0d6efd;
-    box-shadow: 0 0 12px rgba(13, 110, 253, 0.25);
+    box-shadow: 0 0 20px rgba(13, 110, 253, 0.35);
+    background: linear-gradient(135deg, rgba(13, 110, 253, 0.15) 0%, rgba(13, 110, 253, 0.28) 100%);
 }
 
 .checkout-stick-upsell .psc-prev .carousel-control-prev-icon,
 .checkout-stick-upsell .psc-next .carousel-control-next-icon {
-    background-size: 1.2rem;
+    background-size: 1.5rem;
     filter: brightness(0);
-    opacity: 0.7;
+    opacity: 0.75;
+}
+
+.checkout-stick-upsell .psc-prev:hover .carousel-control-prev-icon,
+.checkout-stick-upsell .psc-next:hover .carousel-control-next-icon {
+    filter: brightness(0) invert(1);
+    opacity: 1;
 }
 
 [data-theme="dark"] .checkout-stick-upsell .psc-prev,
 [data-theme="dark"] .checkout-stick-upsell .psc-next {
     background: var(--bg-input, #2d2d2d);
-    border-color: var(--border, #5f6368);
+    border-color: rgba(255, 255, 255, 0.35);
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+[data-theme="dark"] .checkout-stick-upsell .psc-prev:hover,
+[data-theme="dark"] .checkout-stick-upsell .psc-next:hover {
+    border-color: #6ea8fe;
+    box-shadow: 0 0 16px rgba(110, 168, 254, 0.35);
 }
 
 [data-theme="dark"] .checkout-stick-upsell .psc-prev .carousel-control-prev-icon,
 [data-theme="dark"] .checkout-stick-upsell .psc-next .carousel-control-next-icon {
     filter: brightness(0) invert(1);
-    opacity: 0.85;
+    opacity: 0.9;
 }
 
 .checkout-stick-upsell .psc-indicators {
@@ -161,12 +179,10 @@
     height: 100%;
 }
 
-/* LIL STORE */
 .checkout-stick-upsell--store .checkout-stick-upsell__title {
     color: var(--text, #212529);
 }
 
-/* АЙКОС СТОР — lux strip внутри checkout */
 .checkout-stick-upsell--iqos {
     border-color: var(--lux-gold-dim, rgba(201, 169, 98, 0.35));
     background: var(--lux-surface, var(--bg-card));
@@ -190,7 +206,6 @@
     color: var(--text, #f5f0e8);
 }
 
-/* LIL SOLID cyber */
 .checkout-stick-upsell--cyber {
     border-color: rgba(0, 245, 255, 0.25);
     box-shadow: 0 0 20px rgba(0, 245, 255, 0.06);
@@ -202,24 +217,64 @@
     text-shadow: 0 0 8px rgba(0, 245, 255, 0.35);
 }
 
+.checkout-stick-upsell--cyber .psc-prev,
+.checkout-stick-upsell--cyber .psc-next {
+    border-color: rgba(0, 245, 255, 0.55);
+    background: rgba(10, 10, 18, 0.95);
+    box-shadow: 0 0 12px rgba(0, 245, 255, 0.18);
+}
+
+.checkout-stick-upsell--cyber .psc-prev .carousel-control-prev-icon,
+.checkout-stick-upsell--cyber .psc-next .carousel-control-next-icon {
+    filter: brightness(0) saturate(100%) invert(78%) sepia(52%) saturate(1200%) hue-rotate(152deg) brightness(104%) contrast(101%);
+    opacity: 1;
+}
+
 .checkout-stick-upsell--cyber .psc-prev:hover,
 .checkout-stick-upsell--cyber .psc-next:hover {
     border-color: var(--neon-cyan, #00f5ff);
-    box-shadow: 0 0 12px rgba(0, 245, 255, 0.35);
+    background: rgba(0, 245, 255, 0.18);
+    box-shadow: 0 0 18px rgba(0, 245, 255, 0.45);
+}
+
+.checkout-stick-upsell--cyber .psc-prev:hover .carousel-control-prev-icon,
+.checkout-stick-upsell--cyber .psc-next:hover .carousel-control-next-icon {
+    filter: brightness(0) saturate(100%) invert(100%);
+}
+
+[data-theme="dark"] .checkout-stick-upsell--cyber .psc-prev,
+[data-theme="dark"] .checkout-stick-upsell--cyber .psc-next {
+    border-color: rgba(0, 245, 255, 0.65);
+    background: rgba(8, 12, 20, 0.98);
+    box-shadow: 0 0 14px rgba(0, 245, 255, 0.28);
 }
 
 .checkout-stick-upsell--cyber .psc-indicators button.active {
     background-color: var(--neon-cyan, #00f5ff);
 }
 
-@media (max-width: 576px) {
+@media (max-width: 768px) {
     .checkout-stick-carousel-wrap {
-        padding: 0 2.5rem;
+        padding: 0 3.5rem;
     }
 
-    .checkout-stick-upsell .psc-prev,
+    .checkout-stick-upsell .psc-prev {
+        left: -44px;
+        width: 44px;
+        height: 44px;
+    }
+
     .checkout-stick-upsell .psc-next {
-        width: 36px;
-        height: 36px;
+        right: -44px;
+        width: 44px;
+        height: 44px;
+    }
+}
+
+@media (max-width: 576px) {
+    .checkout-stick-carousel-wrap {
+        margin-left: -0.25rem;
+        margin-right: -0.25rem;
+        padding: 0 3rem;
     }
 }
