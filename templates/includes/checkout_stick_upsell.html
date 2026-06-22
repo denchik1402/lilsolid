@@ -1,5 +1,8 @@
 {% if stick_upsell_sections %}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/checkout-upsell.css') }}?v=1">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/checkout-upsell.css') }}?v=2">
+{% if upsell_theme == 'iqos' %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/index.css') }}?v=2">
+{% endif %}
 <div class="checkout-stick-upsell checkout-stick-upsell--{{ upsell_theme|default('store') }} card mb-3">
   <div class="card-body">
     {% for section in stick_upsell_sections %}
@@ -10,27 +13,59 @@
       </div>
       {% if section.empty_catalog %}
       <p class="checkout-stick-upsell__empty small mb-0">{{ section.empty_text }}</p>
+      {% elif upsell_theme == 'iqos' %}
+      <div class="lux-strip checkout-stick-lux-strip">
+        <div class="lux-strip-viewport" id="checkoutStickStrip-{{ section.family }}">
+          {% for product in section.products %}
+          {% include 'includes/lux_strip_card.html' %}
+          {% endfor %}
+        </div>
+        {% with nav_label=section.title %}
+        {% include 'includes/lux_strip_nav.html' %}
+        {% endwith %}
+      </div>
       {% else %}
-      <div class="checkout-stick-grid">
-        {% for product in section.products %}
-        {% set _img = product.all_images[0] if product.all_images else product.image %}
-        <article class="checkout-stick-card" data-product-id="{{ product.id }}">
-          <a href="{{ product|product_url }}" class="checkout-stick-card__img text-decoration-none" tabindex="-1">
-            {% if _img %}
-            <img src="{{ url_for('static', filename='images/products/' + _img) }}" alt="{{ product|product_alt }}" loading="lazy">
-            {% else %}
-            <img src="{{ url_for('static', filename='LOGO3.png') }}" alt="{{ product|product_alt }}" loading="lazy">
-            {% endif %}
-          </a>
-          <div class="checkout-stick-card__body">
-            <a href="{{ product|product_url }}" class="checkout-stick-card__name">{{ product.name }}</a>
-            <div class="checkout-stick-card__price">{{ product.price|format_price }} ₽</div>
-            <button type="button" class="btn btn-sm checkout-stick-add w-100" data-product-id="{{ product.id }}">
-              <i class="fas fa-plus me-1"></i>Добавить
-            </button>
+      {% set carousel_id = 'checkoutStickCarousel-' ~ section.family %}
+      <div class="carousel-nav-wrapper checkout-stick-carousel-wrap">
+        <div class="psc-wrap" id="{{ carousel_id }}">
+          <div class="psc-viewport">
+            <div class="psc-track">
+              {% for product in section.products %}
+              <div class="psc-item">
+                <div class="product-card position-relative h-100">
+                  {% include 'includes/favorite_btn.html' %}
+                  <a href="{{ product|product_url }}" class="product-card-link text-decoration-none text-dark">
+                    <div class="product-card-img-wrap">
+                      {% set first_img = product.all_images[0] if product.all_images else product.image %}
+                      {% if first_img %}
+                      <img src="{{ url_for('static', filename='images/products/' + first_img) }}" class="img-fluid" alt="{{ product|product_alt }}" loading="lazy">
+                      {% else %}
+                      <img src="{{ url_for('static', filename='LOGO3.png') }}" class="img-fluid" alt="{{ product|product_alt }}" loading="lazy">
+                      {% endif %}
+                    </div>
+                    <h5 class="product-title">{{ product.name }}</h5>
+                    <div class="product-price mb-2">
+                      {{ product.price|format_price }} ₽
+                      {% if product.old_price %}
+                      <span class="old-price">{{ product.old_price|format_price }} ₽</span>
+                      {% endif %}
+                    </div>
+                  </a>
+                  <div class="d-grid gap-2">
+                    <a href="{{ product|product_url }}" class="btn btn-outline-primary btn-sm">Подробнее</a>
+                    {% include 'includes/add_to_cart_widget.html' %}
+                  </div>
+                </div>
+              </div>
+              {% endfor %}
+            </div>
           </div>
-        </article>
-        {% endfor %}
+          {% if section.products|length > 1 %}
+          <button type="button" class="psc-prev" aria-label="Назад"><span class="carousel-control-prev-icon"></span></button>
+          <button type="button" class="psc-next" aria-label="Вперёд"><span class="carousel-control-next-icon"></span></button>
+          <div class="psc-indicators"></div>
+          {% endif %}
+        </div>
       </div>
       {% endif %}
     </div>
@@ -42,7 +77,7 @@
   function formatRub(n) {
     return Math.round(n).toLocaleString('ru-RU') + ' ₽';
   }
-  function refreshCheckoutSummary() {
+  window.refreshCheckoutSummary = function() {
     fetch('/api/cart-items', {headers: {'Accept': 'application/json'}})
       .then(function(r) { return r.json(); })
       .then(function(data) {
@@ -65,28 +100,150 @@
         if (total) total.textContent = formatRub(data.total);
         if (typeof window.checkoutPromoReset === 'function') window.checkoutPromoReset(data.total);
       });
-  }
-  document.querySelectorAll('.checkout-stick-add').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      if (btn.disabled) return;
-      var pid = btn.getAttribute('data-product-id');
-      btn.disabled = true;
-      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>…';
-      fetch('/add-to-cart/' + pid, {
-        method: 'POST',
-        headers: {'X-Requested-With': 'XMLHttpRequest'},
-        body: new URLSearchParams({quantity: '1'})
-      }).then(function(r) { return r.json(); }).then(function() {
-        var card = btn.closest('.checkout-stick-card');
-        if (card) card.classList.add('is-added');
-        btn.innerHTML = '<i class="fas fa-check me-1"></i>В заказе';
-        refreshCheckoutSummary();
-        if (typeof updateCartCounter === 'function') updateCartCounter();
-      }).catch(function() {
-        btn.disabled = false;
-        btn.innerHTML = '<i class="fas fa-plus me-1"></i>Добавить';
-      });
+  };
+
+  if (window.jQuery) {
+    jQuery(document).ajaxSuccess(function(e, xhr, settings) {
+      var u = (settings && settings.url) || '';
+      if (u.indexOf('/add-to-cart/') >= 0 || u.indexOf('/update-cart/') >= 0) {
+        window.refreshCheckoutSummary();
+      }
     });
+  }
+
+  var carousels = {};
+  function initScrollCarousel(id) {
+    var wrap = document.getElementById(id);
+    if (!wrap) return;
+    var viewport = wrap.querySelector('.psc-viewport');
+    var track = wrap.querySelector('.psc-track');
+    var prevBtn = wrap.querySelector('.psc-prev');
+    var nextBtn = wrap.querySelector('.psc-next');
+    var items = track ? track.querySelectorAll('.psc-item') : [];
+    var originalCount = items.length;
+    if (originalCount < 2) return;
+    var gap = 16;
+    var loop = true;
+    var isTransitioning = false;
+
+    function getScrollStep() {
+      if (!items.length) return 0;
+      var style = getComputedStyle(track);
+      var gapVal = parseFloat(style.gap) || gap;
+      return items[0].offsetWidth + gapVal;
+    }
+    function getVisibleCount() {
+      var w = (viewport || wrap).offsetWidth;
+      var step = getScrollStep();
+      return Math.max(1, Math.min(items.length - 1, Math.floor((w + gap) / step)));
+    }
+    function getMaxIndex() {
+      return Math.max(0, items.length - getVisibleCount());
+    }
+
+    var visibleCount = getVisibleCount();
+    for (var i = 0; i < visibleCount; i++) {
+      var clone = items[i].cloneNode(true);
+      clone.classList.add('psc-clone');
+      track.appendChild(clone);
+    }
+    items = track.querySelectorAll('.psc-item');
+    var startPrepend = Math.max(0, originalCount - visibleCount);
+    for (var j = originalCount - 1; j >= startPrepend; j--) {
+      var c = items[j].cloneNode(true);
+      c.classList.add('psc-clone');
+      track.insertBefore(c, track.firstChild);
+    }
+    items = track.querySelectorAll('.psc-item');
+    var index = visibleCount;
+
+    function update(noTransition) {
+      var step = getScrollStep();
+      var offset = index * step;
+      if (noTransition) track.style.transition = 'none';
+      track.style.transform = 'translateX(-' + offset + 'px)';
+      if (noTransition) {
+        track.offsetHeight;
+        track.style.transition = '';
+      }
+    }
+    track.addEventListener('transitionend', function(e) {
+      if (!isTransitioning || (e && e.propertyName !== 'transform')) return;
+      isTransitioning = false;
+      if (index >= originalCount + visibleCount) {
+        index = visibleCount;
+        update(true);
+      }
+    });
+
+    function getLogicalPage() {
+      var maxPage = Math.max(0, originalCount - getVisibleCount());
+      if (index >= visibleCount && index <= visibleCount + maxPage) return index - visibleCount;
+      return 0;
+    }
+    function updateIndicators() {
+      var ind = wrap.querySelector('.psc-indicators');
+      if (!ind) return;
+      var pg = getLogicalPage();
+      ind.querySelectorAll('button').forEach(function(b, i) { b.classList.toggle('active', i === pg); });
+    }
+    function doPrev() {
+      if (isTransitioning) return;
+      index--;
+      if (loop && index < visibleCount) {
+        index = Math.max(0, originalCount - getVisibleCount());
+        update(true);
+      } else if (index < 0) index = 0;
+      update();
+      updateIndicators();
+    }
+    function doNext() {
+      if (isTransitioning) return;
+      index++;
+      if (index > getMaxIndex()) {
+        if (loop) isTransitioning = true;
+        else index = getMaxIndex();
+      }
+      update();
+      updateIndicators();
+    }
+    carousels[id] = { doPrev: doPrev, doNext: doNext };
+
+    var indicatorsEl = wrap.querySelector('.psc-indicators');
+    if (indicatorsEl && !indicatorsEl.children.length) {
+      var maxPage = Math.max(0, originalCount - getVisibleCount());
+      for (var p = 0; p <= maxPage; p++) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.setAttribute('aria-label', 'Слайд ' + (p + 1));
+        btn.addEventListener('click', (function(page) {
+          return function() {
+            if (isTransitioning) return;
+            index = visibleCount + page;
+            update();
+            updateIndicators();
+          };
+        })(p));
+        indicatorsEl.appendChild(btn);
+      }
+    }
+    updateIndicators();
+
+    if (prevBtn) prevBtn.addEventListener('click', doPrev);
+    if (nextBtn) nextBtn.addEventListener('click', doNext);
+
+    window.addEventListener('resize', function() {
+      visibleCount = getVisibleCount();
+      var max = getMaxIndex();
+      if (index > max) index = Math.min(visibleCount, max);
+      update();
+      updateIndicators();
+    });
+    update();
+  }
+
+  document.querySelectorAll('.checkout-stick-upsell .psc-wrap[id]').forEach(function(el) {
+    initScrollCarousel(el.id);
   });
 })();
 </script>
