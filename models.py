@@ -121,20 +121,37 @@ class Product(db.Model):
 
     @property
     def all_images(self):
-        """Возвращает список всех изображений товара: [основное, доп1, доп2, ...]"""
+        """Список изображений для галереи: без дубликатов и без _400w/_800w вариантов."""
+        from image_utils import image_base_path, is_variant_filename
+
         result = []
+        seen = set()
+
+        def add_path(path):
+            if not path or not isinstance(path, str):
+                return
+            path = path.strip()
+            if not path or is_variant_filename(path):
+                return
+            key = image_base_path(path)
+            if key in seen:
+                return
+            seen.add(key)
+            result.append(path)
+
         if self.image:
-            result.append(self.image)
+            add_path(self.image)
         if self.images:
             try:
                 extra = json.loads(self.images)
                 if isinstance(extra, list):
-                    result.extend(extra)
+                    for item in extra:
+                        add_path(item)
                 elif isinstance(extra, str):
-                    result.append(extra)
+                    add_path(extra)
             except (json.JSONDecodeError, TypeError):
                 pass
-        return result if result else []
+        return result
 
     def get_url_slug(self):
         """Slug для ЧПУ URL. Генерирует из name, если slug пуст."""
