@@ -14,6 +14,9 @@
 
 <div class="row">
     <div class="col-md-8">
+            {% set upsell_theme = 'cyber' %}
+            {% include 'includes/checkout_stick_upsell.html' %}
+
             <div class="card mb-3">
                 <div class="card-header">
                     <h5>Контактные данные</h5>
@@ -90,12 +93,14 @@
             </div>
             <div class="card-body">
                 {% if cart_items %}
+                    <div id="checkoutOrderLines">
                     {% for item in cart_items %}
-                        <div class="d-flex justify-content-between mb-2">
-                            <span>{{ item.product.name }} x{{ item.quantity }}</span>
-                            <span>{{ item.subtotal }} ₽</span>
+                        <div class="d-flex justify-content-between mb-2 checkout-order-line">
+                            <span>{{ item.product.name }} ×{{ item.quantity }}</span>
+                            <span>{{ item.subtotal|format_price }} ₽</span>
                         </div>
                     {% endfor %}
+                    </div>
                     <hr>
                     <div class="d-flex justify-content-between">
                         <span>Сумма:</span>
@@ -208,6 +213,12 @@ document.getElementById('checkoutForm').onsubmit = function(e) {
     if (!btn || !inp) return;
     var appliedDiscount = 0;
     var appliedFinal = {{ total|default(0) }};
+    window.checkoutPromoReset = function(newTotal) {
+        appliedDiscount = 0;
+        appliedFinal = newTotal;
+        if (msg) { msg.textContent = ''; msg.className = 'text-muted small mt-2 mb-0'; }
+        if (discountRow) discountRow.style.display = 'none';
+    };
     btn.addEventListener('click', function() {
         var code = inp.value.trim();
         if (!code) { msg.textContent = ''; return; }

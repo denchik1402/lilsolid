@@ -935,6 +935,8 @@ def checkout():
             return redirect(url_for('checkout'))
     
     checkout_key = ensure_checkout_idempotency_key(session)
+    from checkout_upsell import get_checkout_stick_upsell
+    stick_upsell_sections = get_checkout_stick_upsell(session.get('cart', {}), _get_cart_products)
     return render_template(
         'checkout.html',
         cart_items=cart_items,
@@ -942,6 +944,8 @@ def checkout():
         subtotal=subtotal,
         discount=discount,
         checkout_idempotency_key=checkout_key,
+        stick_upsell_sections=stick_upsell_sections,
+        upsell_theme='cyber',
     )
 
 def _normalize_phone(s):

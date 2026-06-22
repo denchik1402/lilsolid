@@ -1,0 +1,183 @@
+/* Checkout stick upsell — базовые стили + темы store / iqos / cyber */
+.checkout-stick-upsell {
+    border: 1px solid var(--border, #dee2e6);
+    background: var(--bg-card, #fff);
+    overflow: hidden;
+}
+
+.checkout-stick-upsell__title {
+    font-weight: 600;
+}
+
+.checkout-stick-upsell__hint {
+    color: var(--text-muted, #6c757d);
+}
+
+.checkout-stick-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+    gap: 12px;
+}
+
+.checkout-stick-card {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--border, #e8e8e8);
+    border-radius: 12px;
+    background: var(--bg-input, #f8f9fa);
+    overflow: hidden;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.checkout-stick-card.is-added {
+    border-color: #198754;
+    box-shadow: 0 0 0 1px rgba(25, 135, 84, 0.25);
+}
+
+.checkout-stick-card__img {
+    display: block;
+    aspect-ratio: 1;
+    background: #fff;
+    padding: 8px;
+}
+
+.checkout-stick-card__img img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+}
+
+.checkout-stick-card__body {
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    flex: 1;
+}
+
+.checkout-stick-card__name {
+    font-size: 0.8rem;
+    line-height: 1.25;
+    color: var(--text, #212529);
+    text-decoration: none;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    min-height: 2.5em;
+}
+
+.checkout-stick-card__name:hover {
+    color: #0d6efd;
+}
+
+.checkout-stick-card__price {
+    font-weight: 600;
+    font-size: 0.95rem;
+}
+
+.checkout-stick-add {
+    margin-top: auto;
+}
+
+/* LIL STORE — зелёный акцент */
+.checkout-stick-upsell--store .checkout-stick-upsell__title {
+    color: #212529;
+}
+
+.checkout-stick-upsell--store .checkout-stick-add {
+    background: #198754;
+    border-color: #198754;
+    color: #fff;
+}
+
+.checkout-stick-upsell--store .checkout-stick-add:hover:not(:disabled) {
+    background: #157347;
+    border-color: #157347;
+}
+
+/* АЙКОС СТОР — gold luxury */
+.checkout-stick-upsell--iqos {
+    border-color: var(--lux-gold-dim, rgba(201, 169, 98, 0.35));
+    background: var(--lux-surface, var(--bg-card));
+}
+
+.checkout-stick-upsell--iqos .checkout-stick-upsell__title {
+    font-family: var(--lux-font-display, inherit);
+    letter-spacing: 0.02em;
+}
+
+.checkout-stick-upsell--iqos .checkout-stick-card {
+    background: var(--bg-input);
+    border-color: var(--lux-glass-border, var(--border));
+}
+
+.checkout-stick-upsell--iqos .checkout-stick-card.is-added {
+    border-color: var(--lux-gold, #c9a962);
+    box-shadow: 0 0 12px var(--lux-gold-dim, rgba(201, 169, 98, 0.25));
+}
+
+.checkout-stick-upsell--iqos .checkout-stick-card__name:hover {
+    color: var(--lux-gold, #c9a962);
+}
+
+.checkout-stick-upsell--iqos .checkout-stick-add {
+    background: transparent;
+    border: 1px solid var(--lux-gold, #c9a962);
+    color: var(--lux-gold, #c9a962);
+    font-family: var(--lux-font-display, inherit);
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    font-size: 0.7rem;
+}
+
+.checkout-stick-upsell--iqos .checkout-stick-add:hover:not(:disabled) {
+    background: var(--lux-gold, #c9a962);
+    color: var(--lux-on-accent, #050506);
+}
+
+/* LIL SOLID cyber */
+.checkout-stick-upsell--cyber {
+    border-color: rgba(0, 245, 255, 0.25);
+    box-shadow: 0 0 20px rgba(0, 245, 255, 0.06);
+}
+
+.checkout-stick-upsell--cyber .checkout-stick-upsell__title {
+    font-family: Orbitron, sans-serif;
+    color: var(--neon-cyan, #00f5ff);
+    text-shadow: 0 0 8px rgba(0, 245, 255, 0.35);
+}
+
+.checkout-stick-upsell--cyber .checkout-stick-card {
+    border-color: rgba(0, 245, 255, 0.15);
+    background: rgba(0, 245, 255, 0.03);
+}
+
+.checkout-stick-upsell--cyber .checkout-stick-card.is-added {
+    border-color: var(--neon-green, #39ff14);
+    box-shadow: 0 0 12px rgba(57, 255, 20, 0.2);
+}
+
+.checkout-stick-upsell--cyber .checkout-stick-card__name:hover {
+    color: var(--neon-cyan, #00f5ff);
+}
+
+.checkout-stick-upsell--cyber .checkout-stick-add {
+    background: rgba(0, 245, 255, 0.12);
+    border: 1px solid var(--neon-cyan, #00f5ff);
+    color: var(--neon-cyan, #00f5ff);
+    font-family: Rajdhani, sans-serif;
+    font-weight: 600;
+}
+
+.checkout-stick-upsell--cyber .checkout-stick-add:hover:not(:disabled) {
+    background: var(--neon-cyan, #00f5ff);
+    color: #0a0a12;
+    box-shadow: 0 0 12px rgba(0, 245, 255, 0.45);
+}
+
+@media (max-width: 576px) {
+    .checkout-stick-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}

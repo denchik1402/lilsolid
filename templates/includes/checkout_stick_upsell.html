@@ -1,0 +1,93 @@
+{% if stick_upsell_sections %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/checkout-upsell.css') }}?v=1">
+<div class="checkout-stick-upsell checkout-stick-upsell--{{ upsell_theme|default('store') }} card mb-3">
+  <div class="card-body">
+    {% for section in stick_upsell_sections %}
+    <div class="checkout-stick-upsell__section{% if not loop.first %} mt-4 pt-4 border-top{% endif %}">
+      <div class="checkout-stick-upsell__head mb-3">
+        <h5 class="checkout-stick-upsell__title mb-1">{{ section.title }}</h5>
+        <p class="checkout-stick-upsell__hint small mb-0">{{ section.hint }}</p>
+      </div>
+      {% if section.empty_catalog %}
+      <p class="checkout-stick-upsell__empty small mb-0">{{ section.empty_text }}</p>
+      {% else %}
+      <div class="checkout-stick-grid">
+        {% for product in section.products %}
+        {% set _img = product.all_images[0] if product.all_images else product.image %}
+        <article class="checkout-stick-card" data-product-id="{{ product.id }}">
+          <a href="{{ product|product_url }}" class="checkout-stick-card__img text-decoration-none" tabindex="-1">
+            {% if _img %}
+            <img src="{{ url_for('static', filename='images/products/' + _img) }}" alt="{{ product|product_alt }}" loading="lazy">
+            {% else %}
+            <img src="{{ url_for('static', filename='LOGO3.png') }}" alt="{{ product|product_alt }}" loading="lazy">
+            {% endif %}
+          </a>
+          <div class="checkout-stick-card__body">
+            <a href="{{ product|product_url }}" class="checkout-stick-card__name">{{ product.name }}</a>
+            <div class="checkout-stick-card__price">{{ product.price|format_price }} ₽</div>
+            <button type="button" class="btn btn-sm checkout-stick-add w-100" data-product-id="{{ product.id }}">
+              <i class="fas fa-plus me-1"></i>Добавить
+            </button>
+          </div>
+        </article>
+        {% endfor %}
+      </div>
+      {% endif %}
+    </div>
+    {% endfor %}
+  </div>
+</div>
+<script>
+(function() {
+  function formatRub(n) {
+    return Math.round(n).toLocaleString('ru-RU') + ' ₽';
+  }
+  function refreshCheckoutSummary() {
+    fetch('/api/cart-items', {headers: {'Accept': 'application/json'}})
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        var list = document.getElementById('checkoutOrderLines');
+        if (list && data.items) {
+          list.innerHTML = '';
+          data.items.forEach(function(item) {
+            var row = document.createElement('div');
+            row.className = 'd-flex justify-content-between mb-2 checkout-order-line';
+            row.innerHTML = '<span>' + item.name + ' ×' + item.quantity + '</span><span>' + formatRub(item.subtotal) + '</span>';
+            list.appendChild(row);
+          });
+        }
+        var sub = document.getElementById('checkoutSubtotal');
+        var total = document.getElementById('checkoutTotal');
+        if (sub) {
+          sub.textContent = formatRub(data.total);
+          sub.setAttribute('data-raw', data.total);
+        }
+        if (total) total.textContent = formatRub(data.total);
+        if (typeof window.checkoutPromoReset === 'function') window.checkoutPromoReset(data.total);
+      });
+  }
+  document.querySelectorAll('.checkout-stick-add').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      if (btn.disabled) return;
+      var pid = btn.getAttribute('data-product-id');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span>…';
+      fetch('/add-to-cart/' + pid, {
+        method: 'POST',
+        headers: {'X-Requested-With': 'XMLHttpRequest'},
+        body: new URLSearchParams({quantity: '1'})
+      }).then(function(r) { return r.json(); }).then(function() {
+        var card = btn.closest('.checkout-stick-card');
+        if (card) card.classList.add('is-added');
+        btn.innerHTML = '<i class="fas fa-check me-1"></i>В заказе';
+        refreshCheckoutSummary();
+        if (typeof updateCartCounter === 'function') updateCartCounter();
+      }).catch(function() {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fas fa-plus me-1"></i>Добавить';
+      });
+    });
+  });
+})();
+</script>
+{% endif %}
