@@ -2340,7 +2340,6 @@ def sitemap():
             {'loc': base + url_for('delivery'), 'changefreq': 'monthly', 'priority': '0.5', 'lastmod': lastmod_default},
             {'loc': base + url_for('faq'), 'changefreq': 'monthly', 'priority': '0.6', 'lastmod': lastmod_default},
             {'loc': base + url_for('blog_index'), 'changefreq': 'weekly', 'priority': '0.7', 'lastmod': lastmod_default},
-            {'loc': base + url_for('compare'), 'changefreq': 'weekly', 'priority': '0.6', 'lastmod': lastmod_default},
             {'loc': base + url_for('privacy'), 'changefreq': 'yearly', 'priority': '0.3', 'lastmod': lastmod_default},
         ]
         for cat in Category.query.all():
