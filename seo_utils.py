@@ -217,38 +217,68 @@ def category_home_image_filename(slug: str, db_image: str | None = None) -> str:
 
 
 DEVICE_MODEL_SEO = {
-    'IQOS Iluma i One': {
+    'IQOS ILUMA I ONE': {
         'meta_description': (
-            'Купить IQOS Iluma i One в LIL SOLID, Москва. Компактное устройство IQOS ILUMA '
+            'Купить IQOS ILUMA I ONE в LIL SOLID, Москва. Компактное устройство IQOS ILUMA i '
             'без лезвия, технология SMARTCORE. Оригинал, все цвета. Бронь на сайте, доставка по Москве 0–2 дня.'
         ),
         'meta_keywords': (
-            'IQOS Iluma i One, купить Iluma i One, buy IQOS i One, IQOS ILUMA compact, '
-            'SMARTCORE, IQOS без лезвия, original IQOS, оригинал IQOS, LIL SOLID, Москва'
+            'IQOS ILUMA I ONE, Iluma i One, купить Iluma i One, buy IQOS i One, IQOS ILUMA compact, '
+            'SMARTCORE, IQOS без лезвия, original IQOS, оригинал IQOS, LIL STORE, Москва'
         ),
-        'image_alt': 'IQOS Iluma i One — компактное устройство IQOS ILUMA, фото LIL SOLID',
+        'image_alt': 'IQOS ILUMA I ONE — компактное устройство IQOS ILUMA, фото LIL STORE',
     },
-    'IQOS Iluma i Standart': {
+    'IQOS ILUMA I': {
         'meta_description': (
-            'Купить IQOS Iluma i Standart в LIL SOLID, Москва. Сбалансированная модель IQOS ILUMA '
+            'Купить IQOS ILUMA I в LIL SOLID, Москва. Сбалансированная модель IQOS ILUMA i '
             'без лезвия, SMARTCORE, увеличенная батарея. Оригинал, бронь на сайте, доставка по Москве 0–2 дня.'
         ),
         'meta_keywords': (
-            'IQOS Iluma i Standart, IQOS Iluma i Standard, купить Iluma i Standart, '
-            'buy IQOS i Standard, IQOS ILUMA, SMARTCORE, original IQOS, LIL SOLID, Москва'
+            'IQOS ILUMA I, IQOS Iluma i Standart, купить Iluma i, buy IQOS i Standard, '
+            'IQOS ILUMA, SMARTCORE, original IQOS, LIL STORE, Москва'
         ),
-        'image_alt': 'IQOS Iluma i Standart — устройство IQOS ILUMA, фото LIL SOLID',
+        'image_alt': 'IQOS ILUMA I — устройство IQOS ILUMA, фото LIL STORE',
     },
-    'IQOS Iluma i Prime': {
+    'IQOS ILUMA I PRIME': {
         'meta_description': (
-            'Купить IQOS Iluma i Prime в LIL SOLID, Москва. Премиальное устройство IQOS ILUMA '
+            'Купить IQOS ILUMA I PRIME в LIL SOLID, Москва. Премиальное устройство IQOS ILUMA i '
             'без лезвия, SMARTCORE, максимальная автономность. Оригинал, доставка по Москве 0–2 дня.'
         ),
         'meta_keywords': (
-            'IQOS Iluma i Prime, купить Iluma i Prime, buy IQOS i Prime, IQOS ILUMA premium, '
-            'SMARTCORE, original IQOS, оригинал IQOS, LIL SOLID, Москва'
+            'IQOS ILUMA I PRIME, Iluma i Prime, купить Iluma i Prime, buy IQOS i Prime, '
+            'IQOS ILUMA premium, SMARTCORE, original IQOS, LIL STORE, Москва'
         ),
-        'image_alt': 'IQOS Iluma i Prime — премиальное устройство IQOS ILUMA, фото LIL SOLID',
+        'image_alt': 'IQOS ILUMA I PRIME — премиальное устройство IQOS ILUMA, фото LIL STORE',
+    },
+    'IQOS ILUMA ONE': {
+        'meta_description': (
+            'Купить IQOS ILUMA ONE в LIL SOLID, Москва. Компактное устройство первого поколения ILUMA '
+            'без лезвия. Оригинал, бронь на сайте, доставка по Москве 0–2 дня.'
+        ),
+        'meta_keywords': (
+            'IQOS ILUMA ONE, купить ILUMA ONE, buy IQOS ILUMA ONE, IQOS ILUMA, original IQOS, LIL STORE, Москва'
+        ),
+        'image_alt': 'IQOS ILUMA ONE — устройство IQOS ILUMA, фото LIL STORE',
+    },
+    'IQOS ILUMA PRIME': {
+        'meta_description': (
+            'Купить IQOS ILUMA PRIME в LIL SOLID, Москва. Премиальное устройство IQOS ILUMA '
+            'первого поколения без лезвия. Оригинал, доставка по Москве 0–2 дня.'
+        ),
+        'meta_keywords': (
+            'IQOS ILUMA PRIME, купить ILUMA PRIME, buy IQOS ILUMA PRIME, IQOS ILUMA premium, LIL STORE, Москва'
+        ),
+        'image_alt': 'IQOS ILUMA PRIME — премиальное устройство IQOS ILUMA, фото LIL STORE',
+    },
+    'IQOS ILUMA STANDART': {
+        'meta_description': (
+            'Купить IQOS ILUMA STANDART в LIL SOLID, Москва. Классическое устройство IQOS ILUMA '
+            'без лезвия, SMARTCORE. Оригинал, бронь на сайте, доставка по Москве 0–2 дня.'
+        ),
+        'meta_keywords': (
+            'IQOS ILUMA STANDART, IQOS ILUMA Standard, купить ILUMA, buy IQOS ILUMA, SMARTCORE, LIL STORE, Москва'
+        ),
+        'image_alt': 'IQOS ILUMA STANDART — устройство IQOS ILUMA, фото LIL STORE',
     },
     'LIL SOLID DUAL': {
         'meta_description': (
@@ -257,9 +287,9 @@ DEVICE_MODEL_SEO = {
         ),
         'meta_keywords': (
             'LIL SOLID DUAL, купить LIL SOLID DUAL, buy LIL SOLID DUAL, LIL dual mode, '
-            'нагреватель LIL, LIL device, original LIL, LIL SOLID, Москва'
+            'нагреватель LIL, LIL device, original LIL, LIL STORE, Москва'
         ),
-        'image_alt': 'LIL SOLID DUAL — устройство LIL с кейсом, фото LIL SOLID',
+        'image_alt': 'LIL SOLID DUAL — устройство LIL с кейсом, фото LIL STORE',
     },
     'LIL SOLID 3.0': {
         'meta_description': (
@@ -268,9 +298,9 @@ DEVICE_MODEL_SEO = {
         ),
         'meta_keywords': (
             'LIL SOLID 3.0, купить LIL SOLID 3.0, buy LIL SOLID 3.0, LIL 3.0, '
-            'нагреватель LIL, LIL device, original LIL, LIL SOLID, Москва'
+            'нагреватель LIL, LIL device, original LIL, LIL STORE, Москва'
         ),
-        'image_alt': 'LIL SOLID 3.0 — компактное устройство LIL, фото LIL SOLID',
+        'image_alt': 'LIL SOLID 3.0 — компактное устройство LIL, фото LIL STORE',
     },
     'LIL SOLID 4.0': {
         'meta_description': (
@@ -279,9 +309,9 @@ DEVICE_MODEL_SEO = {
         ),
         'meta_keywords': (
             'LIL SOLID 4.0, купить LIL SOLID 4.0, buy LIL SOLID 4.0, LIL SOLID new, '
-            'LIL device, нагреватель LIL, LIL tobacco heating, original LIL, LIL SOLID, Москва'
+            'LIL device, нагреватель LIL, LIL tobacco heating, original LIL, LIL STORE, Москва'
         ),
-        'image_alt': 'LIL SOLID 4.0 — устройство LIL нового поколения, фото LIL SOLID',
+        'image_alt': 'LIL SOLID 4.0 — устройство LIL нового поколения, фото LIL STORE',
     },
 }
 
@@ -355,17 +385,19 @@ def _device_line(product) -> Optional[str]:
         return 'LIL SOLID 4.0'
     if 'lil solid 3' in name or model == 'LIL SOLID 3.0':
         return 'LIL SOLID 3.0'
-    if 'i prime' in name or 'i prime' in model.lower():
-        return 'IQOS Iluma i Prime'
-    if 'i standart' in name or 'i standard' in name:
-        return 'IQOS Iluma i Standard'
-    if 'i one' in name:
-        return 'IQOS Iluma i One'
+    if 'i prime' in name or model.upper() == 'IQOS ILUMA I PRIME':
+        return 'IQOS ILUMA I PRIME'
+    if 'i standart' in name or 'i standard' in name or model.upper() == 'IQOS ILUMA I':
+        return 'IQOS ILUMA I'
+    if 'i one' in name or model.upper() == 'IQOS ILUMA I ONE':
+        return 'IQOS ILUMA I ONE'
+    if 'iluma one' in name and 'i one' not in name:
+        return 'IQOS ILUMA ONE'
+    if 'iluma prime' in name and 'i prime' not in name:
+        return 'IQOS ILUMA PRIME'
     if product.model:
         return normalize_device_model_name(product.model)
-    return 'IQOS ILUMA'
-
-
+    return 'IQOS ILUMA STANDART'
 def _terea_variant(name: str) -> Optional[dict]:
     lower = name.lower()
     for key, data in TEREA_VARIANTS.items():
