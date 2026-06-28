@@ -275,6 +275,9 @@ def _get_yandex_metrika_id():
     return _get_yandex_metrika_id._cached
 
 
+FAVICON_VERSION = '2'
+
+
 @app.context_processor
 def inject_yandex_metrika():
     return {'yandex_metrika_id': _get_yandex_metrika_id()}
@@ -289,13 +292,15 @@ def inject_seo_defaults():
         base = request.url_root.rstrip('/')
     path = request.path if request.path.startswith('/') else '/' + request.path
     clean_url = (base + path).rstrip('/') if path != '/' else base + '/'
+    favicon_q = f'?v={FAVICON_VERSION}'
     return {
         'seo_site_url': base,
         'seo_canonical_url': clean_url,
         'seo_og_url': clean_url,
-        'seo_favicon_url': base + '/favicon.svg',
-        'seo_favicon_png_url': base + '/favicon.png',
-        'seo_favicon_ico_url': base + '/favicon.ico',
+        'seo_favicon_url': base + '/favicon.svg' + favicon_q,
+        'seo_favicon_png_url': base + '/favicon.png' + favicon_q,
+        'seo_favicon_ico_url': base + '/favicon.ico' + favicon_q,
+        'favicon_version': FAVICON_VERSION,
     }
 
 
