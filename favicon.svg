@@ -24,7 +24,5 @@
     <rect width="120" height="120" rx="26" fill="url(#ls-bg)"/>
     <rect x="20" y="20" width="80" height="80" rx="10" fill="url(#ls-mark)" stroke="#00f5ff" stroke-width="3.5" filter="url(#ls-glow)"/>
     <rect x="36" y="36" width="48" height="48" rx="4" stroke="#39ff14" stroke-width="2.5" stroke-opacity="0.72"/>
-    <path d="M44 44v32h28" stroke="#e8e8e8" stroke-width="7" stroke-linecap="square" stroke-linejoin="miter"/>
-    <path d="M44 44v32h28" stroke="#00f5ff" stroke-width="3" stroke-linecap="square" stroke-linejoin="miter" opacity="0.85"/>
   </g>
 </svg>

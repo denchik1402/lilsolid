@@ -1,5 +1,5 @@
 /* Service Worker для PWA — кэширование для офлайн-доступа */
-const CACHE_NAME = 'lilsolid-v3';
+const CACHE_NAME = 'lilsolid-v4';
 
 self.addEventListener('install', (e) => {
   self.skipWaiting();

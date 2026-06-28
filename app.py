@@ -275,7 +275,7 @@ def _get_yandex_metrika_id():
     return _get_yandex_metrika_id._cached
 
 
-FAVICON_VERSION = '2'
+FAVICON_VERSION = '3'
 
 
 @app.context_processor
