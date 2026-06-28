@@ -44,8 +44,10 @@
     </script>
     {% block schema_ld %}{% endblock %}
     <link rel="sitemap" type="application/xml" href="{{ url_for('sitemap') }}">
-    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='favicon.ico') }}">
-    <link rel="icon" type="image/svg+xml" href="{{ url_for('static', filename='favicon.svg') }}">
+    <link rel="icon" href="{{ seo_favicon_ico_url }}" sizes="any">
+    <link rel="icon" href="{{ seo_favicon_png_url }}" type="image/png" sizes="120x120">
+    <link rel="icon" href="{{ seo_favicon_url }}" type="image/svg+xml">
+    <link rel="apple-touch-icon" href="{{ seo_favicon_png_url }}">
     
     <!-- Preconnect к CDN — ускорение загрузки -->
     <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>

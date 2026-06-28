@@ -2274,6 +2274,25 @@ def service_worker():
     return send_from_directory(app.static_folder, 'sw.js', mimetype='application/javascript')
 
 
+def _send_favicon_svg():
+    return send_from_directory(app.root_path, 'favicon.svg', mimetype='image/svg+xml')
+
+
+@app.route('/favicon.svg')
+def favicon_svg():
+    return _send_favicon_svg()
+
+
+@app.route('/favicon.png')
+def favicon_png():
+    return send_from_directory(app.root_path, 'favicon.png', mimetype='image/png')
+
+
+@app.route('/favicon.ico')
+def favicon_ico():
+    return send_from_directory(app.root_path, 'favicon.ico', mimetype='image/x-icon')
+
+
 @app.route('/manifest.json')
 def manifest():
     """PWA manifest — установка как приложение"""
