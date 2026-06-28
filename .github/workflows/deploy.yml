@@ -20,6 +20,7 @@ jobs:
             set -o pipefail
             APP_DIR=/home/lilstore/lilsolid
             SERVICE=lilsolid
+            trap 'systemctl restart "$SERVICE" 2>/dev/null || systemctl start "$SERVICE" 2>/dev/null || true' EXIT
 
             echo "=== 1. chown ==="
             rm -f "$APP_DIR/gunicorn.ctl" 2>/dev/null || true
@@ -53,7 +54,7 @@ jobs:
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 fill_seo_meta.py" 2>/dev/null || true
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 fill_seo_meta.py --refresh-keywords" 2>/dev/null || true
             echo "=== 5c2. sync_device_models ==="
-            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 -c "from sync_device_models import run; run(rebalance_hits=False)"" 2>/dev/null || true
+            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 sync_device_models.py" 2>/dev/null || true
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 normalize_product_names.py" 2>/dev/null || true
 
             echo "=== 4d. sync from lilstore (catalog, banners, blog — last) ==="

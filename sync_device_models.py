@@ -57,8 +57,11 @@ def assign_product_models(db, Product):
 
 
 def rebalance_hit_flags(db, Product):
-    """Хиты: ILUMA + LIL + TEREA, не только стики."""
-    from homepage_carousel import pick_hit_product_ids
+    """Хиты — только lilstore (homepage_carousel)."""
+    try:
+        from homepage_carousel import pick_hit_product_ids
+    except ImportError:
+        return 0, 0
     products = Product.query.filter(Product.in_stock == True).all()
     if not products:
         products = Product.query.all()
