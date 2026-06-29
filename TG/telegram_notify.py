@@ -65,25 +65,40 @@ def get_config():
     return token, chat_id
 
 
-def _site_order_label():
-    try:
-        import config
-        url = (getattr(config, 'SITE_URL', None) or '').lower()
-    except ImportError:
-        url = ''
-    if 'iqos-store' in url:
-        return 'АЙКОС СТОР · iqos-store.ru'
-    if 'lilsolid' in url:
-        return 'LIL SOLID · lilsolid.ru'
-    if 'lilstore' in url:
-        return 'LIL STORE · lilstore.ru'
-    return url.replace('https://', '').replace('http://', '') or 'Сайт'
+def _site_order_label() -> str:
+    """Домен витрины для Telegram (iqos-store.ru / lilsolid.ru / lilstore.ru)."""
+    url = os.environ.get('SITE_URL', '')
+    if not url:
+        try:
+            import config
+            url = getattr(config, 'SITE_URL', None) or ''
+        except ImportError:
+            url = ''
+    if not url:
+        try:
+            from flask import has_request_context, request
+            if has_request_context():
+                url = request.url_root.rstrip('/')
+        except Exception:
+            pass
+    from urllib.parse import urlparse
+    parsed = urlparse(url if '://' in (url or '') else f'https://{url or ""}')
+    host = (parsed.netloc or '').lower()
+    if host.startswith('www.'):
+        host = host[4:]
+    if 'iqos-store' in host:
+        return 'iqos-store.ru'
+    if 'lilsolid' in host:
+        return 'lilsolid.ru'
+    if 'lilstore' in host:
+        return 'lilstore.ru'
+    return host or 'lilsolid.ru'
 
 
 def format_order_message(order):
     """Форматирует заказ для красивого отображения в Telegram"""
     lines = [
-        f"🛒 <b>НОВЫЙ ЗАКАЗ</b> — {_site_order_label()}",
+        f"🛒 <b>НОВЫЙ ЗАКАЗ</b> · {_site_order_label()}",
         "",
         f"📋 Номер: <code>{order.order_number}</code>",
         f"👤 Клиент: {order.customer_name}",
