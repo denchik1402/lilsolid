@@ -158,7 +158,7 @@
         
         {% set intro = product.get_intro_text() %}
         {% set specs = product.get_characteristics() %}
-        {% if intro %}
+        {% if intro and not pdp_seo_html %}
         <div class="product-intro mb-3">{{ intro|sanitize_html|safe }}</div>
         {% endif %}
         {% if specs %}
