@@ -291,60 +291,100 @@ body.luxury-store .store-modal .btn-primary {
     }
 }
 .pdp-delivery-card { border-left: 4px solid #0d6efd; }
-.pdp-extras-band {
-    margin-top: 0.5rem;
+.pdp-main-col--media,
+.pdp-main-col--buy {
+    min-height: 100%;
 }
-.pdp-stick-upsell--compact {
-    padding: 0.85rem 1rem;
-    background: var(--bg-input, #f8f9fa);
+.pdp-delivery-wrap {
+    width: 100%;
+}
+.pdp-delivery-wrap .pdp-delivery-card {
+    margin-bottom: 0;
+}
+.pdp-stick-upsell--boxed {
+    padding: 0.75rem 0.85rem;
+    margin-top: auto;
     border: 1px solid var(--border, #e8e8e8);
     border-radius: 12px;
+    background: var(--bg-input, #f8f9fa);
 }
 .pdp-stick-upsell__title {
     font-size: 0.95rem;
     font-weight: 600;
-    margin: 0;
+    margin: 0 0 0.65rem;
     color: var(--text, #212529);
 }
-.pdp-stick-card {
-    padding: 0.4rem 0.35rem 0.5rem;
+.pdp-stick-mini {
+    padding: 0.35rem 0.3rem 0.45rem;
     background: var(--bg-card, #fff);
     border: 1px solid var(--border, #ececec);
-    border-radius: 10px;
+    border-radius: 8px;
     transition: border-color 0.2s, box-shadow 0.2s;
 }
-.pdp-stick-card:hover {
+.pdp-stick-mini:hover {
     border-color: #0d6efd;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
-.pdp-stick-card__img {
+.pdp-stick-mini__img {
     display: flex;
     align-items: center;
     justify-content: center;
-    min-height: 52px;
-    max-height: 56px;
-    margin-bottom: 0.35rem;
+    min-height: 48px;
+    max-height: 52px;
+    margin-bottom: 0.3rem;
     overflow: hidden;
 }
-.pdp-stick-card__img img {
-    max-height: 52px;
+.pdp-stick-mini__img img {
+    max-height: 48px;
     width: auto;
     object-fit: contain;
 }
-.pdp-stick-card__name {
+.pdp-stick-mini__name {
     font-size: 0.68rem;
     font-weight: 600;
     line-height: 1.25;
-    margin-bottom: 0.15rem;
+    margin-bottom: 0.1rem;
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
 }
-.pdp-stick-card__price {
+.pdp-stick-mini__price {
     font-size: 0.72rem;
     font-weight: 700;
     color: var(--text-primary, #0d6efd);
+}
+.pdp-stick-mini .product-discount-badge {
+    font-size: 0.6rem;
+    padding: 0.15rem 0.3rem;
+    top: 0.2rem;
+    right: 0.2rem;
+}
+@media (max-width: 767px) {
+    .pdp-stick-upsell--boxed {
+        margin-top: 1rem;
+    }
+    .pdp-delivery-wrap {
+        margin-top: 0 !important;
+    }
+}
+[data-theme="dark"] .pdp-stick-upsell--boxed,
+[data-theme="cyberpunk"] .pdp-stick-upsell--boxed {
+    background: var(--bg-input, #16213e);
+    border-color: var(--border, #2d3a5a);
+}
+[data-theme="dark"] .pdp-stick-mini,
+[data-theme="cyberpunk"] .pdp-stick-mini {
+    background: var(--bg-card, #1e2a4a);
+    border-color: var(--border, #2d3a5a);
+}
+body.luxury-store .pdp-stick-upsell--boxed {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: var(--lux-glass-border, rgba(255, 255, 255, 0.08));
+}
+body.luxury-store .pdp-stick-mini {
+    background: var(--lux-charcoal, #0c0c0f);
+    border-color: var(--lux-glass-border, rgba(255, 255, 255, 0.08));
 }
 .pdp-stick-upsell .small-img { max-height: 100px; }
 .pdp-sibling-nav .btn { max-width: 48%; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -500,29 +540,6 @@ body.luxury-store .home-faq-footer a {
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 0.75rem;
     }
-}
-@media (max-width: 991px) {
-    .pdp-extras-band .col-lg-8 + .col-lg-4 {
-        margin-top: 0.25rem;
-    }
-}
-[data-theme="dark"] .pdp-stick-upsell--compact,
-[data-theme="cyberpunk"] .pdp-stick-upsell--compact {
-    background: var(--bg-input, #16213e);
-    border-color: var(--border, #2d3a5a);
-}
-[data-theme="dark"] .pdp-stick-card,
-[data-theme="cyberpunk"] .pdp-stick-card {
-    background: var(--bg-card, #1e2a4a);
-    border-color: var(--border, #2d3a5a);
-}
-body.luxury-store .pdp-stick-upsell--compact {
-    background: rgba(255, 255, 255, 0.03);
-    border-color: var(--lux-glass-border, rgba(255, 255, 255, 0.08));
-}
-body.luxury-store .pdp-stick-card {
-    background: var(--lux-charcoal, #0c0c0f);
-    border-color: var(--lux-glass-border, rgba(255, 255, 255, 0.08));
 }
 body.luxury-store .product-pdp-seo--wide {
     background: var(--lux-charcoal, #0c0c0f);

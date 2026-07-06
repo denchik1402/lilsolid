@@ -94,9 +94,9 @@
 
 {% include 'includes/pdp_sibling_nav.html' %}
 
-<div class="row">
+<div class="row pdp-main-row align-items-stretch">
     <!-- Галерея изображений товара -->
-    <div class="col-md-6">
+    <div class="col-md-6 d-flex flex-column pdp-main-col pdp-main-col--media">
         <div class="product-gallery">
             <div class="product-gallery-main mb-2">
                 {% set main_img = product.all_images[0] if product.all_images else none %}
@@ -120,7 +120,7 @@
     </div>
     
     <!-- Информация о товаре -->
-    <div class="col-md-6">
+    <div class="col-md-6 d-flex flex-column pdp-main-col pdp-main-col--buy">
         <h1>{{ product.name }}</h1>
         {% if product.model %}<p class="text-muted mb-2">{{ product.model }}</p>{% endif %}
         
@@ -192,7 +192,9 @@
         <button type="button" class="btn btn-outline-primary w-100 mb-4 one-click-trigger" data-product-id="{{ product.id }}" data-product-name="{{ product.name|e }}">Покупка в 1 клик</button>
         {% endif %}
 
-        {% include 'includes/pdp_delivery_card.html' %}
+        <div class="pdp-delivery-wrap mt-auto">
+            {% include 'includes/pdp_delivery_card.html' %}
+        </div>
     </div>
 </div>
 
