@@ -1215,7 +1215,21 @@ def api_product_card(product_id):
 @app.route('/api/one-click-order', methods=['POST'])
 def api_one_click_order():
     """Заказ в 1 клик."""
-    from checkout_idempotency import ensure_checkout_idempotency_key, finalize_checkout_session
+    from sqlalchemy.exc import IntegrityError
+    from checkout_idempotency import (
+        find_existing_order,
+        finalize_checkout_session,
+        one_click_idempotency_key,
+    )
+
+    def _one_click_json(order):
+        finalize_checkout_session(session, order.id)
+        return jsonify({
+            'success': True,
+            'order_id': order.id,
+            'redirect': url_for('order_success', order_id=order.id),
+        })
+
     data = request.get_json(silent=True) or request.form
     try:
         product_id = int(data.get('product_id', 0))
@@ -1228,8 +1242,13 @@ def api_one_click_order():
     product = db.session.get(Product, product_id)
     if not product or not product.in_stock:
         return jsonify({'success': False, 'error': 'Товар недоступен'}), 400
+
+    idempotency_key = one_click_idempotency_key(session, product_id)
+    existing = find_existing_order(Order, idempotency_key)
+    if existing:
+        return _one_click_json(existing)
+
     try:
-        idempotency_key = ensure_checkout_idempotency_key(session)
         order = Order(
             customer_name=name,
             customer_phone=phone,
@@ -1239,7 +1258,7 @@ def api_one_click_order():
             payment_method='courier',
             comment='Заказ в 1 клик с сайта',
             total_amount=product.price,
-            idempotency_key=idempotency_key + f'-oc-{product_id}',
+            idempotency_key=idempotency_key,
         )
         db.session.add(order)
         db.session.flush()
@@ -1250,6 +1269,13 @@ def api_one_click_order():
             price=product.price,
         ))
         db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        existing = find_existing_order(Order, idempotency_key)
+        if existing:
+            return _one_click_json(existing)
+        logger.exception('one-click-order duplicate without existing row')
+        return jsonify({'success': False, 'error': 'Заказ уже оформляется. Подождите пару секунд.'}), 409
     except Exception as e:
         db.session.rollback()
         logger.exception('one-click-order failed: %s', e)
@@ -1257,17 +1283,15 @@ def api_one_click_order():
             'success': False,
             'error': 'Не удалось оформить заказ. Попробуйте через корзину или позвоните нам.',
         }), 500
+
+    order = db.session.get(Order, order.id)
     try:
-        from telegram_notify import send_order_to_telegram
-        send_order_to_telegram(order)
-    except Exception:
-        pass
-    finalize_checkout_session(session, order.id)
-    return jsonify({
-        'success': True,
-        'order_id': order.id,
-        'redirect': url_for('order_success', order_id=order.id),
-    })
+        from telegram_notify import send_order_to_telegram_async
+        send_order_to_telegram_async(order.id)
+    except Exception as e:
+        logger.warning('[Telegram async] one-click order_id=%s: %s', order.id, e)
+
+    return _one_click_json(order)
 
 
 @csrf.exempt

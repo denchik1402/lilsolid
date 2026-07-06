@@ -29,6 +29,12 @@ def find_existing_order(Order, idempotency_key: str):
     return Order.query.filter_by(idempotency_key=idempotency_key).first()
 
 
+def one_click_idempotency_key(session, product_id: int) -> str:
+    """Стабильный ключ для повторных кликов «1 клик» по одному товару в сессии."""
+    base = ensure_checkout_idempotency_key(session)
+    return f'{base}-oc-{int(product_id)}'[:64]
+
+
 def finalize_checkout_session(session, order_id: int) -> None:
     session['cart'] = {}
     session['last_order_id'] = order_id

@@ -58,11 +58,22 @@
     });
 
     var oneClickForm = document.getElementById('oneClickForm');
+    var oneClickSubmitting = false;
     if (oneClickForm) {
+        var oneClickSubmitBtn = oneClickForm.querySelector('button[type="submit"]');
+        if (oneClickSubmitBtn && !oneClickSubmitBtn.dataset.label) {
+            oneClickSubmitBtn.dataset.label = oneClickSubmitBtn.textContent.trim();
+        }
         oneClickForm.addEventListener('submit', function (e) {
             e.preventDefault();
+            if (oneClickSubmitting) return;
             var err = document.getElementById('oneClickError');
             err.classList.add('d-none');
+            oneClickSubmitting = true;
+            if (oneClickSubmitBtn) {
+                oneClickSubmitBtn.disabled = true;
+                oneClickSubmitBtn.textContent = 'Отправка…';
+            }
             var fd = new FormData(oneClickForm);
             var payload = { product_id: fd.get('product_id'), name: fd.get('name'), phone: fd.get('phone') };
             fetch('/api/one-click-order', {
@@ -83,10 +94,18 @@
                     });
                 })
                 .then(function (d) {
-                    if (d.success && d.redirect) window.location.href = d.redirect;
-                    else throw new Error(d.error || 'Ошибка');
+                    if (d.success && d.redirect) {
+                        window.location.href = d.redirect;
+                        return;
+                    }
+                    throw new Error(d.error || 'Ошибка');
                 })
                 .catch(function (ex) {
+                    oneClickSubmitting = false;
+                    if (oneClickSubmitBtn) {
+                        oneClickSubmitBtn.disabled = false;
+                        oneClickSubmitBtn.textContent = oneClickSubmitBtn.dataset.label || 'Отправить заявку';
+                    }
                     err.textContent = ex.message || 'Ошибка отправки';
                     err.classList.remove('d-none');
                 });
