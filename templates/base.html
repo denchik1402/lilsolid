@@ -1392,7 +1392,7 @@
     <!-- Telegram Web App SDK (для кнопки "Запустить приложение" в боте) -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     {% block extra_css %}{% endblock %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/store-enhancements.css') }}?v=3">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/store-enhancements.css') }}?v=5">
     <script>
         (function(){var t=localStorage.getItem('theme')||'cyberpunk';document.documentElement.setAttribute('data-theme',t);})();
     </script>
@@ -1617,7 +1617,7 @@
     <script src="{{ url_for('static', filename='js/wishlist.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/compare.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/search_suggestions.js') }}" defer></script>
-    <script defer src="{{ url_for('static', filename='js/store-enhancements.js') }}?v=3"></script>
+    <script defer src="{{ url_for('static', filename='js/store-enhancements.js') }}?v=5"></script>
     
     <script>
         // Инициализация Telegram Web App (если открыто из бота)

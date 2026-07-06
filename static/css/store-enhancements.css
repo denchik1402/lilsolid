@@ -7,6 +7,20 @@
 .home-model-tile {
     flex: 1 1 0;
     min-width: 0;
+    width: auto;
+    max-width: none;
+}
+body.luxury-store .home-model-tiles-grid,
+[data-theme="cyberpunk"] .home-model-tiles-grid {
+    display: flex;
+    flex-wrap: nowrap;
+    width: 100%;
+}
+body.luxury-store .home-model-tile,
+[data-theme="cyberpunk"] .home-model-tile {
+    flex: 1 1 0;
+    min-width: 0;
+    max-width: none;
 }
 @media (max-width: 576px) {
     .home-model-tiles {
