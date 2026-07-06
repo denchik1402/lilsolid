@@ -4,9 +4,9 @@
 {% block meta_description %}{% if product.meta_description %}{{ product.meta_description }}{% else %}{{ product.name }} — {{ product.price|format_price }} ₽. {{ (product.get_intro_text() or product.description or product.name)|striptags|truncate(120) }}{% endif %}{% endblock %}
 {% block meta_keywords %}{% if product.meta_keywords %}{{ product.meta_keywords }}{% else %}{{ product.name }}, IQOS, TEREA, {{ product.category.name if product.category else '' }}, купить{% endif %}{% endblock %}
 {% block canonical_url %}{{ request.url_root.rstrip('/') }}{{ product|product_url }}{% endblock %}
-{% block og_title %}{{ product.name }} — {{ site_brand_name }}{% endblock %}
+{% block og_title %}{{ product.name }} — LIL STORE{% endblock %}
 {% block og_description %}{{ product.name }} — {{ product.price|format_price }} ₽. Оригинальная продукция.{% endblock %}
-{% block twitter_title %}{{ product.name }} — {{ site_brand_name }}{% endblock %}
+{% block twitter_title %}{{ product.name }} — LIL STORE{% endblock %}
 {% block twitter_description %}{{ product.name }} — {{ product.price|format_price }} ₽. Оригинальная продукция.{% endblock %}
 {% block twitter_image %}{% set _img = product.all_images[0] if product.all_images else product.image %}{% if _img %}{{ request.url_root.rstrip('/') }}{{ url_for('static', filename='images/products/' + _img) }}{% else %}{{ request.url_root.rstrip('/') }}{{ url_for('static', filename='LOGO3.png') }}{% endif %}{% endblock %}
 {% block og_type %}product{% endblock %}
@@ -36,7 +36,7 @@
     "@type": "Offer",
     "url": {{ (_base + (product|product_url))|tojson }},
     "priceCurrency": "RUB",
-    "price": {{ product.price|float }},
+    "price": "{{ product.price }}",
     {% if product.old_price and product.old_price > product.price %}"priceSpecification": {"@type": "PriceSpecification", "price": "{{ product.price }}", "priceCurrency": "RUB", "valueAddedTaxIncluded": true},
     "oldPrice": "{{ product.old_price }}",{% endif %}
     "priceValidUntil": "{{ price_valid_until|default('2026-12-31') }}",
@@ -94,14 +94,22 @@
 
 {% include 'includes/pdp_sibling_nav.html' %}
 
-<div class="row pdp-main-row align-items-stretch">
+<div class="row">
     <!-- Галерея изображений товара -->
     <div class="col-md-6">
         <div class="product-gallery">
             <div class="product-gallery-main mb-2">
                 {% set main_img = product.all_images[0] if product.all_images else none %}
                 {% if main_img %}
-                    <img id="productMainImage" src="{{ url_for('static', filename='images/products/' + main_img) }}" class="img-fluid rounded" alt="{{ product|product_alt }}">
+                    {% set filename = main_img %}
+                    {% set folder = 'products' %}
+                    {% set alt = product|product_alt %}
+                    {% set img_class = 'img-fluid rounded' %}
+                    {% set img_id = 'productMainImage' %}
+                    {% set prefer_800 = true %}
+                    {% set eager = true %}
+                    {% set sizes = '(max-width: 768px) 100vw, 50vw' %}
+                    {% include 'includes/responsive_image.html' %}
                 {% else %}
                     <img id="productMainImage" src="https://via.placeholder.com/400" class="img-fluid rounded" alt="{{ product|product_alt }}">
                 {% endif %}
@@ -109,8 +117,16 @@
             {% if product.all_images|length > 1 %}
             <div class="product-gallery-thumbs d-flex gap-2 flex-wrap">
                 {% for img in product.all_images %}
-                <div class="product-thumb {% if loop.first %}active{% endif %}" data-src="{{ url_for('static', filename='images/products/' + img) }}">
-                    <img src="{{ url_for('static', filename='images/products/' + img) }}" class="img-fluid rounded" alt="{{ product|product_alt }}" loading="lazy">
+                {% set _thumb = optimized_image('products', img) %}
+                <div class="product-thumb {% if loop.first %}active{% endif %}" data-src="{{ _thumb.original_url }}">
+                    {% set filename = img %}
+                    {% set folder = 'products' %}
+                    {% set alt = product|product_alt %}
+                    {% set img_class = 'img-fluid rounded' %}
+                    {% set sizes = '80px' %}
+                    {% set width = 80 %}
+                    {% set height = 80 %}
+                    {% include 'includes/responsive_image.html' %}
                 </div>
                 {% endfor %}
             </div>
@@ -120,9 +136,10 @@
     </div>
     
     <!-- Информация о товаре -->
-    <div class="col-md-6 d-flex flex-column pdp-main-col pdp-main-col--buy">
+    <div class="col-md-6">
         <h1>{{ product.name }}</h1>
         {% if product.model %}<p class="text-muted mb-2">{{ product.model }}</p>{% endif %}
+        <p class="small text-muted mb-2">Артикул: <span class="text-dark">LS-{{ product.id }}</span></p>
         
         <div class="mb-3">
             <span class="h2 text-primary">{{ product.price|format_price }} ₽</span>
@@ -192,9 +209,7 @@
         <button type="button" class="btn btn-outline-primary w-100 mb-4 one-click-trigger" data-product-id="{{ product.id }}" data-product-name="{{ product.name|e }}">Покупка в 1 клик</button>
         {% endif %}
 
-        <div class="pdp-delivery-wrap mt-auto">
-            {% include 'includes/pdp_delivery_card.html' %}
-        </div>
+        {% include 'includes/pdp_delivery_card.html' %}
     </div>
 </div>
 
@@ -307,12 +322,7 @@
                     {% include 'includes/favorite_btn.html' %}
                     <a href="{{ product|product_url }}" class="product-card-link text-decoration-none text-dark">
                         <div class="product-card-img-wrap">
-                            {% set first_img = product.all_images[0] if product.all_images else product.image %}
-                            {% if first_img %}
-                            <img src="{{ url_for('static', filename='images/products/' + first_img) }}" class="img-fluid" alt="{{ product|product_alt }}" loading="lazy">
-                            {% else %}
-                            <img src="https://via.placeholder.com/400" class="img-fluid" alt="{{ product|product_alt }}" loading="lazy">
-                            {% endif %}
+                            {% include 'includes/product_card_image.html' %}
                         </div>
                         <h5 class="product-title">{{ product.name }}</h5>
                         <div class="product-price mb-2">{{ product.price|format_price }} ₽</div>

@@ -7,13 +7,16 @@
             <div class="product-card h-100 position-relative">
                 {% with product=sp %}
                 {% include 'includes/discount_badge.html' %}
-                <a href="{{ sp|product_url }}" class="text-decoration-none text-dark">
+                <a href="{{ sp|product_url }}" class="product-card-link text-decoration-none text-dark">
                     <div class="product-card-img-wrap small-img">
                         {% include 'includes/product_card_image.html' %}
                     </div>
                     <div class="small fw-semibold mt-2">{{ sp.name|truncate(40) }}</div>
                     <div class="product-price small">{{ sp.price|format_price }} ₽</div>
                 </a>
+                <div class="d-grid gap-2 mt-2">
+                    {% include 'includes/add_to_cart_widget.html' %}
+                </div>
                 {% endwith %}
             </div>
         </div>

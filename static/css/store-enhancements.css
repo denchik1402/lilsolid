@@ -307,16 +307,23 @@ body.luxury-store .pdp-stick-upsell--bordered {
     background: rgba(255, 255, 255, 0.03);
     border-color: var(--lux-glass-border, rgba(255, 255, 255, 0.08));
 }
-.pdp-delivery-wrap {
-    width: 100%;
+.pdp-stick-upsell .add-to-cart-widget .cart-widget-add {
+    font-size: 0.8rem;
+    padding: 0.35rem 0.5rem;
 }
-.pdp-delivery-wrap .pdp-delivery-card {
-    margin-bottom: 0;
+.pdp-stick-upsell .add-to-cart-widget .cart-widget-active {
+    font-size: 0.75rem;
 }
-@media (max-width: 767px) {
-    .pdp-delivery-wrap {
-        margin-top: 0 !important;
-    }
+.pdp-stick-upsell .add-to-cart-widget .cart-widget-qty-block .cart-widget-minus,
+.pdp-stick-upsell .add-to-cart-widget .cart-widget-qty-block .cart-widget-plus {
+    width: 28px;
+    min-width: 28px;
+    font-size: 0.9rem;
+}
+.pdp-stick-upsell .add-to-cart-widget .cart-widget-qty-block .cart-widget-qty {
+    width: 32px;
+    min-width: 32px;
+    font-size: 0.8rem;
 }
 .pdp-sibling-nav .btn { max-width: 48%; text-align: left; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .cart-messenger-btns { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
@@ -445,7 +452,6 @@ body.luxury-store #homeFaqAccordion .accordion-body {
 body.luxury-store .home-faq-footer a {
     color: var(--lux-gold, #c9a962);
 }
-
 
 /* SEO-блок на карточке товара */
 .product-pdp-seo {
