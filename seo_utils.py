@@ -53,6 +53,11 @@ def city_prepositional(city: str | None) -> str:
         return raw + 'е'
     return raw
 
+
+def meta_city_site_phrase(city: str | None = None) -> str:
+    """Грамотная вставка для meta: «в Москве — магазин»."""
+    return f'в {city_prepositional(city or CITY_RU)} — {SITE}'
+
 CYRILLIC_BRAND_KEYWORDS = {
     'iqos': ['айкос', 'ай qos', 'купить айкос', 'икос'],
     'iluma': ['илюма', 'ильюма', 'илума', 'купить илюма', 'айкос илюма', 'iluma'],
@@ -500,9 +505,10 @@ def generate_category_seo(category) -> dict[str, str]:
             'seo_text': preset.get('seo_text', ''),
         }
     name = category.name or 'Каталог'
+    loc = meta_city_site_phrase()
     return {
         'meta_description': _truncate(
-            f'{name} — оригинальная продукция IQOS и TEREA в {SITE}, {CITY_RU}. '
+            f'{name} — оригинальная продукция IQOS и TEREA {loc}. '
             f'Бронь на сайте, {DELIVERY}.',
             300,
         ),
@@ -529,7 +535,7 @@ def generate_device_model_seo(device_model) -> dict[str, str]:
     return {
         'image_alt': _truncate(f'{name} — устройство, фото {SITE}', 200),
         'meta_description': _truncate(
-            f'Купить {name} в {SITE}, {CITY_RU}. Оригинальная продукция, бронь на сайте, {DELIVERY}.',
+            f'Купить {name} {meta_city_site_phrase()}. Оригинальная продукция, бронь на сайте, {DELIVERY}.',
             300,
         ),
         'meta_keywords': _truncate(
@@ -539,7 +545,7 @@ def generate_device_model_seo(device_model) -> dict[str, str]:
             300,
         ),
         'seo_text': (
-            f'<p>Купить <strong>{name}</strong> в {SITE}, {CITY_RU}. Оригинальная продукция, '
+            f'<p>Купить <strong>{name}</strong> {meta_city_site_phrase()}. Оригинальная продукция, '
             f'бронь на сайте, {DELIVERY}. Актуальные цвета и наличие — в каталоге ниже.</p>'
         ),
     }
@@ -567,7 +573,7 @@ def _generate_terea_seo(product, name: str, price: str, specs: dict) -> dict[str
 
     meta_description = _truncate(
         f'Стики {name} для IQOS ILUMA — {flavor}. '
-        f'Оригинал TEREA в {SITE}, {CITY_RU}. {price} ₽, 20 стиков в блоке. '
+        f'Оригинал TEREA {meta_city_site_phrase()}. {price} ₽, 20 стиков в блоке. '
         f'Бронь на сайте, {DELIVERY}.',
         300,
     )
@@ -607,7 +613,7 @@ def _generate_iqos_seo(product, name: str, price: str) -> dict[str, str]:
 
     meta_description = _truncate(
         f'{name} — оригинальное устройство {line} без лезвия, SMARTCORE{color_part}. '
-        f'{SITE}, {CITY_RU}. {price} ₽. Бронь на сайте, {DELIVERY}.',
+        f'{meta_city_site_phrase()}. {price} ₽. Бронь на сайте, {DELIVERY}.',
         300,
     )
 
@@ -645,7 +651,7 @@ def _generate_exclusive_seo(product, name: str, price: str) -> dict[str, str]:
 
     meta_description = _truncate(
         f'{name} — {limited_hint}, оригинальный {line}. '
-        f'Эксклюзив в {SITE}, {CITY_RU}. {price} ₽. '
+        f'Эксклюзив {meta_city_site_phrase()}. {price} ₽. '
         f'Бронь на сайте, {DELIVERY}.',
         300,
     )
@@ -682,7 +688,7 @@ def _generate_lil_seo(product, name: str, price: str) -> dict[str, str]:
 
     meta_description = _truncate(
         f'{name} — {line}, {mode}. '
-        f'Оригинал LIL в {SITE}, {CITY_RU}. {price} ₽. '
+        f'Оригинал LIL {meta_city_site_phrase()}. {price} ₽. '
         f'Бронь на сайте, {DELIVERY}.',
         300,
     )

@@ -420,3 +420,145 @@ body.luxury-store .home-faq-footer a {
     color: var(--lux-gold, #c9a962);
 }
 
+
+/* SEO-блок на карточке товара */
+.product-pdp-seo {
+    margin-top: 1.5rem;
+    padding-top: 1.25rem;
+    border-top: 1px solid var(--border, #e8e8e8);
+}
+.pdp-seo-article {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+.pdp-seo-h2 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    line-height: 1.45;
+    color: var(--text, #212529);
+    margin: 0 0 0.85rem;
+}
+.pdp-seo-lead p {
+    font-size: 0.95rem;
+    line-height: 1.65;
+    color: var(--text-muted, #495057);
+    margin: 0 0 1.1rem;
+}
+.pdp-seo-sections {
+    display: flex;
+    flex-direction: column;
+    gap: 0.65rem;
+    margin-bottom: 1rem;
+}
+.pdp-seo-section {
+    padding: 0.8rem 0.95rem;
+    background: var(--bg-input, #f8f9fa);
+    border-radius: 10px;
+    border: 1px solid var(--border, #ececec);
+}
+.pdp-seo-section-title {
+    font-size: 0.75rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted, #6c757d);
+    margin: 0 0 0.35rem;
+}
+.pdp-seo-section-body p {
+    font-size: 0.9rem;
+    line-height: 1.55;
+    margin: 0;
+    color: var(--text, #212529);
+}
+.pdp-seo-facts {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.6rem;
+}
+.pdp-seo-fact {
+    padding: 0.7rem 0.85rem;
+    background: var(--bg-card, #fff);
+    border: 1px solid var(--border, #e8e8e8);
+    border-radius: 10px;
+}
+.pdp-seo-fact-label {
+    display: block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    color: var(--text-muted, #6c757d);
+    margin-bottom: 0.25rem;
+}
+.pdp-seo-fact-value {
+    display: block;
+    font-size: 0.88rem;
+    line-height: 1.45;
+    color: var(--text, #212529);
+}
+.pdp-seo-fact-value a {
+    color: var(--link, #0d6efd);
+    text-decoration: none;
+}
+.pdp-seo-fact-value a:hover {
+    text-decoration: underline;
+}
+/* Старый формат (стики, LIL) — выровнять типографику */
+.product-pdp-seo h2 {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--text-muted, #6c757d);
+    margin: 1.1rem 0 0.35rem;
+}
+.product-pdp-seo h2:first-child,
+.pdp-seo-header .pdp-seo-h2 {
+    font-size: 1.05rem;
+    font-weight: 600;
+    text-transform: none;
+    letter-spacing: normal;
+    color: var(--text, #212529);
+    margin-top: 0;
+}
+.product-pdp-seo p {
+    font-size: 0.92rem;
+    line-height: 1.6;
+    color: var(--text-muted, #495057);
+    margin-bottom: 0.35rem;
+}
+@media (max-width: 576px) {
+    .pdp-seo-facts {
+        grid-template-columns: 1fr;
+    }
+}
+[data-theme="dark"] .pdp-seo-section,
+[data-theme="cyberpunk"] .pdp-seo-section {
+    background: var(--bg-input, #16213e);
+    border-color: var(--border, #2d3a5a);
+}
+[data-theme="dark"] .pdp-seo-fact,
+[data-theme="cyberpunk"] .pdp-seo-fact {
+    background: var(--bg-card, #1e2a4a);
+    border-color: var(--border, #2d3a5a);
+}
+body.luxury-store .pdp-seo-section {
+    background: rgba(255, 255, 255, 0.03);
+    border-color: var(--lux-glass-border, rgba(255, 255, 255, 0.08));
+}
+body.luxury-store .pdp-seo-fact {
+    background: var(--lux-charcoal, #0c0c0f);
+    border-color: var(--lux-glass-border, rgba(255, 255, 255, 0.08));
+}
+body.luxury-store .pdp-seo-h2,
+body.luxury-store .pdp-seo-section-body p,
+body.luxury-store .pdp-seo-fact-value {
+    color: var(--lux-text, #f4f2ee);
+}
+body.luxury-store .pdp-seo-section-title,
+body.luxury-store .pdp-seo-fact-label,
+body.luxury-store .pdp-seo-lead p {
+    color: var(--lux-muted, rgba(244, 242, 238, 0.65));
+}
+

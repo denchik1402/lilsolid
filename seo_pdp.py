@@ -5,7 +5,7 @@ from __future__ import annotations
 import re
 from typing import TYPE_CHECKING
 
-from seo_content import DELIVERY_RATES
+from seo_content import DELIVERY_RATES, format_delivery_moscow_price, format_delivery_rf_text
 from seo_utils import (
     SITE,
     CITY_RU,
@@ -22,6 +22,63 @@ from seo_utils import (
 
 if TYPE_CHECKING:
     from models import Product
+
+
+def _seo_city_in() -> str:
+    try:
+        import config as _cfg
+        city = getattr(_cfg, 'SITE_CITY', None) or CITY_RU
+    except ImportError:
+        city = CITY_RU
+    return city_prepositional(city)
+
+
+def _fix_city_grammar(html: str) -> str:
+    """Исправляет «в Москва» в сохранённых SEO-текстах из БД."""
+    if not html:
+        return html
+    city_in = _seo_city_in()
+    for wrong, right in (
+        (f'в {CITY_RU}', f'в {city_in}'),
+        ('в Москва', 'в Москве'),
+        ('в москва', 'в Москве'),
+    ):
+        html = html.replace(wrong, right)
+    return html
+
+
+def _pdp_article(*parts: str) -> str:
+    return '<article class="pdp-seo-article">' + ''.join(parts) + '</article>'
+
+
+def _pdp_header(seo_h2: str) -> str:
+    return f'<header class="pdp-seo-header"><h2 class="pdp-seo-h2">{seo_h2}</h2></header>'
+
+
+def _pdp_lead(html: str) -> str:
+    body = html if html.strip().startswith('<') else f'<p>{html}</p>'
+    return f'<div class="pdp-seo-lead">{body}</div>'
+
+
+def _pdp_section(title: str, body: str) -> str:
+    body_html = body if body.strip().startswith('<') else f'<p>{body}</p>'
+    return (
+        f'<section class="pdp-seo-section">'
+        f'<h3 class="pdp-seo-section-title">{title}</h3>'
+        f'<div class="pdp-seo-section-body">{body_html}</div>'
+        f'</section>'
+    )
+
+
+def _pdp_facts(*items: tuple[str, str]) -> str:
+    cards = ''.join(
+        f'<div class="pdp-seo-fact">'
+        f'<span class="pdp-seo-fact-label">{label}</span>'
+        f'<span class="pdp-seo-fact-value">{value}</span>'
+        f'</div>'
+        for label, value in items
+    )
+    return f'<div class="pdp-seo-facts">{cards}</div>'
 
 
 def _plain_len(html: str) -> int:
@@ -72,7 +129,7 @@ def build_product_pdp_seo(product: 'Product') -> str:
     """Полный HTML для вкладки «Описание» на PDP (цель 2500+ знаков)."""
     intro_db = product.get_intro_text() if product else ''
     if _plain_len(intro_db) >= 2200:
-        return intro_db
+        return _fix_city_grammar(intro_db)
 
     name = (product.name or '').strip()
     price = _format_price(product.price)
@@ -80,10 +137,10 @@ def build_product_pdp_seo(product: 'Product') -> str:
     category = product.category
     color = (product.color or '').strip()
     color_part = f' в оттенке <strong>{color}</strong>' if color else ''
-    moscow = DELIVERY_RATES['moscow_price']
-    rf = DELIVERY_RATES['rf_from']
+    moscow = format_delivery_moscow_price()
+    rf = format_delivery_rf_text()
     same_day = DELIVERY_RATES.get('moscow_same_day', 'доставка сегодня по Москве')
-    city_in = city_prepositional(CITY_RU)
+    city_in = _seo_city_in()
 
     if _is_terea(product, category):
         flavor = _stick_flavor_text(product)
@@ -107,7 +164,7 @@ def build_product_pdp_seo(product: 'Product') -> str:
             f'Оформите бронь или покупку в один клик.</p>'
             f'<h2>Доставка по Москве и России</h2>'
             f'<p><strong>{same_day}</strong> при заказе до {DELIVERY_RATES.get("moscow_cutoff", "14:00")}. '
-            f'Курьер по Москве и МО — от {moscow} ₽. По России — от {rf} ₽, {DELIVERY_RATES["days_rf"]}. '
+            f'Курьер по Москве и МО — {moscow}. По России — {rf}. '
             f'Оплата при получении.</p>'
             f'<h2>Хранение стиков TEREA</h2>'
             f'<p>Храните в сухом месте, вдали от солнца. Используйте до даты на упаковке. '
@@ -157,7 +214,7 @@ def build_product_pdp_seo(product: 'Product') -> str:
             f'<h2>Цена и заказ</h2>'
             f'<p><strong>{price} ₽</strong> в {SITE}. Бронь на сайте, {same_day}, по России от {rf} ₽.</p>'
             f'<h2>Доставка</h2>'
-            f'<p>Москва и МО — от {moscow} ₽. Россия — от {rf} ₽, {DELIVERY_RATES["days_rf"]}. Оплата при получении.</p>'
+            f'<p>Москва и МО — {moscow}. Россия — {rf}. Оплата при получении.</p>'
             f'<h2>Гарантия и оригинальность</h2>'
             f'<p>Устройство в заводской упаковке с гарантией. {SITE} — только оригинальная продукция.</p>'
         )
@@ -175,23 +232,29 @@ def build_product_pdp_seo(product: 'Product') -> str:
         form = 'Премиальный корпус, увеличенная ёмкость кейса.'
         compare = 'Prime — флагман линейки Iluma i.'
     else:
-        form = 'Технология SMARTCORE INDUCTION™ без лезвия.'
+        form = 'Подходит для ежедневного использования — без лезвия и сложного обслуживания.'
         compare = 'Сравните One, Standart и Prime в каталоге.'
 
-    variants_block = ''
+    sections = []
     if variants:
-        variants_block = f'<h2>Цвета {m}</h2><p>Доступны: {variants}.</p>'
+        sections.append(_pdp_section(f'Цвета {m}', f'Доступны: {variants}.'))
+    sections.append(_pdp_section('Какую модель выбрать', compare))
 
-    return (
-        f'<h2>{name}: купить в {city_in} с быстрой доставкой</h2>'
+    intro = (
         f'<p><strong>{name}</strong> — оригинальное устройство {line}{color_part}. '
         f'SMARTCORE INDUCTION™: нагрев табака внутри стика TEREA, без лезвия. {form}</p>'
-        f'{variants_block}'
-        f'<h2>Какую модель выбрать</h2><p>{compare}</p>'
-        f'<h2>Цена</h2><p><strong>{price} ₽</strong> в {SITE}. Покупка в 1 клик, бронь на сайте.</p>'
-        f'<h2>Доставка</h2><p>{same_day}. Москва — {moscow} ₽, Россия — от {rf} ₽.</p>'
-        f'<h2>Стики TEREA</h2><p>Добавьте блоки в <a href="/catalog/terea-sticks">каталоге стиков</a>.</p>'
-        f'<h2>Гарантия</h2><p>Заводская упаковка, гарантия производителя. {SITE} — только оригинал.</p>'
+    )
+
+    return _pdp_article(
+        _pdp_header(f'{name}: купить в {city_in} с быстрой доставкой'),
+        _pdp_lead(intro),
+        f'<div class="pdp-seo-sections">{"".join(sections)}</div>' if sections else '',
+        _pdp_facts(
+            ('Цена', f'<strong>{price} ₽</strong> · {SITE}. Покупка в 1 клик, бронь на сайте.'),
+            ('Доставка', f'{same_day}. Москва — {moscow}. Россия — {rf}.'),
+            ('Стики TEREA', 'Добавьте блоки в <a href="/catalog/terea-sticks">каталоге стиков</a>.'),
+            ('Гарантия', f'Заводская упаковка, гарантия производителя. {SITE} — только оригинал.'),
+        ),
     )
 
 
