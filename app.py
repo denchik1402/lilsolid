@@ -1228,27 +1228,35 @@ def api_one_click_order():
     product = db.session.get(Product, product_id)
     if not product or not product.in_stock:
         return jsonify({'success': False, 'error': 'Товар недоступен'}), 400
-    idempotency_key = ensure_checkout_idempotency_key(session)
-    order = Order(
-        customer_name=name,
-        customer_phone=phone,
-        customer_email='',
-        delivery_address='Уточнить у клиента (заказ в 1 клик)',
-        delivery_method='delivery',
-        payment_method='courier',
-        comment='Заказ в 1 клик с сайта',
-        total_amount=product.price,
-        idempotency_key=idempotency_key + f'-oc-{product_id}',
-    )
-    db.session.add(order)
-    db.session.flush()
-    db.session.add(OrderItem(
-        order_id=order.id,
-        product_id=product.id,
-        quantity=1,
-        price=product.price,
-    ))
-    db.session.commit()
+    try:
+        idempotency_key = ensure_checkout_idempotency_key(session)
+        order = Order(
+            customer_name=name,
+            customer_phone=phone,
+            customer_email='',
+            delivery_address='Уточнить у клиента (заказ в 1 клик)',
+            delivery_method='delivery',
+            payment_method='courier',
+            comment='Заказ в 1 клик с сайта',
+            total_amount=product.price,
+            idempotency_key=idempotency_key + f'-oc-{product_id}',
+        )
+        db.session.add(order)
+        db.session.flush()
+        db.session.add(OrderItem(
+            order_id=order.id,
+            product_id=product.id,
+            quantity=1,
+            price=product.price,
+        ))
+        db.session.commit()
+    except Exception as e:
+        db.session.rollback()
+        logger.exception('one-click-order failed: %s', e)
+        return jsonify({
+            'success': False,
+            'error': 'Не удалось оформить заказ. Попробуйте через корзину или позвоните нам.',
+        }), 500
     try:
         from telegram_notify import send_order_to_telegram
         send_order_to_telegram(order)
@@ -2821,10 +2829,15 @@ def migrate_default_banners():
 
 
 def migrate_promo_and_order():
-    """Миграция: PromoCode, Order.promo_code, Order.discount_amount, Order.courier_telegram_id"""
+    """Миграция: PromoCode, Order.promo_code, Order.discount_amount, Order.courier_telegram_id, idempotency_key"""
     with app.app_context():
         from sqlalchemy import text
-        for col, ctype in [('promo_code', 'VARCHAR(50)'), ('discount_amount', 'REAL'), ('courier_telegram_id', 'BIGINT')]:
+        for col, ctype in [
+            ('promo_code', 'VARCHAR(50)'),
+            ('discount_amount', 'REAL'),
+            ('courier_telegram_id', 'BIGINT'),
+            ('idempotency_key', 'VARCHAR(64)'),
+        ]:
             try:
                 db.session.execute(text(f'ALTER TABLE "order" ADD COLUMN {col} {ctype}'))
                 db.session.commit()
@@ -2832,7 +2845,23 @@ def migrate_promo_and_order():
                 db.session.rollback()
                 if 'duplicate column name' not in str(e).lower() and 'no such column' not in str(e).lower():
                     print(f"[Migrate] order.{col}: {e}")
+        try:
+            db.session.execute(text(
+                'CREATE UNIQUE INDEX IF NOT EXISTS ix_order_idempotency_key ON "order" (idempotency_key)'
+            ))
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            if 'already exists' not in str(e).lower():
+                print(f"[Migrate] order.idempotency_key index: {e}")
         db.create_all()
+
+
+if os.environ.get('SKIP_STARTUP_MIGRATIONS', '').lower() not in ('1', 'true', 'yes'):
+    try:
+        migrate_promo_and_order()
+    except Exception as _startup_migrate_exc:
+        logger.warning('startup migrate_promo_and_order: %s', _startup_migrate_exc)
 
 
 if __name__ == '__main__':

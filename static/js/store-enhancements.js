@@ -70,7 +70,18 @@
                 headers: { 'Content-Type': 'application/json', 'X-CSRFToken': csrf() },
                 body: JSON.stringify(payload)
             })
-                .then(function (r) { return r.json(); })
+                .then(function (r) {
+                    var ct = (r.headers.get('content-type') || '').toLowerCase();
+                    if (ct.indexOf('application/json') >= 0) {
+                        return r.json().then(function (d) {
+                            if (!r.ok) throw new Error((d && d.error) || ('Ошибка ' + r.status));
+                            return d;
+                        });
+                    }
+                    return r.text().then(function () {
+                        throw new Error('Сервер вернул ошибку (' + r.status + '). Попробуйте через корзину.');
+                    });
+                })
                 .then(function (d) {
                     if (d.success && d.redirect) window.location.href = d.redirect;
                     else throw new Error(d.error || 'Ошибка');
