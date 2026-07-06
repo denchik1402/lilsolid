@@ -24,6 +24,8 @@ def get_model_catalog_tiles(app, db, Product, DeviceModel, Category, url_for, ca
 
     tiles = []
     for dm in DeviceModel.query.order_by(DeviceModel.sort_order, DeviceModel.name).all():
+        if dm.name == 'IQOS ILUMA STANDART':
+            continue
         count = Product.query.filter(
             db.func.lower(Product.model) == dm.name.lower()
         ).count()
@@ -182,7 +184,7 @@ def home_faq_items(brand: str, city: str = 'Москва') -> list[dict[str, str
             'q': 'Как оформить заказ в один клик?',
             'a': (
                 'На карточке товара нажмите «Покупка в 1 клик», укажите имя и телефон — '
-                'менеджер перезвонит для подтверждения. Также доступны корзина, Telegram, WhatsApp и MAX.'
+                'менеджер перезвонит для подтверждения. Также можно оформить через корзину на сайте или Telegram-бот.'
             ),
         },
         {

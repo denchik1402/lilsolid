@@ -50,6 +50,10 @@ def assign_product_models(db, Product):
                 product.model = None
                 updated += 1
             continue
+        if (product.model or '') == 'IQOS ILUMA STANDART':
+            product.model = None
+            updated += 1
+            continue
         detected = detect_device_model(product.name, product.description or '')
         if detected and product.model != detected:
             product.model = detected
