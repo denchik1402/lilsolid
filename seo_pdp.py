@@ -9,6 +9,7 @@ from seo_content import DELIVERY_RATES
 from seo_utils import (
     SITE,
     CITY_RU,
+    city_prepositional,
     _device_line,
     _format_price,
     _is_exclusive,
@@ -82,6 +83,7 @@ def build_product_pdp_seo(product: 'Product') -> str:
     moscow = DELIVERY_RATES['moscow_price']
     rf = DELIVERY_RATES['rf_from']
     same_day = DELIVERY_RATES.get('moscow_same_day', 'доставка сегодня по Москве')
+    city_in = city_prepositional(CITY_RU)
 
     if _is_terea(product, category):
         flavor = _stick_flavor_text(product)
@@ -89,7 +91,7 @@ def build_product_pdp_seo(product: 'Product') -> str:
         strength = specs.get('Крепость', '')
         strength_line = f' Крепость: {strength}.' if strength else ''
         return (
-            f'<h2>{name}: купить в {CITY_RU} с доставкой</h2>'
+            f'<h2>{name}: купить в {city_in} с доставкой</h2>'
             f'<p><strong>{name}</strong> — оригинальные стики TEREA для IQOS ILUMA.{color_part} '
             f'{flavor}.{strength_line} В блоке 20 стиков, оригинальная упаковка Terea KZ. '
             f'Технология SMARTCORE: нагреватель внутри стика, без лезвия в устройстве.</p>'
@@ -129,7 +131,7 @@ def build_product_pdp_seo(product: 'Product') -> str:
             f'<p>HEETS — для устройств с лезвием (IQOS 3, Lil Solid). TEREA — только для ILUMA: нагреватель '
             f'встроен в стик, устройство не требует чистки. Нельзя смешивать форматы — при переходе на ILUMA '
             f'закажите новый девайс в <a href="/catalog/iqos-iluma">каталоге</a> и блоки TEREA.</p>'
-            f'<h2>Как оформить заказ {name} в {CITY_RU}</h2>'
+            f'<h2>Как оформить заказ {name} в {city_in}</h2>'
             f'<p>Добавьте блок в корзину или нажмите «Купить в 1 клик». Укажите адрес — менеджер перезвонит '
             f'для подтверждения. При заказе до {DELIVERY_RATES.get("moscow_cutoff", "14:00")} — {same_day.lower()}. '
             f'Оплата курьеру при получении, без предоплаты.</p>'
@@ -144,7 +146,7 @@ def build_product_pdp_seo(product: 'Product') -> str:
         ) if variants else ''
         dual = 'DUAL' in name.upper()
         return (
-            f'<h2>{name}: купить в {CITY_RU}</h2>'
+            f'<h2>{name}: купить в {city_in}</h2>'
             f'<p><strong>{name}</strong> — оригинальное устройство {line}{color_part}. '
             f'Совместимо со стиками HEETS и Fiit. {"Комплект с зарядным кейсом." if dual else "Компактный моноблок."} '
             f'Проверенная эргономика, доступная цена.</p>'
@@ -181,7 +183,7 @@ def build_product_pdp_seo(product: 'Product') -> str:
         variants_block = f'<h2>Цвета {m}</h2><p>Доступны: {variants}.</p>'
 
     return (
-        f'<h2>{name}: купить в {CITY_RU} с быстрой доставкой</h2>'
+        f'<h2>{name}: купить в {city_in} с быстрой доставкой</h2>'
         f'<p><strong>{name}</strong> — оригинальное устройство {line}{color_part}. '
         f'SMARTCORE INDUCTION™: нагрев табака внутри стика TEREA, без лезвия. {form}</p>'
         f'{variants_block}'

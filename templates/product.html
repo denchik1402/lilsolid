@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Купить {{ product.name }} в {{ pdp_seo_city|default(site_city) }}. Доставим день в день! | {{ site_brand_name }}{% endblock %}
+{% block title %}Купить {{ product.name }} в {{ pdp_seo_city|default(site_city_in) }}. Доставим день в день! | {{ site_brand_name }}{% endblock %}
 {% block meta_description %}{% if product.meta_description %}{{ product.meta_description }}{% else %}{{ product.name }} — {{ product.price|format_price }} ₽. {{ (product.get_intro_text() or product.description or product.name)|striptags|truncate(120) }}{% endif %}{% endblock %}
 {% block meta_keywords %}{% if product.meta_keywords %}{{ product.meta_keywords }}{% else %}{{ product.name }}, IQOS, TEREA, {{ product.category.name if product.category else '' }}, купить{% endif %}{% endblock %}
 {% block canonical_url %}{{ request.url_root.rstrip('/') }}{{ product|product_url }}{% endblock %}

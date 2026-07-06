@@ -199,10 +199,12 @@ def home_faq_items(brand: str, city: str = 'Москва') -> list[dict[str, str
 
 
 def home_seo_html(brand: str, city: str = 'Москва', domain: str = '') -> str:
+    from seo_utils import city_prepositional
     dom = domain or brand.lower().replace(' ', '-')
+    city_in = city_prepositional(city)
     return (
         f'<p><strong>{brand}</strong> — специализированный интернет-магазин оригинальных устройств '
-        f'IQOS ILUMA, LIL SOLID и стиков TEREA в {city}. Если вы ищете, где <strong>iqos купить</strong> '
+        f'IQOS ILUMA, LIL SOLID и стиков TEREA в {city_in}. Если вы ищете, где <strong>iqos купить</strong> '
         f'с быстрой доставкой — вы на правильном сайте. Только подлинная продукция с гарантией производителя.</p>'
         f'<h2>Полный каталог IQOS: устройства и стики</h2>'
         f'<p>На {dom} представлены флагманские <strong>IQOS ILUMA</strong> с технологией SMARTCORE INDUCTION™, '

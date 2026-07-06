@@ -253,14 +253,17 @@ def _phone_to_tel(display_phone):
 
 @app.context_processor
 def inject_site_contacts():
+    from seo_utils import city_prepositional
     phone = _get_site_setting('SITE_PHONE', SITE_PHONE_DEFAULT)
     brand = _get_site_setting('SITE_BRAND_NAME', 'LIL SOLID')
     wa = _get_site_setting('SITE_WHATSAPP_URL', '')
+    city = _get_site_setting('SITE_CITY', SITE_CITY_DEFAULT)
     return {
         'site_phone': phone,
         'site_phone_tel': _phone_to_tel(phone),
         'site_address': _get_site_setting('SITE_ADDRESS', SITE_ADDRESS_DEFAULT),
-        'site_city': _get_site_setting('SITE_CITY', SITE_CITY_DEFAULT),
+        'site_city': city,
+        'site_city_in': city_prepositional(city),
         'site_brand_name': brand,
         'site_whatsapp_url': wa.strip() if wa else '',
         'site_max_url': (_get_site_setting('SITE_MAX_URL', '') or '').strip(),
@@ -795,6 +798,7 @@ def product(product_slug):
     from datetime import datetime, timedelta
     from site_boost import get_product_siblings, get_stick_upsell_products
     from seo_pdp import get_product_pdp_seo
+    from seo_utils import city_prepositional
     price_valid_until = (datetime.utcnow() + timedelta(days=365)).strftime('%Y-%m-%d')
     prev_product, next_product = get_product_siblings(product, Product, db)
     stick_upsell_products = get_stick_upsell_products(product, Product, db)
@@ -810,7 +814,7 @@ def product(product_slug):
                          next_product=next_product,
                          stick_upsell_products=stick_upsell_products,
                          pdp_seo_html=pdp_seo_html,
-                         pdp_seo_city=city)
+                         pdp_seo_city=city_prepositional(city))
 
 def _get_cart_products(session_cart):
     """Один запрос вместо N — загрузка всех товаров корзины."""
