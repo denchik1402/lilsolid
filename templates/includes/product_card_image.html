@@ -1,0 +1,10 @@
+{# Карточка товара: WebP 400w/800w. Вызов: {% include 'includes/product_card_image.html' %} #}
+{% set _img = first_img if first_img is defined else (product.all_images[0] if product.all_images else product.image) %}
+{% set filename = _img %}
+{% set folder = 'products' %}
+{% set alt = product|product_alt %}
+{% set img_class = img_class|default('img-fluid') %}
+{% set width = width|default(400) %}
+{% set height = height|default(400) %}
+{% set sizes = sizes|default('(max-width: 576px) 45vw, (max-width: 992px) 30vw, 280px') %}
+{% include 'includes/responsive_image.html' %}

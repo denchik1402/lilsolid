@@ -1,6 +1,48 @@
 """Утилиты для оптимизированных изображений (WebP + responsive variants)."""
+import json
 import os
 import re
+
+_PRODUCT_IMAGES_MAP = None
+
+
+def load_product_images_map(static_folder=None):
+    """Загрузить product_images_map.json (кэш в памяти)."""
+    global _PRODUCT_IMAGES_MAP
+    if _PRODUCT_IMAGES_MAP is not None:
+        return _PRODUCT_IMAGES_MAP
+    candidates = ['product_images_map.json']
+    if static_folder:
+        parent = os.path.dirname(static_folder)
+        candidates.insert(0, os.path.join(parent, 'product_images_map.json'))
+    for path in candidates:
+        if os.path.isfile(path):
+            with open(path, encoding='utf-8') as f:
+                _PRODUCT_IMAGES_MAP = json.load(f)
+            return _PRODUCT_IMAGES_MAP
+    _PRODUCT_IMAGES_MAP = {}
+    return _PRODUCT_IMAGES_MAP
+
+
+def resolve_product_image(product_name, image=None, static_folder=None):
+    """Путь к файлу в images/products/ — из маппинга или как есть."""
+    if not product_name and not image:
+        return image or ''
+    m = load_product_images_map(static_folder)
+    if product_name:
+        if product_name in m:
+            return m[product_name]
+        low = product_name.lower()
+        for key, val in m.items():
+            if key.lower() == low:
+                return val
+    return image or ''
+
+
+def product_image_exists(static_folder, rel_filename):
+    if not rel_filename:
+        return False
+    return os.path.isfile(os.path.join(static_folder, 'images', 'products', rel_filename.replace('/', os.sep)))
 
 IMAGE_EXTENSIONS = frozenset({'.jpg', '.jpeg', '.png', '.gif', '.webp'})
 PRODUCT_WIDTHS = (400, 800)

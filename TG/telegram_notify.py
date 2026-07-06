@@ -68,10 +68,12 @@ def get_config():
 def _site_order_label() -> str:
     """Домен витрины для Telegram (iqos-store.ru / lilsolid.ru / lilstore.ru)."""
     url = os.environ.get('SITE_URL', '')
+    brand = ''
     if not url:
         try:
             import config
             url = getattr(config, 'SITE_URL', None) or ''
+            brand = getattr(config, 'SITE_BRAND_NAME', None) or ''
         except ImportError:
             url = ''
     if not url:
@@ -87,11 +89,11 @@ def _site_order_label() -> str:
     if host.startswith('www.'):
         host = host[4:]
     if 'iqos-store' in host:
-        return 'iqos-store.ru'
+        return 'АЙКОС СТОР · iqos-store.ru'
     if 'lilsolid' in host:
-        return 'lilsolid.ru'
+        return f'{brand or "LIL SOLID"} · lilsolid.ru'
     if 'lilstore' in host:
-        return 'lilstore.ru'
+        return 'LIL STORE · lilstore.ru'
     return host or 'lilsolid.ru'
 
 

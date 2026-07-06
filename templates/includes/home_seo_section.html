@@ -1,0 +1,8 @@
+{% if home_seo_html %}
+<section class="home-seo-block mb-5" aria-label="О магазине">
+    <h2 class="visually-hidden">Интернет-магазин IQOS в {{ site_city }}</h2>
+    <div class="home-seo-content text-muted">
+        {{ home_seo_html|safe }}
+    </div>
+</section>
+{% endif %}

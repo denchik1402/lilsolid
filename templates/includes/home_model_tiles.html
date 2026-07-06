@@ -1,0 +1,20 @@
+{% if model_catalog_tiles %}
+<section class="home-model-tiles mb-5" aria-label="Каталог по моделям">
+    <h2 class="mb-4 fw-bold">Каталог IQOS — выберите модель</h2>
+    <div class="home-model-tiles-grid">
+        {% for tile in model_catalog_tiles %}
+        <a href="{{ tile.url }}" class="home-model-tile text-decoration-none">
+            <div class="home-model-tile-img">
+                {% if tile.image %}
+                <img src="{{ url_for('static', filename='images/products/' + tile.image) if not tile.image.startswith('http') else tile.image }}" alt="{{ tile.name }}" loading="lazy" width="120" height="120">
+                {% else %}
+                <span class="home-model-tile-ph"><i class="fas fa-box-open"></i></span>
+                {% endif %}
+            </div>
+            <span class="home-model-tile-name">{{ tile.name }}</span>
+            <span class="home-model-tile-count">{{ tile.count }} {% if tile.count % 10 == 1 and tile.count % 100 != 11 %}товар{% elif tile.count % 10 in [2,3,4] and tile.count % 100 not in [12,13,14] %}товара{% else %}товаров{% endif %}</span>
+        </a>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}

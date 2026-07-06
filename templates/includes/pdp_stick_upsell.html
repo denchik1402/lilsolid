@@ -1,0 +1,21 @@
+{% if stick_upsell_products %}
+<section class="pdp-stick-upsell mb-4" aria-label="Рекомендуемые стики">
+    <h4 class="h5 mb-3">Не забудьте взять стики</h4>
+    <div class="row g-3">
+        {% for sp in stick_upsell_products %}
+        <div class="col-6 col-md-3">
+            <div class="product-card h-100 position-relative">
+                {% include 'includes/discount_badge.html' with context %}
+                <a href="{{ sp|product_url }}" class="text-decoration-none text-dark">
+                    <div class="product-card-img-wrap small-img">
+                        {% set product = sp %}{% include 'includes/product_card_image.html' %}
+                    </div>
+                    <div class="small fw-semibold mt-2">{{ sp.name|truncate(40) }}</div>
+                    <div class="product-price small">{{ sp.price|format_price }} ₽</div>
+                </a>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}

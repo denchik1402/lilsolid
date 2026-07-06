@@ -1,0 +1,34 @@
+{% if home_faq_items %}
+<section class="home-faq mb-5" aria-label="Частые вопросы">
+    <h2 class="mb-4 fw-bold">Частые вопросы (FAQ)</h2>
+    <div class="accordion" id="homeFaqAccordion">
+        {% for item in home_faq_items %}
+        <div class="accordion-item">
+            <h3 class="accordion-header" id="faq-h-{{ loop.index }}">
+                <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#faq-c-{{ loop.index }}" aria-expanded="{{ 'true' if loop.first else 'false' }}">
+                    {{ item.q }}
+                </button>
+            </h3>
+            <div id="faq-c-{{ loop.index }}" class="accordion-collapse collapse {% if loop.first %}show{% endif %}" data-bs-parent="#homeFaqAccordion">
+                <div class="accordion-body">{{ item.a }}</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {% for item in home_faq_items %}
+    {
+      "@type": "Question",
+      "name": {{ item.q|tojson }},
+      "acceptedAnswer": {"@type": "Answer", "text": {{ item.a|tojson }}}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+  ]
+}
+</script>
+{% endif %}

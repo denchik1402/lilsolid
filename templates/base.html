@@ -10,27 +10,27 @@
     <meta name="robots" content="{% block meta_robots %}index, follow{% endblock %}">
     <link rel="canonical" href="{% block canonical_url %}{{ seo_canonical_url }}{% endblock %}">
     {% block rel_prev_next %}{% endblock %}
-    <meta property="og:title" content="{% block og_title %}LIL STORE — IQOS и TEREA{% endblock %}">
+    <meta property="og:title" content="{% block og_title %}{{ site_brand_name }} — IQOS и TEREA{% endblock %}">
     <meta property="og:description" content="{% block og_description %}Оригинальные устройства IQOS и стики TEREA. Бронь на сайте, доставка по Москве 0–2 дня.{% endblock %}">
     <meta property="og:type" content="{% block og_type %}website{% endblock %}">
     <meta property="og:url" content="{% block og_url %}{{ seo_og_url }}{% endblock %}">
     <meta property="og:image" content="{% block og_image %}{{ request.url_root.rstrip('/') }}{{ url_for('static', filename='LOGO3.png') }}{% endblock %}">
     <meta property="og:locale" content="ru_RU">
-    <meta property="og:site_name" content="LIL SOLID">
+    <meta property="og:site_name" content="{{ site_brand_name }}">
     <!-- Twitter Card (по умолчанию = og; страницы вроде product переопределяют twitter_* для синхронизации) -->
     <meta name="twitter:card" content="{% block twitter_card %}summary_large_image{% endblock %}">
-    <meta name="twitter:title" content="{% block twitter_title %}LIL STORE — IQOS и TEREA{% endblock %}">
+    <meta name="twitter:title" content="{% block twitter_title %}{{ site_brand_name }} — IQOS и TEREA{% endblock %}">
     <meta name="twitter:description" content="{% block twitter_description %}Оригинальные устройства IQOS и стики TEREA. Бронь на сайте, доставка по Москве 0–2 дня.{% endblock %}">
     <meta name="twitter:image" content="{% block twitter_image %}{{ request.url_root.rstrip('/') }}{{ url_for('static', filename='LOGO3.png') }}{% endblock %}">
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <meta name="theme-color" content="#0a0a12">
     <link rel="manifest" href="{{ url_for('manifest') }}">
-    <title>{% block title %}LIL STORE{% endblock %}</title>
+    <title>{% block title %}{{ site_brand_name }}{% endblock %}</title>
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "WebSite",
-      "name": "LIL SOLID",
+      "name": "{{ site_brand_name }}",
       "url": "{{ request.url_root.rstrip('/') }}",
       "potentialAction": {
         "@type": "SearchAction",
@@ -1392,6 +1392,7 @@
     <!-- Telegram Web App SDK (для кнопки "Запустить приложение" в боте) -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     {% block extra_css %}{% endblock %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/store-enhancements.css') }}?v=1">
     <script>
         (function(){var t=localStorage.getItem('theme')||'cyberpunk';document.documentElement.setAttribute('data-theme',t);})();
     </script>
@@ -1525,7 +1526,7 @@
                     {% endwith %}
                     <p class="mb-3 small">Оригинальные устройства IQOS и стики TEREA. Бронь на сайте, доставка по Москве 0–2 дня. Работаем с 2020 года.</p>
                     <h5>Контакты</h5>
-                    <p class="mb-1">+7 (985) 490-48-80</p>
+                    <p class="mb-1"><a href="tel:{{ site_phone_tel }}">{{ site_phone }}</a></p>
                     <p class="mb-0"><a href="https://t.me/iluma_prime_bot" target="_blank" rel="noopener">@iluma_prime_bot</a></p>
                 </div>
                 <div class="col-lg-6">
@@ -1545,7 +1546,7 @@
             </div>
             <hr class="my-4" style="border-color: var(--border);">
             <div class="text-center">
-                <small class="text-muted">&copy; 2026 ЛИЛ СОЛИД. Все права защищены.</small>
+                <small class="text-muted">&copy; 2026 {{ site_brand_name }}. Все права защищены.</small>
             </div>
             <div class="footer-legal">
                 <p class="mb-0">* Информация, размещённая на сайте, представлена для ознакомления и не является публичной офертой. Продажа табачной продукции онлайн не осуществляется: на сайте возможна только бронь товара, доставка по Москве 0–2 дня. Оплата при получении в соответствии с действующим законодательством РФ.</p>
@@ -1596,9 +1597,17 @@
         <div class="cart-sidebar-footer" id="cartSidebarFooter" style="display: none;">
             <div class="cart-sidebar-total">Итоговая стоимость: <span id="cartSidebarTotal">0</span> ₽</div>
             <a href="{{ url_for('checkout') }}" class="btn btn-primary w-100 mb-2">Перейти к оформлению</a>
-            <a href="{{ url_for('catalog') }}" class="btn btn-outline-secondary w-100" data-bs-dismiss="offcanvas">Продолжить покупки</a>
+            <div class="cart-messenger-btns">
+                {% if telegram_bot_url %}<a href="{{ telegram_bot_url }}" target="_blank" rel="noopener" class="btn btn-outline-primary btn-sm"><i class="fab fa-telegram"></i> Telegram</a>{% endif %}
+                {% if site_whatsapp_url %}<a href="{{ site_whatsapp_url }}" target="_blank" rel="noopener" class="btn btn-outline-success btn-sm"><i class="fab fa-whatsapp"></i> WhatsApp</a>{% endif %}
+                {% if site_max_url %}<a href="{{ site_max_url }}" target="_blank" rel="noopener" class="btn btn-outline-secondary btn-sm">MAX</a>{% endif %}
+            </div>
+            <a href="{{ url_for('catalog') }}" class="btn btn-outline-secondary w-100 mt-2" data-bs-dismiss="offcanvas">Продолжить покупки</a>
         </div>
     </div>
+
+    {% include 'includes/quick_view_modal.html' %}
+    {% include 'includes/one_click_modal.html' %}
 
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js" defer></script>
@@ -1608,6 +1617,7 @@
     <script src="{{ url_for('static', filename='js/wishlist.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/compare.js') }}" defer></script>
     <script src="{{ url_for('static', filename='js/search_suggestions.js') }}" defer></script>
+    <script defer src="{{ url_for('static', filename='js/store-enhancements.js') }}?v=1"></script>
     
     <script>
         // Инициализация Telegram Web App (если открыто из бота)

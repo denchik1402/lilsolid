@@ -7,7 +7,7 @@ def test_index(client, app_ctx):
     """Главная страница возвращает 200."""
     r = client.get('/')
     assert r.status_code == 200
-    assert b'LIL STORE' in r.data or b'IQOS' in r.data
+    assert b'LIL SOLID' in r.data or b'IQOS' in r.data
 
 
 def test_catalog(client, app_ctx):
@@ -90,7 +90,7 @@ def test_manifest(client, app_ctx):
     r = client.get('/manifest.json')
     assert r.status_code == 200
     data = r.get_json()
-    assert data.get('name') == 'LIL STORE'
+    assert data.get('name') == 'LIL SOLID'
     assert 'start_url' in data
     assert 'icons' in data
 

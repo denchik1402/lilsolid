@@ -1,0 +1,13 @@
+<div class="card mb-4 pdp-delivery-card">
+    <div class="card-body">
+        <h5 class="card-title"><i class="fas fa-truck me-2"></i>Доставка</h5>
+        <ul class="mb-2 small">
+            <li><strong>{{ site_city }} и МО</strong> — {{ delivery_moscow_price|default(1000)|int }} ₽, {{ delivery_moscow_note|default('в день заказа') }}</li>
+            <li><strong>По России</strong> — от {{ delivery_rf_from|default(800)|int }} ₽, {{ delivery_rf_note|default('от 1–2 дней') }}</li>
+        </ul>
+        <p class="mb-0 small text-muted">🇪🇺 Оригинальная продукция с заводской гарантией. Оплата при получении.</p>
+        {% if site_phone %}
+        <p class="mt-2 mb-0 small">Вопросы по доставке: <a href="tel:{{ site_phone_tel }}">{{ site_phone }}</a></p>
+        {% endif %}
+    </div>
+</div>

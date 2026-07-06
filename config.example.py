@@ -26,6 +26,19 @@ SITE_PHONE = '+7 (993) 596-82-25'
 SITE_ADDRESS = 'Москва, Ленинградское шоссе, 16А'
 SITE_CITY = 'Москва'
 
+# Бренд на сайте (отображается в title, footer, SEO)
+SITE_BRAND_NAME = 'LIL SOLID'
+
+# Мессенджеры (необязательно; если не используете — не задавайте)
+# SITE_WHATSAPP_URL = ''
+# SITE_MAX_URL = ''
+
+# Доставка на карточке товара и в FAQ
+DELIVERY_MOSCOW_PRICE = 0
+DELIVERY_MOSCOW_NOTE = 'в день заказа'
+DELIVERY_RF_NOTE = 'стоимость доставки сообщит менеджер при подтверждении заказа'
+DELIVERY_RF_DAYS = 'от 1–2 дней'
+
 # Яндекс.Метрика — ОТДЕЛЬНЫЙ счётчик только для https://lilsolid.ru
 # Создайте в https://metrika.yandex.ru → «Добавить счётчик» → домен lilsolid.ru
 YANDEX_METRIKA_ID = ''

@@ -18,9 +18,9 @@ index, follow
 {% endblock %}
 {% block title %}
     {% if category %}
-        {{ category.name }} — купить в LIL STORE
+        {{ category.name }} — купить в {{ site_brand_name }}
     {% else %}
-        Каталог IQOS и TEREA — LIL STORE
+        Каталог IQOS и TEREA — {{ site_brand_name }}
     {% endif %}
 {% endblock %}
 {% block meta_description %}
@@ -499,23 +499,21 @@ index, follow
             <div class="col-md-4 mb-4">
                 <div class="product-card position-relative">
                     {% if product.is_hit %}<span class="badge bg-danger position-absolute top-0 start-0 m-2 product-badge-hit">Хит</span>{% endif %}
+                    {% include 'includes/discount_badge.html' %}
+                    <button type="button" class="btn btn-sm btn-light quick-view-btn" data-product-id="{{ product.id }}" title="Быстрый просмотр" aria-label="Быстрый просмотр"><i class="fas fa-eye"></i></button>
                     {% include 'includes/compare_btn.html' %}
                     {% include 'includes/favorite_btn.html' %}
                     <a href="{{ product|product_url }}" class="product-card-link text-decoration-none text-dark">
                         <div class="product-card-img-wrap">
-                            {% set first_img = product.all_images[0] if product.all_images else product.image %}
-                            {% if first_img %}
-                            <img src="{{ url_for('static', filename='images/products/' + first_img) }}" class="img-fluid" alt="{{ product|product_alt }}" loading="lazy">
-                            {% else %}
-                            <img src="https://via.placeholder.com/400" class="img-fluid" alt="{{ product|product_alt }}" loading="lazy">
-                            {% endif %}
+                            {% set eager = loop.index <= 8 %}
+                            {% include 'includes/product_card_image.html' %}
                         </div>
                         <h5 class="product-title">{{ product.name }}</h5>
                         {% if product.model %}<div class="product-model small text-muted mb-1">{{ product.model }}</div>{% endif %}
                         <div class="product-price">
-                            {{ product.price }} ₽
+                            {{ product.price|format_price }} ₽
                             {% if product.old_price %}
-                            <span class="old-price">{{ product.old_price }} ₽</span>
+                            <span class="old-price">{{ product.old_price|format_price }} ₽</span>
                             {% endif %}
                         </div>
                     </a>

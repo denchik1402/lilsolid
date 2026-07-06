@@ -10,6 +10,11 @@ import re
 from typing import Optional
 
 SITE = 'LIL SOLID'
+try:
+    import config as _cfg
+    SITE = getattr(_cfg, 'SITE_BRAND_NAME', SITE)
+except ImportError:
+    pass
 CITY_RU = 'Москва'
 CITY_EN = 'Moscow'
 DELIVERY = 'доставка по Москве 0–2 дня'

@@ -1,0 +1,4 @@
+{% set _pct = product|discount_percent %}
+{% if _pct %}
+<span class="badge bg-danger product-discount-badge">−{{ _pct }}%</span>
+{% endif %}

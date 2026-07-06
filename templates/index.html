@@ -1,20 +1,20 @@
 {% extends "base.html" %}
 
 {% block meta_robots %}{% if request.args %}noindex, follow{% else %}index, follow{% endif %}{% endblock %}
-{% block title %}LIL STORE — IQOS и стики TEREA. Оригинальная продукция{% endblock %}
-{% block meta_description %}LIL STORE — магазин оригинальных устройств IQOS и стиков TEREA. Бронь на сайте, доставка по Москве 0–2 дня; в регионы — по срокам службы доставки. Работаем с 2020 года.{% endblock %}
-{% block meta_keywords %}IQOS, TEREA, ILUMA, стики, нагревательные устройства, купить IQOS, доставка IQOS{% endblock %}
-{% block og_title %}LIL STORE — IQOS и стики TEREA{% endblock %}
-{% block og_description %}Оригинальные устройства IQOS и стики TEREA. Бронь на сайте, доставка по Москве 0–2 дня.{% endblock %}
+{% block title %}{{ site_brand_name }} — киберпанк-магазин IQOS и TEREA на lilsolid.ru{% endblock %}
+{% block meta_description %}{{ site_brand_name }} (lilsolid.ru) — cyberpunk-витрина оригинальных IQOS ILUMA, LIL SOLID и стиков TEREA. Бронь на сайте, доставка по Москве 0–2 дня; в регионы — по срокам службы доставки.{% endblock %}
+{% block meta_keywords %}IQOS, TEREA, ILUMA, lilsolid, lil solid, айкос, илюма, стики, купить IQOS, cyberpunk{% endblock %}
+{% block og_title %}{{ site_brand_name }} — IQOS и стики TEREA на lilsolid.ru{% endblock %}
+{% block og_description %}Киберпанк-магазин оригинальных устройств IQOS и стиков TEREA. Бронь на сайте, доставка по Москве 0–2 дня.{% endblock %}
 {% block schema_ld %}
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "Organization",
-  "name": "LIL STORE",
+  "name": "{{ site_brand_name }}",
   "url": "{{ request.url_root.rstrip('/') }}",
-  "description": "Магазин оригинальных устройств IQOS и стиков TEREA. Бронь на сайте, доставка по Москве 0–2 дня.",
-  "telephone": "+7 (985) 490-48-80",
+  "description": "Киберпанк-магазин оригинальных устройств IQOS и стиков TEREA на lilsolid.ru. Бронь на сайте, доставка по Москве 0–2 дня.",
+  "telephone": "{{ site_phone }}",
   "sameAs": ["https://t.me/iluma_prime_bot"],
   "address": {"@type": "PostalAddress", "addressCountry": "RU"}
 }
@@ -23,9 +23,9 @@
 {
   "@context": "https://schema.org",
   "@type": "LocalBusiness",
-  "name": "LIL STORE",
+  "name": "{{ site_brand_name }}",
   "image": "{{ request.url_root.rstrip('/') }}{{ url_for('static', filename='LOGO3.png') }}",
-  "telephone": "+7 (985) 490-48-80",
+  "telephone": "{{ site_phone }}",
   "url": "{{ request.url_root.rstrip('/') }}",
   "priceRange": "$$",
   "openingHoursSpecification": [
@@ -521,6 +521,10 @@
     </div>
 </section>
 {% endif %}
+
+{% include 'includes/home_model_tiles.html' %}
+{% include 'includes/home_seo_section.html' %}
+{% include 'includes/home_faq_section.html' %}
 {% endblock %}
 
 {% block extra_js %}

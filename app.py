@@ -254,11 +254,23 @@ def _phone_to_tel(display_phone):
 @app.context_processor
 def inject_site_contacts():
     phone = _get_site_setting('SITE_PHONE', SITE_PHONE_DEFAULT)
+    brand = _get_site_setting('SITE_BRAND_NAME', 'LIL SOLID')
+    wa = _get_site_setting('SITE_WHATSAPP_URL', '')
     return {
         'site_phone': phone,
         'site_phone_tel': _phone_to_tel(phone),
         'site_address': _get_site_setting('SITE_ADDRESS', SITE_ADDRESS_DEFAULT),
         'site_city': _get_site_setting('SITE_CITY', SITE_CITY_DEFAULT),
+        'site_brand_name': brand,
+        'site_whatsapp_url': wa.strip() if wa else '',
+        'site_max_url': (_get_site_setting('SITE_MAX_URL', '') or '').strip(),
+        'delivery_moscow_price': int(_get_site_setting('DELIVERY_MOSCOW_PRICE', 0) or 0),
+        'delivery_rf_note': _get_site_setting(
+            'DELIVERY_RF_NOTE',
+            'стоимость доставки сообщит менеджер при подтверждении заказа',
+        ),
+        'delivery_moscow_note': _get_site_setting('DELIVERY_MOSCOW_NOTE', 'в день заказа'),
+        'delivery_rf_days': _get_site_setting('DELIVERY_RF_DAYS', 'от 1–2 дней'),
     }
 
 
@@ -410,6 +422,32 @@ def format_price(value):
     return "{:,.0f}".format(float(value)).replace(",", " ")
 
 
+@app.template_filter('discount_percent')
+def discount_percent_filter(product):
+    from site_boost import discount_percent
+    return discount_percent(product)
+
+
+def _static_url(filename):
+    return url_for('static', filename=filename)
+
+
+@app.template_global()
+def optimized_image(folder, filename):
+    """WebP-варианты для шаблонов (400w / 800w / 1200w)."""
+    from image_utils import build_optimized_image
+    if not filename:
+        return {'has_variants': False, 'src': None, 'src_800': None, 'srcset_webp': '', 'srcset_fallback': '', 'original_url': None}
+    return build_optimized_image(app.static_folder, folder, filename, _static_url)
+
+
+@app.template_global()
+def has_image_variants(filename, folder='products'):
+    """Есть ли оптимизированные WebP-варианты для файла."""
+    from image_utils import has_image_variants as _has
+    return _has(app.static_folder, folder, filename) if filename else False
+
+
 @app.template_filter('product_alt')
 def product_alt_filter(product):
     """Alt-текст для изображения товара (image_alt или name)"""
@@ -544,6 +582,12 @@ def index():
 
     hit_product_ids = {p.id for p in (hit_products or [])}
     
+    from site_boost import get_model_catalog_tiles, home_faq_items, home_seo_html
+    from urllib.parse import urlparse
+    brand = _get_site_setting('SITE_BRAND_NAME', 'LIL SOLID')
+    city = _get_site_setting('SITE_CITY', SITE_CITY_DEFAULT)
+    site_url = _get_site_setting('SITE_URL', '') or ''
+    domain = urlparse(site_url).netloc or 'lilsolid.ru'
     return render_template('index.html',
                          new_products=new_products,
                          popular_products=popular_products,
@@ -553,7 +597,11 @@ def index():
                          recent_reviews=recent_reviews,
                          promo_slides=promo_slides,
                          home_blocks=home_blocks,
-                         blog_posts=_query_published_blog_posts(limit=3))
+                         blog_posts=_query_published_blog_posts(limit=3),
+                         model_catalog_tiles=get_model_catalog_tiles(
+                             app, db, Product, DeviceModel, Category, url_for),
+                         home_faq_items=home_faq_items(brand, city),
+                         home_seo_html=home_seo_html(brand, city, domain))
 
 @app.route('/catalog/<string:category_slug>')
 @app.route('/catalog')
@@ -743,13 +791,24 @@ def product(product_slug):
                          .order_by(Review.created_at.desc()).all()
     
     from datetime import datetime, timedelta
+    from site_boost import get_product_siblings, get_stick_upsell_products
+    from seo_pdp import get_product_pdp_seo
     price_valid_until = (datetime.utcnow() + timedelta(days=365)).strftime('%Y-%m-%d')
+    prev_product, next_product = get_product_siblings(product, Product, db)
+    stick_upsell_products = get_stick_upsell_products(product, Product, db)
+    pdp_seo_html = get_product_pdp_seo(product)
+    city = _get_site_setting('SITE_CITY', SITE_CITY_DEFAULT)
     
     return render_template('product.html',
                          product=product,
                          similar_products=similar_products,
                          reviews=reviews,
-                         price_valid_until=price_valid_until)
+                         price_valid_until=price_valid_until,
+                         prev_product=prev_product,
+                         next_product=next_product,
+                         stick_upsell_products=stick_upsell_products,
+                         pdp_seo_html=pdp_seo_html,
+                         pdp_seo_city=city)
 
 def _get_cart_products(session_cart):
     """Один запрос вместо N — загрузка всех товаров корзины."""
@@ -1123,6 +1182,78 @@ def cart_count():
     """API для получения количества товаров в корзине"""
     count = len(session.get('cart', {}))
     return jsonify({'count': count})
+
+
+@app.route('/api/product/<int:product_id>')
+def api_product_card(product_id):
+    """JSON для быстрого просмотра."""
+    from site_boost import discount_percent, product_card_image_url
+    product = db.session.get(Product, product_id)
+    if not product:
+        return jsonify({'error': 'not_found'}), 404
+    pct = discount_percent(product)
+    return jsonify({
+        'id': product.id,
+        'name': product.name,
+        'price_fmt': format_price(product.price),
+        'old_price_fmt': format_price(product.old_price) if product.old_price else '',
+        'discount_pct': pct,
+        'url': url_for('product', product_slug=product.get_url_slug()),
+        'image_url': product_card_image_url(product, url_for, app.static_folder),
+        'image_fallback': url_for('static', filename='LOGO3.png'),
+        'in_stock': bool(product.in_stock),
+    })
+
+
+@csrf.exempt
+@app.route('/api/one-click-order', methods=['POST'])
+def api_one_click_order():
+    """Заказ в 1 клик."""
+    from checkout_idempotency import ensure_checkout_idempotency_key, finalize_checkout_session
+    data = request.get_json(silent=True) or request.form
+    try:
+        product_id = int(data.get('product_id', 0))
+    except (TypeError, ValueError):
+        product_id = 0
+    name = (data.get('name') or '').strip()[:100]
+    phone = (data.get('phone') or '').strip()[:20]
+    if not product_id or not name or not phone:
+        return jsonify({'success': False, 'error': 'Укажите имя, телефон и товар'}), 400
+    product = db.session.get(Product, product_id)
+    if not product or not product.in_stock:
+        return jsonify({'success': False, 'error': 'Товар недоступен'}), 400
+    idempotency_key = ensure_checkout_idempotency_key(session)
+    order = Order(
+        customer_name=name,
+        customer_phone=phone,
+        customer_email='',
+        delivery_address='Уточнить у клиента (заказ в 1 клик)',
+        delivery_method='delivery',
+        payment_method='courier',
+        comment='Заказ в 1 клик с сайта',
+        total_amount=product.price,
+        idempotency_key=idempotency_key + f'-oc-{product_id}',
+    )
+    db.session.add(order)
+    db.session.flush()
+    db.session.add(OrderItem(
+        order_id=order.id,
+        product_id=product.id,
+        quantity=1,
+        price=product.price,
+    ))
+    db.session.commit()
+    try:
+        from telegram_notify import send_order_to_telegram
+        send_order_to_telegram(order)
+    except Exception:
+        pass
+    finalize_checkout_session(session, order.id)
+    return jsonify({
+        'success': True,
+        'order_id': order.id,
+        'redirect': url_for('order_success', order_id=order.id),
+    })
 
 
 @csrf.exempt
@@ -2303,9 +2434,9 @@ def manifest():
     """PWA manifest — установка как приложение"""
     base = request.url_root.rstrip('/')
     return jsonify({
-        'name': 'LIL STORE',
-        'short_name': 'LIL STORE',
-        'description': 'IQOS и стики TEREA. Оригинальная продукция, доставка по Москве 0–2 дня.',
+        'name': _get_site_setting('SITE_BRAND_NAME', 'LIL SOLID'),
+        'short_name': _get_site_setting('SITE_BRAND_NAME', 'LIL SOLID'),
+        'description': 'IQOS и стики TEREA на lilsolid.ru. Оригинальная продукция, доставка по Москве 0–2 дня.',
         'start_url': base + '/',
         'display': 'standalone',
         'background_color': '#f8f9fa',

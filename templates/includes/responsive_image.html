@@ -1,0 +1,32 @@
+{# Оптимизированное изображение: WebP + srcset.
+   Параметры: folder ('products'|'banners'), filename, alt, img_class, sizes, eager, width, height #}
+{% if filename %}
+{% set _oi = optimized_image(folder|default('products'), filename) %}
+{% set _src = _oi.src_800 if prefer_800|default(false) and _oi.has_variants else _oi.src %}
+{% if _oi.has_variants %}
+<picture>
+    <source type="image/webp" srcset="{{ _oi.srcset_webp }}" sizes="{{ sizes|default('(max-width: 768px) 50vw, 280px') }}">
+    <img src="{{ _src }}"
+         srcset="{{ _oi.srcset_fallback }}"
+         sizes="{{ sizes|default('(max-width: 768px) 50vw, 280px') }}"
+         class="{{ img_class|default('img-fluid') }}"
+         alt="{{ alt|default('') }}"
+         {% if width %}width="{{ width }}"{% endif %}
+         {% if height %}height="{{ height }}"{% endif %}
+         decoding="async"
+         {% if img_id %}id="{{ img_id }}"{% endif %}
+         {% if eager %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %}>
+</picture>
+{% else %}
+<img src="{{ _oi.src }}"
+     class="{{ img_class|default('img-fluid') }}"
+     alt="{{ alt|default('') }}"
+     {% if width %}width="{{ width }}"{% endif %}
+     {% if height %}height="{{ height }}"{% endif %}
+     decoding="async"
+     {% if img_id %}id="{{ img_id }}"{% endif %}
+     {% if eager %}loading="eager" fetchpriority="high"{% else %}loading="lazy"{% endif %}>
+{% endif %}
+{% elif show_placeholder|default(true) %}
+<img src="https://via.placeholder.com/400" class="{{ img_class|default('img-fluid') }}" alt="{{ alt|default('') }}" loading="lazy" decoding="async">
+{% endif %}
