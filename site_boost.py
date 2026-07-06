@@ -142,7 +142,8 @@ def product_card_image_url(product, url_for, static_folder):
     raw = product.all_images[0] if getattr(product, 'all_images', None) else product.image
     if not raw:
         return url_for('static', filename='LOGO3.png')
-    path = resolve_product_image(product.name, raw, static_folder) or raw
+    from image_utils import normalize_product_image_path
+    path = normalize_product_image_path(resolve_product_image(product.name, raw, static_folder) or raw)
     if path.startswith('http'):
         return path
     return url_for('static', filename=f'images/products/{path}' if not path.startswith('images/') else path)

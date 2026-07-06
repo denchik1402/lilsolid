@@ -24,6 +24,18 @@ def load_product_images_map(static_folder=None):
     return _PRODUCT_IMAGES_MAP
 
 
+def normalize_product_image_path(path):
+    """Путь относительно static/images/products/ (без дубля products/)."""
+    if not path:
+        return path
+    path = str(path).replace('\\', '/').lstrip('/')
+    if path.startswith('images/products/'):
+        path = path[len('images/products/'):]
+    if path.startswith('products/'):
+        path = path[len('products/'):]
+    return path
+
+
 def resolve_product_image(product_name, image=None, static_folder=None):
     """Путь к файлу в images/products/ — из маппинга или как есть."""
     if not product_name and not image:
@@ -31,17 +43,18 @@ def resolve_product_image(product_name, image=None, static_folder=None):
     m = load_product_images_map(static_folder)
     if product_name:
         if product_name in m:
-            return m[product_name]
+            return normalize_product_image_path(m[product_name])
         low = product_name.lower()
         for key, val in m.items():
             if key.lower() == low:
-                return val
-    return image or ''
+                return normalize_product_image_path(val)
+    return normalize_product_image_path(image or '')
 
 
 def product_image_exists(static_folder, rel_filename):
     if not rel_filename:
         return False
+    rel_filename = normalize_product_image_path(rel_filename)
     return os.path.isfile(os.path.join(static_folder, 'images', 'products', rel_filename.replace('/', os.sep)))
 
 IMAGE_EXTENSIONS = frozenset({'.jpg', '.jpeg', '.png', '.gif', '.webp'})

@@ -7,9 +7,35 @@ from datetime import datetime
 from pathlib import Path
 
 from app import app, db
+from image_utils import normalize_product_image_path, product_image_exists
 from models import Category, Product
 
 DATA_PATH = Path(__file__).resolve().parent / 'data' / 'lil40_products.json'
+IMAGE_DIR = Path(__file__).resolve().parent / 'static' / 'images' / 'products'
+
+
+def _normalize_row(row: dict) -> dict:
+    row = dict(row)
+    if row.get('image'):
+        row['image'] = normalize_product_image_path(row['image'])
+    return row
+
+
+def _repair_lil40_images(static_folder: str) -> int:
+    fixed = 0
+    for product in Product.query.filter(Product.model == 'LIL SOLID 4.0').all():
+        norm = normalize_product_image_path(product.image)
+        if norm != product.image:
+            product.image = norm
+            fixed += 1
+            continue
+        if norm and not product_image_exists(static_folder, norm):
+            stem = Path(norm).stem
+            for candidate in IMAGE_DIR.glob(f'{stem}.*'):
+                product.image = candidate.name
+                fixed += 1
+                break
+    return fixed
 
 
 def _find_product(row: dict) -> Product | None:
@@ -32,11 +58,13 @@ def run() -> None:
         if not lil:
             raise SystemExit('category lil not found')
         added = updated = 0
-        for row in payload:
+        for row in (_normalize_row(r) for r in payload):
             product = _find_product(row)
             if product:
                 for key, val in row.items():
                     if key == 'slug' and product.slug:
+                        continue
+                    if key == 'image' and val and not product_image_exists(app.static_folder, val):
                         continue
                     setattr(product, key, val)
                 product.category_id = lil.id
@@ -68,12 +96,13 @@ def run() -> None:
             )
             db.session.add(product)
             added += 1
+        repaired = _repair_lil40_images(app.static_folder)
         db.session.commit()
         total = Product.query.filter(
             Product.model == 'LIL SOLID 4.0',
             Product.in_stock == True,
         ).count()
-        print(f'lil40: added={added}, updated={updated}, in_stock_total={total}')
+        print(f'lil40: added={added}, updated={updated}, repaired_images={repaired}, in_stock_total={total}')
 
 
 if __name__ == '__main__':
