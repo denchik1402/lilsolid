@@ -1,9 +1,12 @@
 {% if home_faq_items %}
 <section class="home-faq mb-5" aria-label="Частые вопросы">
-    <h2 class="mb-4 fw-bold">Частые вопросы (FAQ)</h2>
-    <div class="accordion" id="homeFaqAccordion">
+    <header class="home-faq-header">
+        <h2 class="fw-bold">Частые вопросы</h2>
+        <p class="home-faq-lead">Ответы о выборе устройства, доставке и оформлении заказа</p>
+    </header>
+    <div class="accordion accordion-flush" id="homeFaqAccordion">
         {% for item in home_faq_items %}
-        <div class="accordion-item">
+        <div class="accordion-item border-0">
             <h3 class="accordion-header" id="faq-h-{{ loop.index }}">
                 <button class="accordion-button {% if not loop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#faq-c-{{ loop.index }}" aria-expanded="{{ 'true' if loop.first else 'false' }}">
                     {{ item.q }}
@@ -15,6 +18,9 @@
         </div>
         {% endfor %}
     </div>
+    <p class="home-faq-footer mb-0">
+        <a href="{{ url_for('faq') }}">Все вопросы и ответы →</a>
+    </p>
 </section>
 <script type="application/ld+json">
 {

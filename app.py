@@ -610,6 +610,8 @@ def catalog(category_slug=None):
     category = None
     device_model_filter = None
     if category_slug:
+        from device_models_utils import resolve_device_model_slug
+        category_slug = resolve_device_model_slug(category_slug)
         category = Category.query.filter_by(slug=category_slug).first()
         if not category:
             device_model_filter = DeviceModel.query.filter_by(slug=category_slug).first_or_404()

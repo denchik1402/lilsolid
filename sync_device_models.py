@@ -8,8 +8,10 @@ from device_models_utils import (
     CANONICAL_DEVICE_MODELS,
     LEGACY_MODEL_NAMES,
     detect_device_model,
+    is_stick_product_name,
     normalize_legacy_model,
 )
+from homepage_carousel import pick_hit_product_ids
 from seo_utils import device_model_slug
 
 
@@ -43,6 +45,11 @@ def assign_product_models(db, Product):
     """Проставляет Product.model по названию."""
     updated = 0
     for product in Product.query.all():
+        if is_stick_product_name(product.name or ''):
+            if product.model:
+                product.model = None
+                updated += 1
+            continue
         detected = detect_device_model(product.name, product.description or '')
         if detected and product.model != detected:
             product.model = detected
@@ -56,12 +63,20 @@ def assign_product_models(db, Product):
     return updated
 
 
+def cleanup_legacy_device_models(db, DeviceModel, Product):
+    """Удаляет пустые устаревшие модели (IQOS ILUMA STANDART без устройств)."""
+    removed = 0
+    for dm in DeviceModel.query.filter(DeviceModel.name == 'IQOS ILUMA STANDART').all():
+        count = Product.query.filter(db.func.lower(Product.model) == dm.name.lower()).count()
+        if count == 0:
+            db.session.delete(dm)
+            removed += 1
+    db.session.commit()
+    return removed
+
+
 def rebalance_hit_flags(db, Product):
-    """Хиты — только lilstore (homepage_carousel)."""
-    try:
-        from homepage_carousel import pick_hit_product_ids
-    except ImportError:
-        return 0, 0
+    """Хиты: ILUMA + LIL + TEREA, не только стики."""
     products = Product.query.filter(Product.in_stock == True).all()
     if not products:
         products = Product.query.all()
@@ -84,15 +99,17 @@ def run(rebalance_hits: bool = False):
     with app.app_context():
         sync_device_model_catalog(db, DeviceModel, Product)
         model_updates = assign_product_models(db, Product)
+        removed = cleanup_legacy_device_models(db, DeviceModel, Product)
         hit_changed, hit_total = 0, 0
         if rebalance_hits:
             hit_changed, hit_total = rebalance_hit_flags(db, Product)
         cache.delete('index_data')
         print(
             f'Models synced; products updated: {model_updates}; '
+            f'legacy models removed: {removed}; '
             f'hits rebalanced: {hit_changed} (target {hit_total})'
         )
 
 
 if __name__ == '__main__':
-    run(rebalance_hits=False)
+    run(rebalance_hits=True)

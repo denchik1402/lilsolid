@@ -55,6 +55,8 @@ jobs:
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 fill_seo_meta.py --refresh-keywords" 2>/dev/null || true
             echo "=== 5c2. sync_device_models ==="
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 sync_device_models.py" 2>/dev/null || true
+            echo "=== 5c3. import_lil40_products ==="
+            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 import_lil40_products.py" 2>/dev/null || true
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 normalize_product_names.py" 2>/dev/null || true
 
             echo "=== 4d. sync from lilstore (catalog, banners, blog — last) ==="

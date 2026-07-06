@@ -20,6 +20,8 @@ def get_model_catalog_tiles(app, db, Product, DeviceModel, Category, url_for, ca
     """Плитки моделей и стиков для главной."""
     from image_utils import resolve_product_image, product_image_exists
 
+    from device_models_utils import device_model_display_name
+
     tiles = []
     for dm in DeviceModel.query.order_by(DeviceModel.sort_order, DeviceModel.name).all():
         count = Product.query.filter(
@@ -37,7 +39,7 @@ def get_model_catalog_tiles(app, db, Product, DeviceModel, Category, url_for, ca
                 img = None
         url = url_for('catalog', category_slug=dm.slug) if dm.slug else url_for('catalog', model=dm.name)
         tiles.append({
-            'name': dm.name,
+            'name': device_model_display_name(dm.name),
             'count': count,
             'url': url,
             'image': img,
@@ -186,8 +188,8 @@ def home_faq_items(brand: str, city: str = 'Москва') -> list[dict[str, str
         {
             'q': 'Сколько стоит доставка?',
             'a': (
-                'Москва и МО — от 1 000 ₽ (экспресс в день заказа). По России — от 800 ₽, '
-                'точная сумма зависит от города и способа доставки. Указана на карточке товара.'
+                'По Москве и МО — от 0 ₽, курьер в день заказа (при заказе до 14:00 — часто в тот же день). '
+                'По России срок обычно от 1–2 дней; точную стоимость доставки менеджер сообщит при подтверждении заказа.'
             ),
         },
     ]
