@@ -500,7 +500,7 @@ index, follow
                 <div class="product-card position-relative">
                     {% if product.is_hit %}<span class="badge bg-danger position-absolute top-0 start-0 m-2 product-badge-hit">Хит</span>{% endif %}
                     {% include 'includes/discount_badge.html' %}
-                    <button type="button" class="btn btn-sm btn-light quick-view-btn" data-product-id="{{ product.id }}" title="Быстрый просмотр" aria-label="Быстрый просмотр"><i class="fas fa-eye"></i></button>
+                    <button type="button" class="quick-view-btn" data-product-id="{{ product.id }}" title="Быстрый просмотр" aria-label="Быстрый просмотр"><i class="fas fa-eye"></i></button>
                     {% include 'includes/compare_btn.html' %}
                     {% include 'includes/favorite_btn.html' %}
                     <a href="{{ product|product_url }}" class="product-card-link text-decoration-none text-dark">

@@ -325,21 +325,12 @@
 
 {% block extra_js %}
 <script src="{{ url_for('static', filename='js/viewed.js') }}"></script>
+<script src="{{ url_for('static', filename='js/product-gallery.js') }}?v=1"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     var productId = {{ product.id }};
     if (typeof viewedAdd === 'function') viewedAdd(productId);
     if (typeof viewedRender === 'function') viewedRender('viewedSection', productId);
-    document.querySelectorAll('.product-thumb').forEach(function(thumb) {
-        thumb.addEventListener('click', function() {
-            var src = this.getAttribute('data-src');
-            if (src) {
-                document.getElementById('productMainImage').src = src;
-                document.querySelectorAll('.product-thumb').forEach(function(t) { t.classList.remove('active'); });
-                this.classList.add('active');
-            }
-        });
-    });
     var shareCopyBtn = document.getElementById('shareCopyBtn');
     if (shareCopyBtn) {
         shareCopyBtn.addEventListener('click', function() {
