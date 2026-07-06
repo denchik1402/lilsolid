@@ -183,10 +183,7 @@
         {% if not intro and not specs and product.description %}
         <div class="product-description mb-3">{{ product.description|sanitize_html|safe }}</div>
         {% endif %}
-        {% if pdp_seo_html %}
-        <div class="product-pdp-seo">{{ pdp_seo_html|safe }}</div>
-        {% endif %}
-        
+
         <!-- Добавление в корзину (виджет в стиле Яндекс.Маркета) -->
         <div class="mb-3 add-to-cart-widget-lg">
             {% include 'includes/add_to_cart_widget.html' %}
@@ -196,6 +193,10 @@
         {% endif %}
 
         {% include 'includes/pdp_delivery_card.html' %}
+
+        {% if pdp_seo_html %}
+        <div class="product-pdp-seo">{{ pdp_seo_html|safe }}</div>
+        {% endif %}
         
     </div>
 </div>

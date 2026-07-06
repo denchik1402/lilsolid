@@ -213,10 +213,10 @@ def home_seo_html(brand: str, city: str = 'Москва', domain: str = '') -> s
         f'<h2>Почему выбирают {brand}</h2>'
         f'<ul>'
         f'<li><strong>Оригинальный IQOS</strong> — заводская упаковка, без подделок</li>'
-        f'<li><strong>Доставка айкос {city.lower()}</strong> — курьер в день заказа, по РФ от 1–2 дней</li>'
+        f'<li><strong>Доставка IQOS по {city_in}</strong> — курьер в день заказа, по РФ от 1–2 дней</li>'
         f'<li><strong>Бронь на сайте</strong> — оплата при получении</li>'
         f'<li><strong>Консультация</strong> — Telegram, WhatsApp, телефон</li>'
         f'</ul>'
         f'<p>Изучите каталог, сравните модели и оформите заказ за несколько минут. '
-        f'<strong>Iqos купить москва</strong> и регионы — с {brand} просто и безопасно.</p>'
+        f'<strong>IQOS купить в {city_in}</strong> и регионах — с {brand} просто и безопасно.</p>'
     )
