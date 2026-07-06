@@ -116,6 +116,7 @@
             </div>
             {% endif %}
         </div>
+        {% include 'includes/pdp_stick_upsell.html' %}
     </div>
     
     <!-- Информация о товаре -->
@@ -188,24 +189,11 @@
             {% include 'includes/add_to_cart_widget.html' %}
         </div>
         {% if product.in_stock %}
-        <button type="button" class="btn btn-outline-primary w-100 mb-0 one-click-trigger" data-product-id="{{ product.id }}" data-product-name="{{ product.name|e }}">Покупка в 1 клик</button>
+        <button type="button" class="btn btn-outline-primary w-100 mb-4 one-click-trigger" data-product-id="{{ product.id }}" data-product-name="{{ product.name|e }}">Покупка в 1 клик</button>
         {% endif %}
-    </div>
-</div>
 
-<div class="row pdp-extras-band g-3 mt-3 align-items-stretch">
-    {% if stick_upsell_products %}
-    <div class="col-lg-8">
-        {% include 'includes/pdp_stick_upsell.html' %}
-    </div>
-    <div class="col-lg-4 d-flex">
-        <div class="w-100">{% include 'includes/pdp_delivery_card.html' %}</div>
-    </div>
-    {% else %}
-    <div class="col-12 col-lg-5 col-xl-4 ms-lg-auto">
         {% include 'includes/pdp_delivery_card.html' %}
     </div>
-    {% endif %}
 </div>
 
 {% if pdp_seo_html %}
