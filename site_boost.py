@@ -102,7 +102,7 @@ def get_product_siblings(product, Product, db, limit=50):
     return prev_p, next_p
 
 
-def get_stick_upsell_products(product, Product, db, limit=4):
+def get_stick_upsell_products(product, Product, db, limit=6):
     """Апселл стиков на карточке устройства."""
     if not product:
         return []
