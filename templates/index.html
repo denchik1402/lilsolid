@@ -1,11 +1,11 @@
 {% extends "base.html" %}
 
 {% block meta_robots %}{% if request.args %}noindex, follow{% else %}index, follow{% endif %}{% endblock %}
-{% block title %}{{ site_brand_name }} — киберпанк-магазин IQOS и TEREA на lilsolid.ru{% endblock %}
-{% block meta_description %}{{ site_brand_name }} (lilsolid.ru) — cyberpunk-витрина оригинальных IQOS ILUMA, LIL SOLID и стиков TEREA. Бронь на сайте, доставка по Москве 0–2 дня; в регионы — по срокам службы доставки.{% endblock %}
+{% block title %}Купить IQOS, стики TEREA и HEETS | Доставка день в день | {{ site_brand_name }}{% endblock %}
+{% block meta_description %}Купить IQOS, стики TEREA и HEETS в {{ site_city_in }}. {{ site_brand_name }} — оригинальные устройства ILUMA и LIL SOLID на lilsolid.ru, доставка день в день.{% endblock %}
 {% block meta_keywords %}IQOS, TEREA, ILUMA, lilsolid, lil solid, айкос, илюма, стики, купить IQOS, cyberpunk{% endblock %}
-{% block og_title %}{{ site_brand_name }} — IQOS и стики TEREA на lilsolid.ru{% endblock %}
-{% block og_description %}Киберпанк-магазин оригинальных устройств IQOS и стиков TEREA. Бронь на сайте, доставка по Москве 0–2 дня.{% endblock %}
+{% block og_title %}Купить IQOS, стики TEREA и HEETS | {{ site_brand_name }}{% endblock %}
+{% block og_description %}Оригинальные устройства IQOS ILUMA, LIL SOLID и стики TEREA. Доставка день в день по {{ site_city_in }}.{% endblock %}
 {% block schema_ld %}
 <script type="application/ld+json">
 {

@@ -4,10 +4,10 @@
 {% block meta_description %}{% if product.meta_description %}{{ product.meta_description }}{% else %}{{ product.name }} — {{ product.price|format_price }} ₽. {{ (product.get_intro_text() or product.description or product.name)|striptags|truncate(120) }}{% endif %}{% endblock %}
 {% block meta_keywords %}{% if product.meta_keywords %}{{ product.meta_keywords }}{% else %}{{ product.name }}, IQOS, TEREA, {{ product.category.name if product.category else '' }}, купить{% endif %}{% endblock %}
 {% block canonical_url %}{{ request.url_root.rstrip('/') }}{{ product|product_url }}{% endblock %}
-{% block og_title %}{{ product.name }} — LIL STORE{% endblock %}
-{% block og_description %}{{ product.name }} — {{ product.price|format_price }} ₽. Оригинальная продукция.{% endblock %}
-{% block twitter_title %}{{ product.name }} — LIL STORE{% endblock %}
-{% block twitter_description %}{{ product.name }} — {{ product.price|format_price }} ₽. Оригинальная продукция.{% endblock %}
+{% block og_title %}{{ product.name }} — {{ site_brand_name }}{% endblock %}
+{% block og_description %}{{ product.name }} — {{ product.price|format_price }} ₽. Купить в {{ pdp_seo_city|default(site_city_in) }} с доставкой день в день. Оригинальная продукция.{% endblock %}
+{% block twitter_title %}{{ product.name }} — {{ site_brand_name }}{% endblock %}
+{% block twitter_description %}{{ product.name }} — {{ product.price|format_price }} ₽. Купить в {{ pdp_seo_city|default(site_city_in) }} с доставкой день в день. Оригинальная продукция.{% endblock %}
 {% block twitter_image %}{% set _img = product.all_images[0] if product.all_images else product.image %}{% if _img %}{{ request.url_root.rstrip('/') }}{{ url_for('static', filename='images/products/' + _img) }}{% else %}{{ request.url_root.rstrip('/') }}{{ url_for('static', filename='LOGO3.png') }}{% endif %}{% endblock %}
 {% block og_type %}product{% endblock %}
 {% block og_url %}{{ request.url_root.rstrip('/') }}{{ product|product_url }}{% endblock %}
@@ -175,9 +175,10 @@
         
         {% set intro = product.get_intro_text() %}
         {% set specs = product.get_characteristics() %}
-        {% if intro and not pdp_seo_html %}
+        {% if intro %}
         <div class="product-intro mb-3">{{ intro|sanitize_html|safe }}</div>
         {% endif %}
+        {% include 'includes/pdp_trust_badges.html' %}
         {% if specs %}
         <div class="product-specs card mb-4">
             <div class="card-header product-specs-header">

@@ -4,6 +4,7 @@
         <ul class="mb-2 small">
             <li><strong>{{ site_city }} и МО</strong> — {% if delivery_moscow_price == 0 %}от 0 ₽{% else %}от {{ delivery_moscow_price|int }} ₽{% endif %}, {{ delivery_moscow_note|default('в день заказа') }}</li>
             <li><strong>По России</strong> — {{ delivery_rf_note|default('стоимость доставки сообщит менеджер при подтверждении заказа') }}{% if delivery_rf_days %}, {{ delivery_rf_days }}{% endif %}</li>
+            <li><strong>Способы</strong> — курьер, СДЭК, Почта России</li>
         </ul>
         <p class="mb-0 small text-muted">Оригинальная продукция с заводской гарантией. Оплата при получении.</p>
         {% if site_phone %}
