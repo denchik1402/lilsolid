@@ -1,0 +1,23 @@
+{% if telegram_bot_url %}
+<section class="tg-promo-banner mb-4" aria-label="Telegram">
+    <div class="tg-promo-inner d-flex flex-wrap align-items-center justify-content-between gap-3 p-3 rounded-3">
+        <div>
+            <strong class="d-block">Акции и новинки в Telegram</strong>
+            <span class="small text-muted">Актуальные цены, быстрая поддержка и промо — в боте {{ site_brand_name }}.</span>
+        </div>
+        <a href="{{ telegram_bot_url }}" target="_blank" rel="noopener" class="btn btn-primary btn-sm">
+            <i class="fab fa-telegram me-1"></i> Открыть бота
+        </a>
+    </div>
+</section>
+<style>
+.tg-promo-inner {
+    background: rgba(36, 129, 204, 0.08);
+    border: 1px solid rgba(36, 129, 204, 0.35);
+}
+[data-theme="cyberpunk"] .tg-promo-inner {
+    background: rgba(0, 245, 255, 0.08);
+    border-color: rgba(0, 245, 255, 0.35);
+}
+</style>
+{% endif %}

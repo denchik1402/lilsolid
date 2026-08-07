@@ -1,0 +1,26 @@
+<div class="wholesale-tiers card mb-3 border-success" id="wholesaleTiers">
+    <div class="card-body py-3">
+        <h6 class="mb-2 text-success"><i class="fas fa-tags me-1"></i> Скидка за количество</h6>
+        <p class="small text-muted mb-2">Чем больше блоков стиков — тем ниже цена за штуку.</p>
+        <div class="table-responsive">
+            <table class="table table-sm mb-0 wholesale-tiers-table">
+                <thead>
+                    <tr>
+                        <th>Количество</th>
+                        <th>Скидка</th>
+                        <th>Цена за шт.</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for row in wholesale_tiers %}
+                    <tr class="{% if row.discount_pct %}table-success{% endif %}">
+                        <td>{{ row.label }}</td>
+                        <td>{% if row.discount_pct %}−{{ row.discount_pct }}%{% else %}—{% endif %}</td>
+                        <td><strong>{{ row.unit|format_price }} ₽</strong></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>

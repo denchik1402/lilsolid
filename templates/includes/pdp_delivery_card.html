@@ -2,8 +2,9 @@
     <div class="card-body">
         <h5 class="card-title"><i class="fas fa-truck me-2"></i>Доставка</h5>
         <ul class="mb-2 small">
-            <li><strong>{{ site_city }} и МО</strong> — {% if delivery_moscow_price == 0 %}от 0 ₽{% else %}от {{ delivery_moscow_price|int }} ₽{% endif %}, {{ delivery_moscow_note|default('в день заказа') }}</li>
-            <li><strong>По России</strong> — {{ delivery_rf_note|default('стоимость доставки сообщит менеджер при подтверждении заказа') }}{% if delivery_rf_days %}, {{ delivery_rf_days }}{% endif %}</li>
+            <li><strong>Стоимость</strong> — от 0 ₽; точная сумма зависит от адреса (менеджер сообщит при подтверждении)</li>
+            <li><strong>{{ site_city }} и МО</strong> — {{ delivery_moscow_note|default('в день заказа или на следующий') }}</li>
+            <li><strong>По России</strong> — {{ delivery_rf_note|default('стоимость и сроки сообщит менеджер') }}{% if delivery_rf_days %}, {{ delivery_rf_days }}{% endif %}</li>
             <li><strong>Способы</strong> — курьер, СДЭК, Почта России</li>
         </ul>
         <p class="mb-0 small text-muted">Оригинальная продукция с заводской гарантией. Оплата при получении.</p>

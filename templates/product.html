@@ -139,7 +139,7 @@
     <div class="col-md-6">
         <h1>{{ product.name }}</h1>
         {% if product.model %}<p class="text-muted mb-2">{{ product.model }}</p>{% endif %}
-        <p class="small text-muted mb-2">Артикул: <span class="text-dark">LS-{{ product.id }}</span></p>
+        <p class="small text-muted mb-2">Артикул: <span class="text-dark">LIL-{{ product.id }}</span></p>
         
         <div class="mb-3">
             <span class="h2 text-primary">{{ product.price|format_price }} ₽</span>
@@ -149,6 +149,7 @@
             {% if _pct %}<span class="badge bg-danger ms-2">−{{ _pct }}%</span>{% endif %}
             {% endif %}
         </div>
+        {% if wholesale_tiers %}{% include 'includes/wholesale_tiers.html' %}{% endif %}
         
         <div class="mb-3">
             {% if product.in_stock %}

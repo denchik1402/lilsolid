@@ -23,7 +23,7 @@
                     </div>
                     <div class="col-8 col-md-4">
                         <h5 class="mb-0">{{ item.product.name }}</h5>
-                        <p class="text-muted mb-0 small">{{ item.product.price|format_price }} ₽ за шт.</p>
+                        <p class="text-muted mb-0 small">{% if item.unit_price is defined %}{{ item.unit_price|format_price }}{% else %}{{ item.product.price|format_price }}{% endif %} ₽ за шт.{% if item.wholesale_discount %} <span class="text-success">(−{{ (item.wholesale_discount * 100)|int }}%)</span>{% endif %}</p>
                     </div>
                     <div class="col-12 col-md-3">
                         <div class="cart-widget-qty-block d-inline-flex">
@@ -64,7 +64,7 @@
                     </tr>
                     <tr>
                         <td>Доставка:</td>
-                        <td>0 ₽</td>
+                        <td>от 0 ₽</td>
                     </tr>
                     <tr>
                         <td><strong>Итого:</strong></td>

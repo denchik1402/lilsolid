@@ -89,11 +89,11 @@ def _site_order_label() -> str:
     if host.startswith('www.'):
         host = host[4:]
     if 'iqos-store' in host:
-        return 'АЙКОС СТОР · iqos-store.ru'
+        return 'iqos-store.ru'
     if 'lilsolid' in host:
-        return f'{brand or "LIL SOLID"} · lilsolid.ru'
+        return 'lilsolid.ru'
     if 'lilstore' in host:
-        return 'LIL STORE · lilstore.ru'
+        return 'lilstore.ru'
     return host or 'lilsolid.ru'
 
 
@@ -120,7 +120,7 @@ def format_order_message(order):
         f"💰 <b>Итого: {total_str} ₽</b>",
         "",
         f"📍 Адрес доставки: {order.delivery_address or '—'}",
-        f"🚚 Способ получения: Москва 0–2 дня; регионы — уточняет менеджер",
+        f"🚚 Доставка: от 0 ₽ (зависит от адреса); сроки уточнит менеджер",
         f"💳 Оплата: При получении",
     ])
     

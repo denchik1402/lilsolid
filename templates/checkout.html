@@ -5,7 +5,7 @@
 
 {% block content %}
 <h1 class="mb-4">Оформление</h1>
-<p class="text-muted mb-4">Доставка по Москве — 0–2 дня. В регионы срок зависит от службы доставки — менеджер перезвонит для подтверждения заказа. Оплата при получении.</p>
+<p class="text-muted mb-4">Доставка от 0 ₽ — точная стоимость зависит от адреса. Сроки по Москве обычно день в день или на следующий; по России — от 1–2 дней. Менеджер подтвердит при звонке. Оплата при получении.</p>
 
 <form action="/checkout" method="post" id="checkoutForm">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -108,7 +108,7 @@
                     </div>
                     <div class="d-flex justify-content-between">
                         <span>Доставка:</span>
-                        <span>0 ₽</span>
+                        <span>от 0 ₽</span>
                     </div>
                     <div class="d-flex justify-content-between text-success" id="promoDiscountRow" style="display:none!important;">
                         <span>Скидка:</span>
