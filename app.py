@@ -2478,7 +2478,7 @@ def manifest():
     return jsonify({
         'name': _get_site_setting('SITE_BRAND_NAME', 'LIL SOLID'),
         'short_name': _get_site_setting('SITE_BRAND_NAME', 'LIL SOLID'),
-        'description': 'IQOS и стики TEREA на lilsolid.ru. Оригинальная продукция, доставка от 0 ₽ (стоимость зависит от адреса).',
+        'description': 'IQOS и стики TEREA на lilsolid.ru. Оригинальная продукция, быстрая доставка по всей России.',
         'start_url': base + '/',
         'display': 'standalone',
         'background_color': '#f8f9fa',

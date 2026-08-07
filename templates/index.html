@@ -2,7 +2,7 @@
 
 {% block meta_robots %}{% if request.args %}noindex, follow{% else %}index, follow{% endif %}{% endblock %}
 {% block title %}Купить LIL SOLID 3.0, DUAL и 4.0 | Оригинал на lilsolid.ru{% endblock %}
-{% block meta_description %}LIL SOLID — магазин компактных устройств LIL SOLID 3.0, DUAL и 4.0 и совместимых стиков. Доставка от 0 ₽ по {{ site_city_in }}.{% endblock %}
+{% block meta_description %}LIL SOLID — магазин компактных устройств LIL SOLID 3.0, DUAL и 4.0 и совместимых стиков. Быстрая доставка по всей России.{% endblock %}
 {% block meta_keywords %}IQOS, TEREA, ILUMA, lilsolid, lil solid, айкос, илюма, стики, купить IQOS, cyberpunk{% endblock %}
 {% block og_title %}Купить IQOS, стики TEREA и HEETS | {{ site_brand_name }}{% endblock %}
 {% block og_description %}Оригинальные устройства IQOS ILUMA, LIL SOLID и стики TEREA. Доставка день в день по {{ site_city_in }}.{% endblock %}
@@ -13,7 +13,7 @@
   "@type": "Organization",
   "name": "{{ site_brand_name }}",
   "url": "{{ request.url_root.rstrip('/') }}",
-  "description": "Киберпанк-магазин оригинальных устройств IQOS и стиков TEREA на lilsolid.ru. Бронь на сайте, доставка от 0 ₽ (стоимость зависит от адреса).",
+  "description": "Киберпанк-магазин оригинальных устройств IQOS и стиков TEREA на lilsolid.ru. Бронь на сайте, быстрая доставка по всей России.",
   "telephone": "{{ site_phone }}",
   "sameAs": ["https://t.me/iluma_prime_bot"],
   "address": {"@type": "PostalAddress", "addressCountry": "RU"}
@@ -311,7 +311,7 @@
         <div class="p-3 rounded-3 bg-white shadow-sm h-100">
             <i class="fas fa-truck fa-3x text-primary mb-3"></i>
             <h5 class="fw-bold">Быстрая доставка</h5>
-            <p class="text-muted mb-0">Отправка в день заказа по всей России</p>
+            <p class="text-muted mb-0">Быстрая доставка по всей России</p>
         </div>
     </div>
     <div class="col-md-4 mb-3 mb-md-0">
@@ -523,7 +523,7 @@
 {% endif %}
 
 {% include 'includes/home_model_tiles.html' %}
-<h1 class="visually-hidden">LIL SOLID — купить оригинальные LIL SOLID 3.0, DUAL и 4.0 в {{ site_city_in }} с доставкой от 0 ₽</h1>
+<h1 class="visually-hidden">LIL SOLID — купить оригинальные LIL SOLID 3.0, DUAL и 4.0 в {{ site_city_in }} с быстрой доставкой по всей России</h1>
 {% include 'includes/tg_promo_banner.html' %}
 {% include 'includes/home_seo_section.html' %}
 {% include 'includes/home_faq_section.html' %}
