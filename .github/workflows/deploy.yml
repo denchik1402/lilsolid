@@ -1,4 +1,4 @@
-name: Deploy lilsolid.ru
+﻿name: Deploy lilsolid.ru
 
 on:
   push:
@@ -58,6 +58,8 @@ jobs:
             echo "=== 5c3. import_lil40_products ==="
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 import_lil40_products.py" 2>/dev/null || true
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 normalize_product_names.py" 2>/dev/null || true
+            echo "=== 5c4. align_prices_vs_tabachka ==="
+            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 align_prices_vs_tabachka.py" 2>/dev/null || true
 
             echo "=== 4d. sync from lilstore (catalog, banners, blog — last) ==="
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 scripts/apply_store_sync.py"
@@ -99,3 +101,4 @@ jobs:
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 smoke_test.py" || true
 
             echo "=== Deploy lilsolid completed ==="
+

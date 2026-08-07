@@ -1,0 +1,12 @@
+{# Пометка упаковки TEREA: блок = 10 пачек × 20 стиков #}
+{% set _n = (product.name or '')|lower %}
+{% set _slug = product.category.slug if product.category else '' %}
+{% if _slug == 'terea-sticks' or _n.startswith('terea') %}
+<div class="terea-pack-note small text-muted mb-2">
+    <strong class="text-dark">Блок · 10 пачек</strong>
+    <span class="mx-1">·</span>
+    20 стиков в пачке
+    <span class="mx-1">·</span>
+    ≈ {{ (product.price / 10)|format_price }} ₽/пачка
+</div>
+{% endif %}

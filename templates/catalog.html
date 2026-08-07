@@ -493,6 +493,8 @@ index, follow
         {% if category and category.description %}
         <div class="category-description text-muted mb-4">{{ category.description }}</div>
         {% endif %}
+
+        {% include 'includes/device_wholesale_banner.html' %}
         
         {% if products %}
         <div class="row {% if filters.view == 'list' %}catalog-list{% endif %}">
@@ -517,6 +519,7 @@ index, follow
                             <span class="old-price">{{ product.old_price|format_price }} ₽</span>
                             {% endif %}
                         </div>
+                        {% include 'includes/terea_pack_note.html' %}
                     </a>
                     <div class="d-grid gap-2">
                         <a href="{{ product|product_url }}" class="btn btn-primary">Подробнее</a>

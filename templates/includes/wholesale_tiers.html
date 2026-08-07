@@ -1,19 +1,24 @@
-<div class="wholesale-tiers card mb-3 border-success" id="wholesaleTiers">
+{% set _kind = wholesale_tiers[0].kind if wholesale_tiers and wholesale_tiers[0].kind is defined else 'sticks' %}
+{% set _intro = wholesale_tiers[0].intro if wholesale_tiers and wholesale_tiers[0].intro is defined else 'Чем больше — тем ниже цена за штуку.' %}
+<div class="wholesale-tiers card mb-3 {% if _kind == 'devices' %}border-primary{% else %}border-success{% endif %}" id="wholesaleTiers" data-wholesale-kind="{{ _kind }}">
     <div class="card-body py-3">
-        <h6 class="mb-2 text-success"><i class="fas fa-tags me-1"></i> Скидка за количество</h6>
-        <p class="small text-muted mb-2">Чем больше блоков стиков — тем ниже цена за штуку.</p>
+        <h6 class="mb-2 {% if _kind == 'devices' %}text-primary{% else %}text-success{% endif %}">
+            <i class="fas fa-tags me-1"></i>
+            {% if _kind == 'devices' %}Скидка на устройства{% else %}Скидка за количество{% endif %}
+        </h6>
+        <p class="small text-muted mb-2">{{ _intro }}</p>
         <div class="table-responsive">
             <table class="table table-sm mb-0 wholesale-tiers-table">
                 <thead>
                     <tr>
                         <th>Количество</th>
                         <th>Скидка</th>
-                        <th>Цена за шт.</th>
+                        <th>{% if _kind == 'sticks' %}Цена за блок{% else %}Цена за шт.{% endif %}</th>
                     </tr>
                 </thead>
                 <tbody>
                     {% for row in wholesale_tiers %}
-                    <tr class="{% if row.discount_pct %}table-success{% endif %}">
+                    <tr class="{% if row.discount_pct %}{% if _kind == 'devices' %}table-primary{% else %}table-success{% endif %}{% endif %}">
                         <td>{{ row.label }}</td>
                         <td>{% if row.discount_pct %}−{{ row.discount_pct }}%{% else %}—{% endif %}</td>
                         <td><strong>{{ row.unit|format_price }} ₽</strong></td>
