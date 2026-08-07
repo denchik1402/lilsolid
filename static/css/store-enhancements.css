@@ -655,3 +655,94 @@ body.luxury-store .pdp-seo-lead p {
     color: var(--lux-muted, rgba(244, 242, 238, 0.65));
 }
 
+
+/* ── Wholesale banner + TEREA pack note (lilstore style) ── */
+.device-wholesale-banner__inner {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.65rem 1rem;
+    padding: 0.85rem 1.1rem;
+    border-radius: 12px;
+    background: var(--bg-card, #fff);
+    border: 1px solid var(--border, #e8e8e8);
+    box-shadow: 0 2px 10px var(--shadow, rgba(0, 0, 0, 0.06));
+    color: var(--text, #212529);
+    font-size: 0.9375rem;
+    line-height: 1.35;
+}
+.device-wholesale-banner__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.45rem;
+}
+.device-wholesale-banner__item i {
+    color: #0d6efd;
+    font-size: 0.95rem;
+}
+.device-wholesale-banner__sep {
+    width: 1px;
+    height: 1.1rem;
+    background: var(--border, #e8e8e8);
+    flex-shrink: 0;
+}
+@media (max-width: 576px) {
+    .device-wholesale-banner__sep { display: none; }
+}
+[data-theme="dark"] .device-wholesale-banner__inner {
+    background: var(--bg-card);
+    border-color: var(--border);
+    box-shadow: none;
+}
+[data-theme="dark"] .device-wholesale-banner__item i {
+    color: #6ea8fe;
+}
+[data-theme="cyberpunk"] .device-wholesale-banner__inner {
+    background: rgba(0, 245, 255, 0.06);
+    border-color: rgba(0, 245, 255, 0.28);
+    box-shadow: none;
+}
+[data-theme="cyberpunk"] .device-wholesale-banner__item i {
+    color: #00f5ff;
+}
+
+.terea-pack-note {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.4rem 0.55rem;
+}
+.terea-pack-note__badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.2rem 0.55rem;
+    border-radius: 999px;
+    font-size: 0.8125rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    color: #0d6efd;
+    background: rgba(13, 110, 253, 0.12);
+    border: 1px solid rgba(13, 110, 253, 0.28);
+}
+.terea-pack-note__meta {
+    font-size: 0.8125rem;
+    font-weight: 500;
+    color: var(--text, #212529);
+    opacity: 0.85;
+}
+[data-theme="dark"] .terea-pack-note__badge {
+    color: #8bb4ff;
+    background: rgba(110, 168, 254, 0.16);
+    border-color: rgba(110, 168, 254, 0.4);
+}
+[data-theme="dark"] .terea-pack-note__meta {
+    color: var(--text);
+    opacity: 0.9;
+}
+[data-theme="cyberpunk"] .terea-pack-note__badge {
+    color: #00f5ff;
+    background: rgba(0, 245, 255, 0.1);
+    border-color: rgba(0, 245, 255, 0.35);
+}
+
+

@@ -2,11 +2,8 @@
 {% set _n = (product.name or '')|lower %}
 {% set _slug = product.category.slug if product.category else '' %}
 {% if _slug == 'terea-sticks' or _n.startswith('terea') %}
-<div class="terea-pack-note small text-muted mb-2">
-    <strong class="text-dark">Блок · 10 пачек</strong>
-    <span class="mx-1">·</span>
-    20 стиков в пачке
-    <span class="mx-1">·</span>
-    ≈ {{ (product.price / 10)|format_price }} ₽/пачка
+<div class="terea-pack-note mb-2">
+    <span class="terea-pack-note__badge">Блок · 10 пачек</span>
+    <span class="terea-pack-note__meta">20 стиков в пачке · ≈ {{ (product.price / 10)|format_price }} ₽/пачка</span>
 </div>
 {% endif %}
