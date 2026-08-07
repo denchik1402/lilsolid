@@ -9,6 +9,8 @@ import os
 import re
 from typing import Optional
 
+from seo_role_presets import build_category_seo, build_device_model_seo
+
 SITE = 'LIL SOLID'
 try:
     import config as _cfg
@@ -148,87 +150,7 @@ TEREA_VARIANTS = {
     },
 }
 
-CATEGORY_SEO = {
-    'iqos-iluma': {
-        'meta_description': (
-            'Купить IQOS ILUMA и IQOS Iluma i в LIL SOLID, Москва. '
-            'Оригинальные устройства i One, i Standard и i Prime без лезвия, SMARTCORE. '
-            'Бронь на сайте, быстрая доставка по всей России; в регионы — по срокам службы доставки.'
-        ),
-        'meta_keywords': (
-            'IQOS ILUMA, IQOS Iluma i, Iluma i One, Iluma i Prime, Iluma i Standard, '
-            'купить IQOS ILUMA, buy IQOS ILUMA, нагреватель IQOS, IQOS без лезвия, '
-            'SMARTCORE, LIL SOLID, Москва, original IQOS, '
-            'илюма, ильюма, айкос илюма, купить илюма, купить айкос'
-        ),
-        'seo_text': (
-            '<p><strong>IQOS ILUMA</strong> — линейка нагревателей нового поколения без лезвия и без необходимости '
-            'чистки. Технология SMARTCORE INDUCTION™ нагревает табак изнутри стика TEREA, сохраняя вкус и снижая '
-            'запах по сравнению с обычным курением.</p>'
-            '<p>В LIL SOLID представлены три форм-фактора: компактный <strong>Iluma i One</strong>, сбалансированный '
-            '<strong>Iluma i Standart</strong> и премиальный <strong>Iluma i Prime</strong> с увеличенной автономностью. '
-            'Все устройства — оригинальная продукция с гарантией производителя.</p>'
-            '<p>Оформите бронь на сайте — менеджер свяжется для подтверждения. Быстрая доставка по всей России; в регионы — по срокам службы доставки, уточняет менеджер, '
-            'оплата при получении. Актуальные цвета и наличие — в каталоге ниже.</p>'
-        ),
-    },
-    'terea-sticks': {
-        'meta_description': (
-            'Купить стики TEREA для IQOS ILUMA в LIL SOLID, Москва. '
-            'Оригинальные Terea KZ: Purple Wave, Amber, Pearl, Blue и другие вкусы. '
-            '20 стиков в блоке, быстрая доставка по всей России, бронь на lilsolid.ru.'
-        ),
-        'meta_keywords': (
-            'TEREA, стики TEREA, TEREA sticks, стики для IQOS ILUMA, Terea KZ, '
-            'купить TEREA, buy TEREA sticks, Terea Purple Wave, Terea Amber, '
-            'Terea Pearl, IQOS ILUMA sticks, LIL SOLID, Москва, original TEREA, '
-            'тереа, стики тереа, стики для илюма, стики айкос, купить стики'
-        ),
-        'seo_text': (
-            '<p><strong>TEREA</strong> — стики, разработанные специально для IQOS ILUMA. В отличие от HEETS, '
-            'они содержат металлический нагреваемый элемент внутри и не требуют лезвия в устройстве. '
-            'В блоке 20 стиков, срок годности и оригинальная упаковка PMI.</p>'
-            '<p>В ассортименте LIL SOLID — классические табачные вкусы (Amber, Silver, Yellow), '
-            'освежающие ментоловые (Blue, Turquoise, Zing Wave) и линейка Pearl с капсулами '
-            '(Purple Wave, Sun Pearl, Twilight Pearl и др.). Все позиции — оригинал Terea KZ.</p>'
-            '<p>Выберите вкус в каталоге и оформите бронь. Москва 0–2 дня; регионы — уточняет менеджер по России. '
-            'Не уверены, какой вкус подойдёт? Напишите в Telegram @iluma_prime_bot — подскажем.</p>'
-        ),
-    },
-    'lil': {
-        'meta_description': (
-            'Купить LIL SOLID, LIL SOLID DUAL и LIL SOLID 4.0 в LIL SOLID, Москва. '
-            'Оригинальные устройства LIL для нагревания табака. '
-            'Все модели и цвета в наличии. Москва 0–2 дня; регионы — уточняет менеджер.'
-        ),
-        'meta_keywords': (
-            'LIL SOLID, LIL SOLID DUAL, LIL SOLID 3.0, LIL SOLID 4.0, LIL device, '
-            'купить LIL SOLID, buy LIL SOLID, нагреватель LIL, LIL tobacco heating, '
-            'LIL SOLID, Москва, original LIL, лил солид, лилсолид, купить лил'
-        ),
-        'seo_text': (
-            '<p><strong>LIL SOLID</strong> — доступная линейка нагревателей табака от PMI. '
-            'Устройства совместимы со стиками HEETS и аналогами, подходят тем, кто ищет '
-            'компактный и надёжный формат без премиальной цены ILUMA.</p>'
-            '<p>В каталоге — <strong>LIL SOLID 3.0</strong> (компактный корпус, два режима нагрева), '
-            '<strong>LIL SOLID DUAL</strong> (с зарядным кейсом) и новинка <strong>LIL SOLID 4.0</strong> '
-            'с обновлённым дизайном. Все цвета в наличии — чёрный, синий, зелёный, золотой и лимитированные.</p>'
-            '<p>Бронь на сайте, быстрая доставка по всей России, оплата при получении. Оригинальная продукция, работаем с 2020 года.</p>'
-        ),
-    },
-    'exclusive': {
-        'meta_description': (
-            'Эксклюзивные и лимитированные IQOS ILUMA в LIL SOLID, Москва. '
-            'Seletti Limited Edition, Anniversary Model и редкие серии. '
-            'Оригинальная продукция, бронь на сайте, быстрая доставка по всей России.'
-        ),
-        'meta_keywords': (
-            'IQOS limited edition, IQOS Seletti, Iluma Seletti, эксклюзивный IQOS, '
-            'лимитированный IQOS, IQOS Anniversary, rare IQOS ILUMA, '
-            'купить IQOS limited, LIL SOLID, Москва, collector IQOS'
-        ),
-    },
-}
+CATEGORY_SEO = build_category_seo(SITE, 'lil')
 
 CATEGORY_HOME = {
     'iqos-iluma': {
@@ -260,104 +182,7 @@ def category_home_image_filename(slug: str, db_image: str | None = None) -> str:
     return os.path.basename(raw) if raw else ''
 
 
-DEVICE_MODEL_SEO = {
-    'IQOS ILUMA I ONE': {
-        'meta_description': (
-            'Купить IQOS ILUMA I ONE в LIL SOLID, Москва. Компактное устройство IQOS ILUMA i '
-            'без лезвия, технология SMARTCORE. Оригинал, все цвета. Бронь на сайте, быстрая доставка по всей России.'
-        ),
-        'meta_keywords': (
-            'IQOS ILUMA I ONE, Iluma i One, купить Iluma i One, buy IQOS i One, IQOS ILUMA compact, '
-            'SMARTCORE, IQOS без лезвия, original IQOS, оригинал IQOS, LIL STORE, Москва'
-        ),
-        'image_alt': 'IQOS ILUMA I ONE — компактное устройство IQOS ILUMA, фото LIL STORE',
-    },
-    'IQOS ILUMA I': {
-        'meta_description': (
-            'Купить IQOS ILUMA I в LIL SOLID, Москва. Сбалансированная модель IQOS ILUMA i '
-            'без лезвия, SMARTCORE, увеличенная батарея. Оригинал, бронь на сайте, быстрая доставка по всей России.'
-        ),
-        'meta_keywords': (
-            'IQOS ILUMA I, IQOS Iluma i Standart, купить Iluma i, buy IQOS i Standard, '
-            'IQOS ILUMA, SMARTCORE, original IQOS, LIL STORE, Москва'
-        ),
-        'image_alt': 'IQOS ILUMA I — устройство IQOS ILUMA, фото LIL STORE',
-    },
-    'IQOS ILUMA I PRIME': {
-        'meta_description': (
-            'Купить IQOS ILUMA I PRIME в LIL SOLID, Москва. Премиальное устройство IQOS ILUMA i '
-            'без лезвия, SMARTCORE, максимальная автономность. Оригинал, быстрая доставка по всей России.'
-        ),
-        'meta_keywords': (
-            'IQOS ILUMA I PRIME, Iluma i Prime, купить Iluma i Prime, buy IQOS i Prime, '
-            'IQOS ILUMA premium, SMARTCORE, original IQOS, LIL STORE, Москва'
-        ),
-        'image_alt': 'IQOS ILUMA I PRIME — премиальное устройство IQOS ILUMA, фото LIL STORE',
-    },
-    'IQOS ILUMA ONE': {
-        'meta_description': (
-            'Купить IQOS ILUMA ONE в LIL SOLID, Москва. Компактное устройство первого поколения ILUMA '
-            'без лезвия. Оригинал, бронь на сайте, быстрая доставка по всей России.'
-        ),
-        'meta_keywords': (
-            'IQOS ILUMA ONE, купить ILUMA ONE, buy IQOS ILUMA ONE, IQOS ILUMA, original IQOS, LIL STORE, Москва'
-        ),
-        'image_alt': 'IQOS ILUMA ONE — устройство IQOS ILUMA, фото LIL STORE',
-    },
-    'IQOS ILUMA PRIME': {
-        'meta_description': (
-            'Купить IQOS ILUMA PRIME в LIL SOLID, Москва. Премиальное устройство IQOS ILUMA '
-            'первого поколения без лезвия. Оригинал, быстрая доставка по всей России.'
-        ),
-        'meta_keywords': (
-            'IQOS ILUMA PRIME, купить ILUMA PRIME, buy IQOS ILUMA PRIME, IQOS ILUMA premium, LIL STORE, Москва'
-        ),
-        'image_alt': 'IQOS ILUMA PRIME — премиальное устройство IQOS ILUMA, фото LIL STORE',
-    },
-    'IQOS ILUMA STANDART': {
-        'meta_description': (
-            'Купить IQOS ILUMA STANDART в LIL SOLID, Москва. Классическое устройство IQOS ILUMA '
-            'без лезвия, SMARTCORE. Оригинал, бронь на сайте, быстрая доставка по всей России.'
-        ),
-        'meta_keywords': (
-            'IQOS ILUMA STANDART, IQOS ILUMA Standard, купить ILUMA, buy IQOS ILUMA, SMARTCORE, LIL STORE, Москва'
-        ),
-        'image_alt': 'IQOS ILUMA STANDART — устройство IQOS ILUMA, фото LIL STORE',
-    },
-    'LIL SOLID DUAL': {
-        'meta_description': (
-            'Купить LIL SOLID DUAL в LIL SOLID, Москва. Устройство LIL с зарядным кейсом, '
-            'два режима нагрева, совместимость с HEETS и FIT. Оригинал, быстрая доставка по всей России.'
-        ),
-        'meta_keywords': (
-            'LIL SOLID DUAL, купить LIL SOLID DUAL, buy LIL SOLID DUAL, LIL dual mode, '
-            'нагреватель LIL, LIL device, original LIL, LIL STORE, Москва'
-        ),
-        'image_alt': 'LIL SOLID DUAL — устройство LIL с кейсом, фото LIL STORE',
-    },
-    'LIL SOLID 3.0': {
-        'meta_description': (
-            'Купить LIL SOLID 3.0 в LIL SOLID, Москва. Компактное устройство LIL с двумя режимами '
-            'интенсивности и съёмным нагревателем. Оригинал, бронь на сайте, быстрая доставка по всей России.'
-        ),
-        'meta_keywords': (
-            'LIL SOLID 3.0, купить LIL SOLID 3.0, buy LIL SOLID 3.0, LIL 3.0, '
-            'нагреватель LIL, LIL device, original LIL, LIL STORE, Москва'
-        ),
-        'image_alt': 'LIL SOLID 3.0 — компактное устройство LIL, фото LIL STORE',
-    },
-    'LIL SOLID 4.0': {
-        'meta_description': (
-            'Купить LIL SOLID 4.0 в LIL SOLID, Москва. Новое поколение LIL SOLID — '
-            'улучшенный нагреватель, стильный дизайн. Оригинальная продукция LIL, быстрая доставка по всей России.'
-        ),
-        'meta_keywords': (
-            'LIL SOLID 4.0, купить LIL SOLID 4.0, buy LIL SOLID 4.0, LIL SOLID new, '
-            'LIL device, нагреватель LIL, LIL tobacco heating, original LIL, LIL STORE, Москва'
-        ),
-        'image_alt': 'LIL SOLID 4.0 — устройство LIL нового поколения, фото LIL STORE',
-    },
-}
+DEVICE_MODEL_SEO = build_device_model_seo(SITE, 'lil')
 
 
 def normalize_device_model_name(name: str) -> str:

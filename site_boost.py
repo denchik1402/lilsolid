@@ -201,23 +201,21 @@ def home_faq_items(brand: str, city: str = 'Москва') -> list[dict[str, str
 
 def home_seo_html(brand: str, city: str = 'Москва', domain: str = '') -> str:
     from seo_utils import city_prepositional
-    dom = domain or brand.lower().replace(' ', '-')
+    dom = domain or 'lilsolid.ru'
     city_in = city_prepositional(city)
     return (
-        f'<p><strong>{brand}</strong> — специализированный интернет-магазин оригинальных устройств '
-        f'IQOS ILUMA, LIL SOLID и стиков TEREA в {city_in}. Если вы ищете, где <strong>iqos купить</strong> '
-        f'с быстрой доставкой — вы на правильном сайте. Только подлинная продукция с гарантией производителя.</p>'
-        f'<h2>Полный каталог IQOS: устройства и стики</h2>'
-        f'<p>На {dom} представлены флагманские <strong>IQOS ILUMA</strong> с технологией SMARTCORE INDUCTION™, '
-        f'компактные <strong>Iluma i One</strong>, <strong>LIL SOLID 3.0, DUAL и 4.0</strong>, '
-        f'а также стики <strong>TEREA</strong> (KZ, EU) и <strong>HEETS</strong> для совместимых устройств.</p>'
-        f'<h2>Почему выбирают {brand}</h2>'
+        f'<p><strong>{brand}</strong> — магазин устройств <strong>LIL SOLID</strong> в {city_in}: 3.0, DUAL и 4.0. '
+        f'Компактные нагреватели под стики HEETS и Fiit — без путаницы с ILUMA/TEREA.</p>'
+        f'<h2>Каталог LIL SOLID</h2>'
+        f'<p>На {dom} собраны актуальные цвета LIL SOLID 3.0, DUAL с кейсом и новинка 4.0. '
+        f'IQOS ILUMA и TEREA доступны как дополнительная линейка.</p>'
+        f'<h2>Почему выбирать {brand}</h2>'
         f'<ul>'
-        f'<li><strong>Оригинальный IQOS</strong> — заводская упаковка, без подделок</li>'
-        f'<li><strong>Доставка IQOS по {city_in}</strong> — курьер в день заказа, по РФ от 1–2 дней</li>'
-        f'<li><strong>Бронь на сайте</strong> — оплата при получении</li>'
-        f'<li><strong>Консультация</strong> — Telegram, WhatsApp, телефон</li>'
+        f'<li><strong>Специализация на LIL</strong> — понятный выбор поколения</li>'
+        f'<li><strong>Оригинал</strong> — заводская упаковка</li>'
+        f'<li><strong>Бронь и доставка по России</strong></li>'
+        f'<li><strong>Поддержка по совместимости стиков</strong></li>'
         f'</ul>'
-        f'<p>Изучите каталог, сравните модели и оформите заказ за несколько минут. '
-        f'<strong>IQOS купить в {city_in}</strong> и регионах — с {brand} просто и безопасно.</p>'
+        f'<p>Купить LIL SOLID в {city_in} проще всего в каталоге {brand}.</p>'
     )
+

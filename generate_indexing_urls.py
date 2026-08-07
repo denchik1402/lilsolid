@@ -7,7 +7,7 @@
   python generate_indexing_urls.py
   python generate_indexing_urls.py --out seo/google_indexing_urls.txt
 
-Полный список товаров — в https://lilstore.ru/sitemap.xml (отправляйте sitemap один раз,
+Полный список товаров — в https://lilsolid.ru/sitemap.xml (отправляйте sitemap один раз,
 вручную — только приоритетные и новые страницы, лимит GSC ~10–20 URL в день).
 """
 from __future__ import annotations
@@ -18,7 +18,7 @@ import sys
 
 ROOT = os.path.dirname(os.path.abspath(__file__))
 DEFAULT_OUT = os.path.join(ROOT, 'seo', 'google_indexing_urls.txt')
-BASE = 'https://lilstore.ru'
+BASE = 'https://lilsolid.ru'
 
 
 def _base_url() -> str:
@@ -84,7 +84,7 @@ def collect_urls(base: str) -> tuple[list[str], list[str], list[str]]:
 def write_file(path: str, base: str, priority: list[str], catalog: list[str], products: list[str]) -> None:
     os.makedirs(os.path.dirname(path) or '.', exist_ok=True)
     lines = [
-        '# URL для ручного запроса индексирования — LIL STORE',
+        '# URL для ручного запроса индексирования — LIL SOLID',
         f'# Сгенерировано для: {base}',
         '#',
         '# Google Search Console → Проверка URL → «Запросить индексирование»',

@@ -51,8 +51,6 @@ jobs:
 
             echo "=== 4c. SEO scripts (before catalog sync) ==="
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 update_product_galleries.py" 2>/dev/null || true
-            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 fill_seo_meta.py" 2>/dev/null || true
-            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 fill_seo_meta.py --refresh-keywords" 2>/dev/null || true
             echo "=== 5c2. sync_device_models ==="
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 sync_device_models.py" 2>/dev/null || true
             echo "=== 5c3. import_lil40_products ==="
@@ -62,6 +60,10 @@ jobs:
             echo "=== 4d. sync from lilstore (catalog, banners, blog — last) ==="
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 scripts/apply_store_sync.py"
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 fix_product_images.py" || true
+
+            echo "=== 4d2. fill SEO after sync (role brand, wipe LIL STORE leaks) ==="
+            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 fill_seo_meta.py --force" 2>/dev/null || true
+            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 fill_seo_meta.py --refresh-keywords" 2>/dev/null || true
 
             echo "=== 5c4. align_prices_vs_tabachka (after store sync) ==="
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 align_prices_vs_tabachka.py" || true
