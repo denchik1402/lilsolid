@@ -200,22 +200,7 @@ def home_faq_items(brand: str, city: str = 'Москва') -> list[dict[str, str
 
 
 def home_seo_html(brand: str, city: str = 'Москва', domain: str = '') -> str:
-    from seo_utils import city_prepositional
-    dom = domain or 'lilsolid.ru'
-    city_in = city_prepositional(city)
-    return (
-        f'<p><strong>{brand}</strong> — магазин устройств <strong>LIL SOLID</strong> в {city_in}: 3.0, DUAL и 4.0. '
-        f'Компактные нагреватели под стики HEETS и Fiit — без путаницы с ILUMA/TEREA.</p>'
-        f'<h2>Каталог LIL SOLID</h2>'
-        f'<p>На {dom} собраны актуальные цвета LIL SOLID 3.0, DUAL с кейсом и новинка 4.0. '
-        f'IQOS ILUMA и TEREA доступны как дополнительная линейка.</p>'
-        f'<h2>Почему выбирать {brand}</h2>'
-        f'<ul>'
-        f'<li><strong>Специализация на LIL</strong> — понятный выбор поколения</li>'
-        f'<li><strong>Оригинал</strong> — заводская упаковка</li>'
-        f'<li><strong>Бронь и доставка по России</strong></li>'
-        f'<li><strong>Поддержка по совместимости стиков</strong></li>'
-        f'</ul>'
-        f'<p>Купить LIL SOLID в {city_in} проще всего в каталоге {brand}.</p>'
-    )
+    from seo_role_presets import home_seo_html_for_role
+    return home_seo_html_for_role('lil', brand, city, domain)
+
 

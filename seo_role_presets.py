@@ -1,444 +1,324 @@
 # -*- coding: utf-8 -*-
-"""Ролевые SEO-пресеты категорий и моделей устройств.
+"""Ролевые SEO-пресеты: коммерческие «Купить…» по всему каталогу + уникальный угол бренда.
 
-Роли:
-  hub      — lilstore.ru (LIL STORE): хаб ILUMA + LIL + TEREA
-  premium  — iqos-store.ru (АЙКОС СТОР): премиум ILUMA
-  lil      — lilsolid.ru (LIL SOLID): фокус LIL
-  specialist — iluma-iqos.ru (ILUMA IQOS): специалист ILUMA/TEREA
+Роли задают акцент и формулировки, но НЕ выкидывают линейки из выдачи:
+  hub        — lilstore.ru: полный коммерческий охват (эталон, который работал в топе)
+  premium    — iqos-store.ru: тот же каталог, акцент премиум ILUMA
+  lil        — lilsolid.ru: тот же каталог, акцент LIL SOLID
+  specialist — iluma-iqos.ru: тот же каталог, акцент ILUMA/TEREA
 """
 from __future__ import annotations
 
+CITY = 'Москва'
+
+# Транслит и разговорные запросы (Яндекс часто ищет так)
+QUERY_VARIANTS = [
+    'купить IQOS', 'iqos купить', 'купить айкос', 'айкос купить',
+    'купить ILUMA', 'купить илюма', 'купить ильюма', 'илюма купить',
+    'купить IQOS ILUMA', 'купить айкос илюма',
+    'купить LIL SOLID', 'купить лил солид', 'купить лил', 'лил солид купить',
+    'купить LIL SOLID в Москве', 'купить лил солид в Москве',
+    'стики TEREA', 'купить TEREA', 'купить тереа', 'тереа купить', 'стики тереа',
+    'стики HEETS', 'купить HEETS', 'купить хитс', 'heets купить',
+    'купить стики', 'стики для IQOS', 'стики для илюма',
+    'IQOS Москва', 'айкос Москва', 'илюма Москва', 'лил солид Москва',
+]
+
+
+def commercial_keywords(*extra: str) -> str:
+    """Сжатый блок ключевых под meta_keywords (≤ ~300 символов после truncate снаружи)."""
+    parts = list(QUERY_VARIANTS) + [p for p in extra if p]
+    seen: set[str] = set()
+    out: list[str] = []
+    for p in parts:
+        key = p.casefold().strip()
+        if not key or key in seen:
+            continue
+        seen.add(key)
+        out.append(p.strip())
+    return ', '.join(out)
+
+
+def product_keyword_boost() -> list[str]:
+    """Добавка к meta_keywords товаров — единый коммерческий хвост."""
+    return list(QUERY_VARIANTS)
+
+
+def _buy(what: str, site: str, tail: str = '') -> str:
+    base = f'Купить {what} в {site}, {CITY}.'
+    return f'{base} {tail}'.strip()
+
 
 def build_category_seo(site: str, role: str) -> dict:
-    city = 'Москва'
-    if role == 'hub':
-        return {
-            'iqos-iluma': {
-                'meta_description': (
-                    f'Каталог IQOS ILUMA в {site}: Iluma i One, Standart и Prime — оригинал в одном хабе '
-                    f'с LIL SOLID и TEREA. {city}, бронь на сайте, быстрая доставка по России.'
-                ),
-                'meta_keywords': (
-                    f'IQOS ILUMA каталог, Iluma i One, Iluma i Prime, хаб IQOS, {site}, {city}, original IQOS'
-                ),
-                'seo_text': (
-                    f'<p><strong>{site}</strong> — хаб оригинальных <strong>IQOS ILUMA</strong> рядом с LIL SOLID и стиками TEREA. '
-                    f'Технология SMARTCORE INDUCTION™: без лезвия и без чистки.</p>'
-                    f'<p>В каталоге — <strong>Iluma i One</strong>, <strong>Iluma i Standart</strong> и <strong>Iluma i Prime</strong>. '
-                    f'Сравните модели на одной витрине и оформите бронь — менеджер подтвердит цвет и наличие.</p>'
-                    f'<p>Быстрая доставка по всей России, оплата при получении. Актуальные цены — в карточках ниже.</p>'
-                ),
-            },
-            'terea-sticks': {
-                'meta_description': (
-                    f'Стики TEREA для IQOS ILUMA в {site}: блок 10 пачек (20 стиков в пачке). '
-                    f'Вкусы KZ — Purple Wave, Amber, Pearl и другие. {city}, бронь на сайте.'
-                ),
-                'meta_keywords': (
-                    f'TEREA блок, стики TEREA KZ, TEREA для ILUMA, купить TEREA {site}, {city}, original TEREA'
-                ),
-                'seo_text': (
-                    f'<p><strong>TEREA</strong> — стики только для IQOS ILUMA. В {site} продаём <strong>блоками по 10 пачек</strong> '
-                    f'(в пачке 20 стиков): удобно для регулярного использования.</p>'
-                    f'<p>Классика (Amber, Silver), ментол (Blue, Turquoise) и Pearl с капсулами — оригинал Terea KZ. '
-                    f'Подберём вкус в Telegram или при подтверждении брони.</p>'
-                ),
-            },
-            'lil': {
-                'meta_description': (
-                    f'LIL SOLID 3.0, DUAL и 4.0 в хабе {site}. Оригинальные устройства рядом с IQOS ILUMA и HEETS. '
-                    f'{city}, бронь, быстрая доставка по России.'
-                ),
-                'meta_keywords': (
-                    f'LIL SOLID хаб, LIL SOLID 4.0, LIL SOLID DUAL, купить LIL {site}, {city}, original LIL'
-                ),
-                'seo_text': (
-                    f'<p>В {site} линейка <strong>LIL SOLID</strong> стоит рядом с ILUMA: удобно сравнить форматы и бюджет. '
-                    f'<strong>3.0</strong>, <strong>DUAL</strong> с кейсом и новинка <strong>4.0</strong> — оригинал PMI.</p>'
-                    f'<p>Совместимы с HEETS/Fiit. Бронь на сайте, оплата при получении.</p>'
-                ),
-            },
-            'exclusive': {
-                'meta_description': (
-                    f'Лимитированные IQOS ILUMA в {site}: Seletti, Anniversary и редкие серии. '
-                    f'Оригинал, бронь, доставка по России.'
-                ),
-                'meta_keywords': (
-                    f'IQOS limited {site}, Seletti ILUMA, Anniversary IQOS, эксклюзив IQOS, {city}'
-                ),
-            },
-        }
+    """Коммерческие meta по всем категориям; seo_text с углом роли."""
+    angle = {
+        'hub': f'{site} — полный каталог: IQOS ILUMA, LIL SOLID, TEREA и HEETS в одном заказе.',
+        'premium': f'{site} — премиальная витрина IQOS ILUMA; в каталоге также LIL SOLID, TEREA и HEETS.',
+        'lil': f'{site} — магазин LIL SOLID; в каталоге также IQOS ILUMA, TEREA и HEETS.',
+        'specialist': f'{site} — специалист IQOS ILUMA и TEREA; в каталоге также LIL SOLID и HEETS.',
+    }.get(role, site)
 
-    if role == 'premium':
-        return {
-            'iqos-iluma': {
-                'meta_description': (
-                    f'Премиальные IQOS ILUMA в {site}: Iluma i Prime, Standart и One — оригинал, '
-                    f'акцент на статусные цвета и лимитированные серии. {city}.'
-                ),
-                'meta_keywords': (
-                    f'премиум IQOS ILUMA, Iluma i Prime купить, АЙКОС СТОР, luxury IQOS, {city}, original IQOS'
-                ),
-                'seo_text': (
-                    f'<p><strong>{site}</strong> — премиальная витрина <strong>IQOS ILUMA</strong>. '
-                    f'Фокус на качество сборки, редкие цвета и модели с максимальной автономностью.</p>'
-                    f'<p>Линейка Iluma i: компактный <strong>One</strong>, сбалансированный <strong>Standart</strong> '
-                    f'и флагман <strong>Prime</strong>. Только оригинал с гарантией производителя.</p>'
-                    f'<p>Бронь на сайте, консультация по комплектации, быстрая доставка по России.</p>'
-                ),
-            },
-            'terea-sticks': {
-                'meta_description': (
-                    f'Оригинальные стики TEREA к премиальным ILUMA в {site}. Блок 10 пачек. '
-                    f'Подбор вкуса под ваше устройство. {city}.'
-                ),
-                'meta_keywords': (
-                    f'TEREA премиум, стики к ILUMA Prime, TEREA блок {site}, {city}, original TEREA'
-                ),
-                'seo_text': (
-                    f'<p>Стики <strong>TEREA</strong> — единственный формат для IQOS ILUMA. В {site} блоки по 10 пачек, '
-                    f'оригинал KZ с актуальным сроком годности.</p>'
-                    f'<p>Поможем подобрать вкус под ежедневное использование или редкую серию устройства.</p>'
-                ),
-            },
-            'lil': {
-                'meta_description': (
-                    f'LIL SOLID в ассортименте {site} — компактная альтернатива ILUMA. '
-                    f'Оригинал, бронь, доставка. Основной фокус витрины — премиум IQOS ILUMA.'
-                ),
-                'meta_keywords': (
-                    f'LIL SOLID {site}, альтернатива ILUMA, LIL 4.0 оригинал, {city}'
-                ),
-                'seo_text': (
-                    f'<p>На {site} устройства <strong>LIL SOLID</strong> — дополнительная линейка к премиум ILUMA: '
-                    f'если нужен более компактный и доступный формат с HEETS.</p>'
-                ),
-            },
-            'exclusive': {
-                'meta_description': (
-                    f'Коллекционные IQOS ILUMA в {site}: Seletti Limited, Anniversary и редкие издания. '
-                    f'Премиум-витрина, оригинал, бронь.'
-                ),
-                'meta_keywords': (
-                    f'IQOS Seletti {site}, limited edition ILUMA, коллекционный IQOS, {city}'
-                ),
-            },
-        }
-
-    if role == 'lil':
-        return {
-            'iqos-iluma': {
-                'meta_description': (
-                    f'IQOS ILUMA в {site} — дополнительная линейка к основному каталогу LIL SOLID. '
-                    f'Оригинал, бронь. Главный фокус магазина — устройства LIL.'
-                ),
-                'meta_keywords': (
-                    f'IQOS ILUMA {site}, ILUMA к LIL SOLID, original IQOS, {city}'
-                ),
-                'seo_text': (
-                    f'<p>В {site} основной акцент — <strong>LIL SOLID</strong>. Линейка <strong>IQOS ILUMA</strong> '
-                    f'доступна как дополнительный выбор для тех, кто переходит на TEREA и SMARTCORE.</p>'
-                ),
-            },
-            'terea-sticks': {
-                'meta_description': (
-                    f'TEREA для IQOS ILUMA в {site}. Если пользуетесь LIL — смотрите HEETS/Fiit в каталоге. '
-                    f'Блок 10 пачек, оригинал.'
-                ),
-                'meta_keywords': (
-                    f'TEREA {site}, стики ILUMA, блок TEREA, {city}'
-                ),
-                'seo_text': (
-                    f'<p>Стики <strong>TEREA</strong> подходят только к IQOS ILUMA. Для LIL SOLID берите HEETS или Fiit — '
-                    f'их совместимость отличается. В {site} подскажем при брони.</p>'
-                ),
-            },
-            'lil': {
-                'meta_description': (
-                    f'Купить LIL SOLID 3.0, DUAL и 4.0 в {site} — магазин устройств LIL. '
-                    f'Все цвета, оригинал, бронь, быстрая доставка по России. {city}.'
-                ),
-                'meta_keywords': (
-                    f'купить LIL SOLID, LIL SOLID 4.0, LIL SOLID DUAL, LIL SOLID 3.0, {site}, {city}, original LIL'
-                ),
-                'seo_text': (
-                    f'<p><strong>{site}</strong> — магазин компактных нагревателей <strong>LIL SOLID</strong>. '
-                    f'Модели <strong>3.0</strong>, <strong>DUAL</strong> с кейсом и новинка <strong>4.0</strong> — '
-                    f'оригинал PMI, совместимость с HEETS и Fiit.</p>'
-                    f'<p>Сравните поколения, выберите цвет и оформите бронь. Доставка по России, оплата при получении.</p>'
-                ),
-            },
-            'exclusive': {
-                'meta_description': (
-                    f'Редкие и лимитированные устройства в {site}. Основной каталог — LIL SOLID; '
-                    f'эксклюзивы ILUMA — по наличию.'
-                ),
-                'meta_keywords': (
-                    f'лимитированный LIL, exclusive {site}, {city}'
-                ),
-            },
-        }
-
-    # specialist — iluma-iqos
     return {
         'iqos-iluma': {
-            'meta_description': (
-                f'{site}: специализированный магазин IQOS ILUMA — Iluma i One, Standart и Prime. '
-                f'Только линейка ILUMA и стики TEREA. {city}, экспресс и доставка по России.'
+            'meta_description': _buy(
+                'IQOS ILUMA и IQOS Iluma i',
+                site,
+                'Оригинал i One, Standart и Prime без лезвия, SMARTCORE. '
+                'Также илюма / ильюма / айкос. Бронь на сайте, быстрая доставка по России.',
             ),
-            'meta_keywords': (
-                f'ILUMA IQOS магазин, купить IQOS ILUMA специалист, Iluma i One, Iluma i Prime, {site}, {city}'
+            'meta_keywords': commercial_keywords(
+                'IQOS ILUMA', 'Iluma i One', 'Iluma i Prime', 'Iluma i Standart',
+                site, CITY, 'original IQOS', angle.split('—')[0].strip(),
             ),
             'seo_text': (
-                f'<p><strong>{site}</strong> заточен под <strong>IQOS ILUMA</strong> и стики <strong>TEREA</strong>. '
-                f'Разбираемся в поколениях Iluma i, помогаем выбрать One / Standart / Prime под ваш ритм.</p>'
-                f'<p>SMARTCORE без лезвия, оригинал PMI, бронь на сайте. Экспресс по Москве и отправка в регионы.</p>'
+                f'<p><strong>Купить IQOS ILUMA</strong> (илюма, ильюма, айкос) в {site}, {CITY}. {angle}</p>'
+                f'<p><strong>IQOS ILUMA</strong> — нагрев без лезвия, SMARTCORE INDUCTION™, только стики TEREA. '
+                f'В каталоге: <strong>Iluma i One</strong>, <strong>Iluma i Standart</strong>, <strong>Iluma i Prime</strong>.</p>'
+                f'<p>Бронь на сайте, оплата при получении, быстрая доставка по всей России. '
+                f'Сравните цвета и оформите заказ за несколько минут.</p>'
             ),
         },
         'terea-sticks': {
-            'meta_description': (
-                f'Стики TEREA в {site} — узкий ассортимент под ILUMA. Блок 10 пачек, вкусы KZ. '
-                f'Консультация по совместимости. {city}.'
+            'meta_description': _buy(
+                'стики TEREA для IQOS ILUMA',
+                site,
+                'Оригинал Terea KZ: Purple Wave, Amber, Pearl, Blue и другие. '
+                'Блок / пачки. Бронь, доставка по России.',
             ),
-            'meta_keywords': (
-                f'TEREA ILUMA IQOS, стики TEREA специалист, блок TEREA {site}, {city}, original TEREA'
+            'meta_keywords': commercial_keywords(
+                'TEREA', 'стики TEREA', 'купить тереа', 'Terea KZ', 'стики для IQOS ILUMA',
+                site, CITY, 'original TEREA',
             ),
             'seo_text': (
-                f'<p>В {site} стики <strong>TEREA</strong> — ключевая расходка к ILUMA. Продаём блоками (10 пачек × 20 стиков), '
-                f'оригинал KZ. Подскажем вкус под крепость и ментол.</p>'
+                f'<p><strong>Купить стики TEREA</strong> (тереа) в {site}: расходка только для IQOS ILUMA / илюма. '
+                f'HEETS к ILUMA не подходят — для LIL SOLID смотрите HEETS отдельно.</p>'
+                f'<p>Классика, ментол и Pearl с капсулой — оригинал KZ. Бронь на сайте, доставка по России.</p>'
             ),
         },
         'lil': {
-            'meta_description': (
-                f'LIL SOLID в {site} — вспомогательная линейка рядом со специализацией IQOS ILUMA. '
-                f'Оригинал, бронь.'
+            'meta_description': _buy(
+                'LIL SOLID, LIL SOLID DUAL и LIL SOLID 4.0',
+                site,
+                'Оригинал LIL, все цвета. Купить лил солид / лил в Москве. '
+                'Совместимость с HEETS и Fiit. Бронь, доставка по России.',
             ),
-            'meta_keywords': (
-                f'LIL SOLID {site}, HEETS к LIL, {city}'
+            'meta_keywords': commercial_keywords(
+                'LIL SOLID', 'LIL SOLID 4.0', 'LIL SOLID DUAL', 'LIL SOLID 3.0',
+                'купить лил', 'лил солид', site, CITY, 'original LIL',
             ),
             'seo_text': (
-                f'<p>Основная экспертиза {site} — ILUMA и TEREA. <strong>LIL SOLID</strong> есть в каталоге '
-                f'как альтернатива на HEETS, если нужен другой форм-фактор.</p>'
+                f'<p><strong>Купить LIL SOLID</strong> (лил солид, лил) в {site}, {CITY}. {angle}</p>'
+                f'<p>Модели <strong>3.0</strong>, <strong>DUAL</strong> и <strong>4.0</strong> — оригинал PMI, стики HEETS/Fiit. '
+                f'Рядом в каталоге — IQOS ILUMA и TEREA, если сравниваете форматы.</p>'
+                f'<p>Бронь на сайте, оплата при получении, быстрая доставка по России.</p>'
             ),
         },
         'exclusive': {
-            'meta_description': (
-                f'Лимитированные IQOS ILUMA в {site}: редкие цвета и Seletti. '
-                f'Специализированная витрина ILUMA IQOS.'
+            'meta_description': _buy(
+                'лимитированные IQOS ILUMA',
+                site,
+                'Seletti, Anniversary и редкие серии. Оригинал, бронь, доставка по России.',
             ),
-            'meta_keywords': (
-                f'limited ILUMA {site}, Seletti IQOS, {city}'
+            'meta_keywords': commercial_keywords(
+                'IQOS Seletti', 'Anniversary IQOS', 'limited edition ILUMA', site, CITY,
+            ),
+            'seo_text': (
+                f'<p>Эксклюзивные и лимитированные <strong>IQOS ILUMA</strong> в {site}. '
+                f'Оригинал PMI, бронь на сайте.</p>'
             ),
         },
     }
 
 
 def build_device_model_seo(site: str, role: str) -> dict:
-    """Ключи как в seo_utils DEVICE_MODEL_SEO (UPPER для hub/premium/lil)."""
-    city = 'Москва'
+    """Коммерческие meta моделей; роль влияет на хвост описания, не убирает «Купить»."""
+    focus = {
+        'hub': 'полный каталог ILUMA + LIL + TEREA',
+        'premium': 'премиум-витрина IQOS ILUMA',
+        'lil': 'магазин LIL SOLID',
+        'specialist': 'специалист IQOS ILUMA',
+    }.get(role, site)
     photo = f'фото {site}'
 
-    def entry(desc: str, kw: str, alt: str) -> dict:
-        return {'meta_description': desc, 'meta_keywords': kw, 'image_alt': alt}
-
-    if role == 'hub':
+    def entry(label: str, extra_kw: str, alt: str, tip: str = '') -> dict:
+        tip_bit = f' {tip}' if tip else ''
         return {
-            'IQOS ILUMA I ONE': entry(
-                f'IQOS ILUMA i One в хабе {site}: компактный ILUMA без лезвия. Оригинал, все цвета, бронь. {city}.',
-                f'Iluma i One {site}, компактный IQOS ILUMA, SMARTCORE, {city}, original IQOS',
-                f'IQOS ILUMA i One — компактный ILUMA, {photo}',
+            'meta_description': _buy(
+                label,
+                site,
+                f'{tip_bit} Оригинал, бронь на сайте, быстрая доставка по всей России. {focus.capitalize()}.',
             ),
-            'IQOS ILUMA I': entry(
-                f'IQOS ILUMA i Standart в {site} — сбалансированная модель хаба ILUMA + LIL + TEREA. {city}.',
-                f'Iluma i Standart {site}, IQOS ILUMA i, SMARTCORE, {city}',
-                f'IQOS ILUMA i Standart — устройство ILUMA, {photo}',
-            ),
-            'IQOS ILUMA I PRIME': entry(
-                f'IQOS ILUMA i Prime в {site}: премиум-автономность в общем каталоге с LIL и TEREA. {city}.',
-                f'Iluma i Prime {site}, IQOS ILUMA premium, {city}, original IQOS',
-                f'IQOS ILUMA i Prime — премиум ILUMA, {photo}',
-            ),
-            'IQOS ILUMA ONE': entry(
-                f'IQOS ILUMA ONE в {site} — первое поколение ILUMA, оригинал. {city}.',
-                f'IQOS ILUMA ONE {site}, {city}',
-                f'IQOS ILUMA ONE, {photo}',
-            ),
-            'IQOS ILUMA PRIME': entry(
-                f'IQOS ILUMA PRIME в {site} — премиум первого поколения ILUMA. {city}.',
-                f'IQOS ILUMA PRIME {site}, {city}',
-                f'IQOS ILUMA PRIME, {photo}',
-            ),
-            'IQOS ILUMA STANDART': entry(
-                f'IQOS ILUMA STANDART в {site}. Оригинал, бронь, доставка. {city}.',
-                f'IQOS ILUMA STANDART {site}, {city}',
-                f'IQOS ILUMA STANDART, {photo}',
-            ),
-            'LIL SOLID DUAL': entry(
-                f'LIL SOLID DUAL в хабе {site}: кейс + два режима, рядом с ILUMA. {city}.',
-                f'LIL SOLID DUAL {site}, LIL с кейсом, {city}, original LIL',
-                f'LIL SOLID DUAL, {photo}',
-            ),
-            'LIL SOLID 3.0': entry(
-                f'LIL SOLID 3.0 в {site} — компактный LIL в общем каталоге. {city}.',
-                f'LIL SOLID 3.0 {site}, купить LIL 3.0, {city}',
-                f'LIL SOLID 3.0, {photo}',
-            ),
-            'LIL SOLID 4.0': entry(
-                f'LIL SOLID 4.0 в {site} — новое поколение LIL на витрине хаба. {city}.',
-                f'LIL SOLID 4.0 {site}, новинка LIL, {city}',
-                f'LIL SOLID 4.0, {photo}',
-            ),
+            'meta_keywords': commercial_keywords(label, extra_kw, site, CITY, 'original'),
+            'image_alt': alt if alt.endswith(photo) or photo in alt else f'{alt}, {photo}',
         }
 
-    if role == 'premium':
-        return {
-            'IQOS ILUMA I ONE': entry(
-                f'Премиум-витрина {site}: IQOS ILUMA i One — компактный оригинал SMARTCORE. {city}.',
-                f'Iluma i One премиум, {site}, luxury IQOS, {city}',
-                f'IQOS ILUMA i One, {photo}',
-            ),
-            'IQOS ILUMA I': entry(
-                f'IQOS ILUMA i Standart в {site} — премиальный баланс размера и батареи. {city}.',
-                f'Iluma i Standart {site}, премиум IQOS, {city}',
-                f'IQOS ILUMA i Standart, {photo}',
-            ),
-            'IQOS ILUMA I PRIME': entry(
-                f'IQOS ILUMA i Prime в {site} — флагман премиум-линейки. Максимальная автономность. {city}.',
-                f'Iluma i Prime {site}, флагман IQOS ILUMA, {city}',
-                f'IQOS ILUMA i Prime, {photo}',
-            ),
-            'IQOS ILUMA ONE': entry(
-                f'IQOS ILUMA ONE в премиум-каталоге {site}. Оригинал. {city}.',
-                f'IQOS ILUMA ONE {site}, {city}',
-                f'IQOS ILUMA ONE, {photo}',
-            ),
-            'IQOS ILUMA PRIME': entry(
-                f'IQOS ILUMA PRIME в {site}. Премиум первого поколения. {city}.',
-                f'IQOS ILUMA PRIME {site}, {city}',
-                f'IQOS ILUMA PRIME, {photo}',
-            ),
-            'IQOS ILUMA STANDART': entry(
-                f'IQOS ILUMA STANDART в {site}. Оригинал, бронь. {city}.',
-                f'IQOS ILUMA STANDART {site}, {city}',
-                f'IQOS ILUMA STANDART, {photo}',
-            ),
-            'LIL SOLID DUAL': entry(
-                f'LIL SOLID DUAL в {site} — дополнительная линейка к премиум ILUMA. {city}.',
-                f'LIL SOLID DUAL {site}, {city}',
-                f'LIL SOLID DUAL, {photo}',
-            ),
-            'LIL SOLID 3.0': entry(
-                f'LIL SOLID 3.0 в ассортименте {site}. Фокус витрины — IQOS ILUMA. {city}.',
-                f'LIL SOLID 3.0 {site}, {city}',
-                f'LIL SOLID 3.0, {photo}',
-            ),
-            'LIL SOLID 4.0': entry(
-                f'LIL SOLID 4.0 в {site}. Компактная альтернатива премиум ILUMA. {city}.',
-                f'LIL SOLID 4.0 {site}, {city}',
-                f'LIL SOLID 4.0, {photo}',
-            ),
-        }
-
-    if role == 'lil':
-        return {
-            'IQOS ILUMA I ONE': entry(
-                f'IQOS ILUMA i One в {site} — дополнительная модель рядом с каталогом LIL SOLID. {city}.',
-                f'Iluma i One {site}, {city}',
-                f'IQOS ILUMA i One, {photo}',
-            ),
-            'IQOS ILUMA I': entry(
-                f'IQOS ILUMA i Standart в магазине LIL SOLID ({site}). {city}.',
-                f'Iluma i Standart {site}, {city}',
-                f'IQOS ILUMA i Standart, {photo}',
-            ),
-            'IQOS ILUMA I PRIME': entry(
-                f'IQOS ILUMA i Prime в {site}. Основной фокус — устройства LIL. {city}.',
-                f'Iluma i Prime {site}, {city}',
-                f'IQOS ILUMA i Prime, {photo}',
-            ),
-            'IQOS ILUMA ONE': entry(
-                f'IQOS ILUMA ONE в {site}. {city}.',
-                f'IQOS ILUMA ONE {site}, {city}',
-                f'IQOS ILUMA ONE, {photo}',
-            ),
-            'IQOS ILUMA PRIME': entry(
-                f'IQOS ILUMA PRIME в {site}. {city}.',
-                f'IQOS ILUMA PRIME {site}, {city}',
-                f'IQOS ILUMA PRIME, {photo}',
-            ),
-            'IQOS ILUMA STANDART': entry(
-                f'IQOS ILUMA STANDART в {site}. {city}.',
-                f'IQOS ILUMA STANDART {site}, {city}',
-                f'IQOS ILUMA STANDART, {photo}',
-            ),
-            'LIL SOLID DUAL': entry(
-                f'Купить LIL SOLID DUAL в {site} — магазин LIL: кейс, два режима, HEETS/Fiit. {city}.',
-                f'купить LIL SOLID DUAL, LIL DUAL {site}, original LIL, {city}',
-                f'LIL SOLID DUAL — устройство LIL с кейсом, {photo}',
-            ),
-            'LIL SOLID 3.0': entry(
-                f'Купить LIL SOLID 3.0 в {site}: компактный нагреватель LIL, все цвета. {city}.',
-                f'купить LIL SOLID 3.0, LIL 3.0 {site}, {city}, original LIL',
-                f'LIL SOLID 3.0 — компактный LIL, {photo}',
-            ),
-            'LIL SOLID 4.0': entry(
-                f'Купить LIL SOLID 4.0 в {site} — новинка линейки LIL, оригинал. {city}.',
-                f'купить LIL SOLID 4.0, LIL 4.0 {site}, новинка LIL, {city}',
-                f'LIL SOLID 4.0 — новое поколение LIL, {photo}',
-            ),
-        }
-
-    # specialist — keys may be title-case on iluma; provide both styles
-    base = {
+    data = {
         'IQOS ILUMA I ONE': entry(
-            f'{site}: IQOS ILUMA i One — компактный специалитетный выбор без лезвия. {city}.',
-            f'Iluma i One {site}, специалист IQOS ILUMA, SMARTCORE, {city}',
-            f'IQOS ILUMA i One, {photo}',
+            'IQOS ILUMA i One',
+            'Iluma i One, компактный IQOS ILUMA, SMARTCORE, купить илюма',
+            f'IQOS ILUMA i One — компактный ILUMA, {photo}',
+            'Компактный IQOS ILUMA без лезвия, SMARTCORE.',
         ),
         'IQOS ILUMA I': entry(
-            f'{site}: IQOS ILUMA i Standart — экспертный подбор под ежедневное использование. {city}.',
-            f'Iluma i Standart {site}, {city}',
-            f'IQOS ILUMA i Standart, {photo}',
+            'IQOS ILUMA i Standart',
+            'Iluma i Standart, IQOS ILUMA i, SMARTCORE',
+            f'IQOS ILUMA i Standart — устройство ILUMA, {photo}',
+            'Сбалансированная модель IQOS ILUMA i без лезвия.',
         ),
         'IQOS ILUMA I PRIME': entry(
-            f'{site}: IQOS ILUMA i Prime — флагман для тех, кто выбирает только ILUMA. {city}.',
-            f'Iluma i Prime {site}, флагман ILUMA, {city}',
-            f'IQOS ILUMA i Prime, {photo}',
+            'IQOS ILUMA i Prime',
+            'Iluma i Prime, премиум IQOS ILUMA, флагман ILUMA',
+            f'IQOS ILUMA i Prime — премиум ILUMA, {photo}',
+            'Премиум IQOS ILUMA i, максимальная автономность.',
         ),
         'IQOS ILUMA ONE': entry(
-            f'IQOS ILUMA ONE в специализированном магазине {site}. {city}.',
-            f'IQOS ILUMA ONE {site}, {city}',
+            'IQOS ILUMA ONE',
+            'IQOS ILUMA ONE, первое поколение ILUMA',
             f'IQOS ILUMA ONE, {photo}',
+            'Первое поколение ILUMA без лезвия.',
         ),
         'IQOS ILUMA PRIME': entry(
-            f'IQOS ILUMA PRIME в {site}. {city}.',
-            f'IQOS ILUMA PRIME {site}, {city}',
+            'IQOS ILUMA PRIME',
+            'IQOS ILUMA PRIME',
             f'IQOS ILUMA PRIME, {photo}',
+            'Премиум первого поколения ILUMA.',
         ),
         'IQOS ILUMA STANDART': entry(
-            f'IQOS ILUMA STANDART в {site}. {city}.',
-            f'IQOS ILUMA STANDART {site}, {city}',
+            'IQOS ILUMA STANDART',
+            'IQOS ILUMA STANDART, SMARTCORE',
             f'IQOS ILUMA STANDART, {photo}',
+            'Классический IQOS ILUMA без лезвия.',
         ),
         'LIL SOLID DUAL': entry(
-            f'LIL SOLID DUAL в {site} — вспомогательная модель рядом со специализацией ILUMA. {city}.',
-            f'LIL SOLID DUAL {site}, {city}',
-            f'LIL SOLID DUAL, {photo}',
+            'LIL SOLID DUAL',
+            'LIL DUAL, купить лил солид dual, HEETS, Fiit',
+            f'LIL SOLID DUAL — LIL с кейсом, {photo}',
+            'Кейс, два режима, совместимость с HEETS и Fiit.',
         ),
         'LIL SOLID 3.0': entry(
-            f'LIL SOLID 3.0 в {site}. Основной фокус — IQOS ILUMA и TEREA. {city}.',
-            f'LIL SOLID 3.0 {site}, {city}',
-            f'LIL SOLID 3.0, {photo}',
+            'LIL SOLID 3.0',
+            'LIL 3.0, купить лил 3.0, купить лил солид',
+            f'LIL SOLID 3.0 — компактный LIL, {photo}',
+            'Компактный LIL, все цвета.',
         ),
         'LIL SOLID 4.0': entry(
-            f'LIL SOLID 4.0 в {site}. {city}.',
-            f'LIL SOLID 4.0 {site}, {city}',
-            f'LIL SOLID 4.0, {photo}',
+            'LIL SOLID 4.0',
+            'LIL 4.0, новинка LIL, купить лил солид 4.0',
+            f'LIL SOLID 4.0 — новое поколение LIL, {photo}',
+            'Новое поколение LIL SOLID.',
         ),
     }
-    # iluma title-case aliases
-    base['IQOS Iluma i One'] = base['IQOS ILUMA I ONE']
-    base['IQOS Iluma i Standart'] = base['IQOS ILUMA I']
-    base['IQOS Iluma i Prime'] = base['IQOS ILUMA I PRIME']
-    return base
+    # title-case aliases (iluma-iqos)
+    data['IQOS Iluma i One'] = data['IQOS ILUMA I ONE']
+    data['IQOS Iluma i Standart'] = data['IQOS ILUMA I']
+    data['IQOS Iluma i Prime'] = data['IQOS ILUMA I PRIME']
+    return data
+
+
+def home_seo_html_for_role(
+    role: str,
+    brand: str,
+    city: str = 'Москва',
+    domain: str = '',
+) -> str:
+    """Коммерческий SEO-блок главной: полный каталог + угол роли."""
+    from seo_utils import city_prepositional
+
+    city_in = city_prepositional(city)
+    defaults = {
+        'hub': 'lilstore.ru',
+        'premium': 'iqos-store.ru',
+        'lil': 'lilsolid.ru',
+        'specialist': 'iluma-iqos.ru',
+    }
+    dom = domain or defaults.get(role, brand.lower().replace(' ', '-'))
+
+    catalog = (
+        f'На {dom}: <strong>IQOS ILUMA</strong> (One, Standart, Prime), '
+        f'<strong>LIL SOLID 3.0 / DUAL / 4.0</strong>, стики <strong>TEREA</strong> и <strong>HEETS</strong>. '
+        f'Запросы вроде купить илюма, купить лил солид, купить айкос, купить тереа — закрываем одним каталогом.'
+    )
+
+    if role == 'hub':
+        lead = (
+            f'<p><strong>{brand}</strong> — интернет-магазин оригинальных устройств '
+            f'IQOS ILUMA, LIL SOLID и стиков TEREA в {city_in}. Если ищете, где <strong>iqos купить</strong>, '
+            f'<strong>купить илюма</strong>, <strong>купить лил солид</strong> или <strong>стики TEREA / HEETS</strong> '
+            f'с быстрой доставкой — вы на правильном сайте. Только оригинал PMI.</p>'
+        )
+        why = 'Почему выбирают {brand}'
+        bullets = (
+            f'<li><strong>Оригинальный IQOS / айкос / илюма</strong> — заводская упаковка</li>'
+            f'<li><strong>Полный каталог</strong> — ILUMA, LIL SOLID, TEREA, HEETS</li>'
+            f'<li><strong>Доставка по {city_in}</strong> и России — курьер и регионы</li>'
+            f'<li><strong>Бронь на сайте</strong> — оплата при получении</li>'
+        )
+        close = (
+            f'<p><strong>IQOS купить в {city_in}</strong>, купить LIL SOLID и стики — с {brand} просто и безопасно. '
+            f'Сравните модели и оформите заказ за несколько минут.</p>'
+        )
+        h2_cat = 'Полный каталог: IQOS, ILUMA, LIL SOLID, стики'
+    elif role == 'premium':
+        lead = (
+            f'<p><strong>{brand}</strong> — премиальная витрина <strong>IQOS ILUMA</strong> в {city_in}. '
+            f'<strong>Купить IQOS</strong>, <strong>купить илюма / ильюма / айкос</strong>, стики TEREA и HEETS, '
+            f'а также LIL SOLID — оригинал, бронь на сайте.</p>'
+        )
+        why = f'Почему {brand}'
+        bullets = (
+            f'<li><strong>Премиум IQOS ILUMA</strong> — Prime, Standart, One, лимитки</li>'
+            f'<li><strong>Весь каталог</strong> — TEREA, HEETS, LIL SOLID</li>'
+            f'<li><strong>Доставка по {city_in}</strong> и России</li>'
+            f'<li><strong>Бронь и оплата при получении</strong></li>'
+        )
+        close = (
+            f'<p>Оформите заказ в {brand}: <strong>купить IQOS ILUMA в {city_in}</strong> '
+            f'и подобрать стики тереа / heets без серых партий.</p>'
+        )
+        h2_cat = 'Каталог: IQOS ILUMA, LIL, TEREA, HEETS'
+    elif role == 'lil':
+        lead = (
+            f'<p><strong>{brand}</strong> — магазин <strong>LIL SOLID</strong> в {city_in}: '
+            f'<strong>купить лил солид</strong>, <strong>купить лил</strong>, LIL 3.0 / DUAL / 4.0. '
+            f'В том же каталоге — IQOS ILUMA (илюма), айкос, стики TEREA и HEETS.</p>'
+        )
+        why = f'Почему {brand}'
+        bullets = (
+            f'<li><strong>Специализация на LIL SOLID</strong> — 3.0, DUAL, 4.0</li>'
+            f'<li><strong>Полный каталог</strong> — ILUMA, TEREA, HEETS</li>'
+            f'<li><strong>Доставка по {city_in}</strong> и России</li>'
+            f'<li><strong>Бронь на сайте</strong></li>'
+        )
+        close = (
+            f'<p><strong>Купить LIL SOLID в {city_in}</strong> и сравнить с ILUMA — в каталоге {brand}.</p>'
+        )
+        h2_cat = 'Каталог: LIL SOLID, IQOS ILUMA, стики'
+    else:  # specialist
+        lead = (
+            f'<p><strong>{brand}</strong> — специализированный магазин <strong>IQOS ILUMA</strong> и стиков '
+            f'<strong>TEREA</strong> в {city_in}. <strong>Купить илюма / ильюма / iluma / айкос</strong>, '
+            f'стики тереа; в каталоге также LIL SOLID и HEETS.</p>'
+        )
+        why = f'Почему {brand}'
+        bullets = (
+            f'<li><strong>Экспертиза ILUMA / TEREA</strong></li>'
+            f'<li><strong>Весь ассортимент</strong> — LIL SOLID, HEETS</li>'
+            f'<li><strong>Экспресс по {city_in}</strong>, доставка по России</li>'
+            f'<li><strong>Бронь и оплата при получении</strong></li>'
+        )
+        close = (
+            f'<p><strong>Купить IQOS ILUMA в {city_in}</strong> у специалиста {brand} — '
+            f'подберём модель и вкусы TEREA.</p>'
+        )
+        h2_cat = 'Каталог: ILUMA, TEREA, LIL SOLID, HEETS'
+
+    return (
+        lead
+        + f'<h2>{h2_cat}</h2>'
+        + f'<p>{catalog}</p>'
+        + f'<h2>{why.format(brand=brand)}</h2>'
+        + '<ul>'
+        + bullets
+        + '</ul>'
+        + close
+    )
