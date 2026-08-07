@@ -16,7 +16,7 @@ def _is_main_shop() -> bool:
     try:
         import config
         url = (getattr(config, 'SITE_URL', None) or '').lower()
-        if 'iqos-store' in url or 'lilsolid' in url:
+        if 'iqos-store' in url or 'lilsolid' in url or 'iluma-iqos' in url or 'iluma' in url:
             return False
         return 'lilstore' in url
     except ImportError:

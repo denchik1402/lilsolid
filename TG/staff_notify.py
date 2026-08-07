@@ -22,23 +22,45 @@ def get_bot_token():
     return token
 
 
+def get_config_admin_ids() -> list[int]:
+    """TELEGRAM_ADMIN_IDS из config/env — всегда в получателях заказов."""
+    raw = os.environ.get('TELEGRAM_ADMIN_IDS', '')
+    try:
+        import config
+        raw = raw or getattr(config, 'TELEGRAM_ADMIN_IDS', '') or ''
+    except ImportError:
+        pass
+    ids: list[int] = []
+    for x in str(raw).replace(',', ' ').split():
+        try:
+            ids.append(int(x.strip()))
+        except ValueError:
+            pass
+    return ids
+
+
 def get_staff_telegram_ids(roles=STAFF_ROLES) -> list[int]:
-    """Telegram ID всех пользователей с ролями staff из локальной БД."""
+    """Telegram ID staff из локальной БД + TELEGRAM_ADMIN_IDS (если роль admin запрошена)."""
+    ids: list[int] = []
+    seen: set[int] = set()
     try:
         from app import app
         from models import TelegramUser
         with app.app_context():
             users = TelegramUser.query.filter(TelegramUser.role.in_(tuple(roles))).all()
-            ids = []
-            seen = set()
             for u in users:
                 tid = int(u.telegram_id)
                 if tid and tid not in seen:
                     seen.add(tid)
                     ids.append(tid)
-            return ids
     except Exception:
-        return []
+        pass
+    if 'admin' in roles or 'boss' in roles:
+        for tid in get_config_admin_ids():
+            if tid not in seen:
+                seen.add(tid)
+                ids.append(tid)
+    return ids
 
 
 def _staff_sync_url() -> str:
@@ -56,7 +78,7 @@ def _staff_sync_url() -> str:
 
 
 def fetch_remote_staff_telegram_ids(bot_token: str, roles=STAFF_ROLES) -> list[int]:
-    """Staff IDs с основного сервера (iqos-store / lilsolid)."""
+    """Staff IDs с основного сервера (iqos-store / lilsolid / iluma)."""
     if not bot_token:
         return []
     try:
@@ -65,8 +87,9 @@ def fetch_remote_staff_telegram_ids(bot_token: str, roles=STAFF_ROLES) -> list[i
         import hashlib
         def derive_sync_secret(t):
             return hashlib.sha256(f'notify-sync:{t}'.encode()).hexdigest()
+    qs = urllib.parse.urlencode({'roles': ','.join(roles)})
     req = urllib.request.Request(
-        _staff_sync_url(),
+        f'{_staff_sync_url()}?{qs}',
         headers={
             'X-Notify-Sync': derive_sync_secret(bot_token),
             'User-Agent': 'LilStore-StaffSync/1.0',
@@ -105,15 +128,21 @@ def get_group_chat_id():
     return chat_id
 
 
-def collect_notification_chat_ids(roles=STAFF_ROLES, include_group=True) -> list[int | str]:
-    """Уникальные chat_id: staff в личку + опционально группа."""
+def collect_notification_chat_ids(roles=STAFF_ROLES, include_group=True,
+                                  include_remote=True) -> list[int | str]:
+    """Уникальные chat_id: staff в личку + опционально группа.
+
+    Локальная БД + TELEGRAM_ADMIN_IDS + (опционально) staff с хаба.
+    """
     targets: list[int | str] = []
     seen = set()
 
-    staff_ids = get_staff_telegram_ids(roles)
-    if not staff_ids:
+    staff_ids = list(get_staff_telegram_ids(roles))
+    if include_remote:
         token = get_bot_token() or ''
-        staff_ids = fetch_remote_staff_telegram_ids(token, roles)
+        for tid in fetch_remote_staff_telegram_ids(token, roles):
+            if tid not in staff_ids:
+                staff_ids.append(tid)
 
     for tid in staff_ids:
         key = str(tid)
@@ -132,6 +161,7 @@ def collect_notification_chat_ids(roles=STAFF_ROLES, include_group=True) -> list
 
 def send_telegram_messages(text: str, *, reply_markup: dict | None = None,
                            roles=STAFF_ROLES, include_group=True,
+                           include_remote=True,
                            exclude_telegram_ids=None,
                            return_placements: bool = False):
     """
@@ -145,7 +175,9 @@ def send_telegram_messages(text: str, *, reply_markup: dict | None = None,
         return False, 'Telegram не настроен (TELEGRAM_BOT_TOKEN)'
 
     exclude = {str(x) for x in (exclude_telegram_ids or [])}
-    chat_ids = collect_notification_chat_ids(roles=roles, include_group=include_group)
+    chat_ids = collect_notification_chat_ids(
+        roles=roles, include_group=include_group, include_remote=include_remote,
+    )
     chat_ids = [cid for cid in chat_ids if str(cid) not in exclude]
     if not chat_ids:
         if return_placements:
@@ -156,6 +188,14 @@ def send_telegram_messages(text: str, *, reply_markup: dict | None = None,
     errors = []
     sent = 0
     placements: list[tuple[int | str, int]] = []
+
+    def _post(payload: dict) -> dict:
+        data = urllib.parse.urlencode(payload).encode()
+        req = urllib.request.Request(url, data=data, method='POST')
+        req.add_header('Content-Type', 'application/x-www-form-urlencoded')
+        with urllib.request.urlopen(req, timeout=15) as resp:
+            return json.loads(resp.read().decode())
+
     for chat_id in chat_ids:
         payload = {
             'chat_id': chat_id,
@@ -165,20 +205,36 @@ def send_telegram_messages(text: str, *, reply_markup: dict | None = None,
         }
         if reply_markup is not None:
             payload['reply_markup'] = json.dumps(reply_markup)
-        data = urllib.parse.urlencode(payload).encode()
         try:
-            req = urllib.request.Request(url, data=data, method='POST')
-            req.add_header('Content-Type', 'application/x-www-form-urlencoded')
-            with urllib.request.urlopen(req, timeout=5) as resp:
-                result = json.loads(resp.read().decode())
-                if result.get('ok'):
+            result = _post(payload)
+            if result.get('ok'):
+                sent += 1
+                if return_placements:
+                    msg_id = result.get('result', {}).get('message_id')
+                    if msg_id is not None:
+                        placements.append((chat_id, int(msg_id)))
+                continue
+            desc = str(result.get('description', chat_id))
+            # Часто ломает parse_mode HTML из‑за < в названии товара — повтор без HTML
+            if 'parse' in desc.lower() or 'entities' in desc.lower():
+                payload_plain = {
+                    'chat_id': chat_id,
+                    'text': text,
+                    'disable_web_page_preview': True,
+                }
+                if reply_markup is not None:
+                    payload_plain['reply_markup'] = json.dumps(reply_markup)
+                result2 = _post(payload_plain)
+                if result2.get('ok'):
                     sent += 1
                     if return_placements:
-                        msg_id = result.get('result', {}).get('message_id')
+                        msg_id = result2.get('result', {}).get('message_id')
                         if msg_id is not None:
                             placements.append((chat_id, int(msg_id)))
-                else:
-                    errors.append(str(result.get('description', chat_id)))
+                    continue
+                errors.append(str(result2.get('description', chat_id)))
+            else:
+                errors.append(desc)
         except Exception as exc:
             errors.append(str(exc))
 

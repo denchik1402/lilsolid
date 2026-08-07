@@ -1,81 +1,37 @@
 # -*- coding: utf-8 -*-
 """
 Отправка уведомлений о заказах в Telegram.
-Чат для уведомлений: куда добавлен бот (сохраняется автоматически или через /set_notify).
-TELEGRAM_CHAT_ID в config — запасной вариант.
+Рассылка: admin, boss, courier (личка) + групповой чат (если настроен /set_notify).
 """
 
 import os
-import urllib.request
-import urllib.parse
-import json
 import logging
 import threading
+from html import escape
+from urllib.parse import urlparse
 
-from staff_notify import send_telegram_messages
+from staff_notify import send_telegram_messages, get_group_chat_id, get_bot_token
 from order_notify import order_take_button_markup, register_order_notify_messages
 
 _logger = logging.getLogger(__name__)
 
 
 def get_config():
-    """Token и chat_id для уведомлений (config.py или BotSetting на этом сайте)."""
-    token = os.environ.get('TELEGRAM_BOT_TOKEN')
-    chat_id = os.environ.get('TELEGRAM_CHAT_ID')
-    if os.path.exists('config.py'):
-        try:
-            import config
-            token = token or getattr(config, 'TELEGRAM_BOT_TOKEN', None)
-            chat_id = chat_id or getattr(config, 'TELEGRAM_CHAT_ID', None) or None
-        except ImportError:
-            pass
-    try:
-        from flask import has_request_context
-        from models import BotSetting
-        if has_request_context():
-            s = BotSetting.query.filter_by(key='notification_chat_id').first()
-            if s and s.value:
-                chat_id = s.value
-        else:
-            from app import app
-            with app.app_context():
-                s = BotSetting.query.filter_by(key='notification_chat_id').first()
-                if s and s.value:
-                    chat_id = s.value
-    except Exception:
-        pass
-    if not chat_id and token:
-        try:
-            from notify_sync import sync_notification_chat_to_local_db
-            if sync_notification_chat_to_local_db():
-                from flask import has_request_context
-                from models import BotSetting
-                if has_request_context():
-                    s = BotSetting.query.filter_by(key='notification_chat_id').first()
-                    if s and s.value:
-                        chat_id = s.value
-                else:
-                    from app import app
-                    with app.app_context():
-                        s = BotSetting.query.filter_by(key='notification_chat_id').first()
-                        if s and s.value:
-                            chat_id = s.value
-        except Exception:
-            pass
+    """Получает token и chat_id (группа — для обратной совместимости)."""
+    token = get_bot_token()
+    chat_id = get_group_chat_id()
     return token, chat_id
 
 
 def _site_order_label() -> str:
-    """Домен витрины для Telegram (iqos-store.ru / lilsolid.ru / lilstore.ru)."""
+    """Домен витрины: lilstore.ru / iqos-store.ru / lilsolid.ru / iluma-iqos.ru."""
     url = os.environ.get('SITE_URL', '')
-    brand = ''
-    if not url:
+    if not url and os.path.exists('config.py'):
         try:
             import config
             url = getattr(config, 'SITE_URL', None) or ''
-            brand = getattr(config, 'SITE_BRAND_NAME', None) or ''
         except ImportError:
-            url = ''
+            pass
     if not url:
         try:
             from flask import has_request_context, request
@@ -83,7 +39,6 @@ def _site_order_label() -> str:
                 url = request.url_root.rstrip('/')
         except Exception:
             pass
-    from urllib.parse import urlparse
     parsed = urlparse(url if '://' in (url or '') else f'https://{url or ""}')
     host = (parsed.netloc or '').lower()
     if host.startswith('www.'):
@@ -92,41 +47,47 @@ def _site_order_label() -> str:
         return 'iqos-store.ru'
     if 'lilsolid' in host:
         return 'lilsolid.ru'
+    if 'iluma-iqos' in host or host.startswith('iluma'):
+        return 'iluma-iqos.ru'
     if 'lilstore' in host:
         return 'lilstore.ru'
-    return host or 'lilsolid.ru'
+    return host or 'lilstore.ru'
 
 
 def format_order_message(order):
-    """Форматирует заказ для красивого отображения в Telegram"""
+    """Форматирует заказ для Telegram (HTML-safe)."""
     lines = [
         f"🛒 <b>НОВЫЙ ЗАКАЗ</b> · {_site_order_label()}",
         "",
-        f"📋 Номер: <code>{order.order_number}</code>",
-        f"👤 Клиент: {order.customer_name}",
-        f"📞 Телефон: {order.customer_phone}",
-        f"✉️ Email: {order.customer_email or '—'}",
+        f"📋 Номер: <code>{escape(str(order.order_number or ''))}</code>",
+        f"👤 Клиент: {escape(str(order.customer_name or '—'))}",
+        f"📞 Телефон: {escape(str(order.customer_phone or '—'))}",
+        f"✉️ Email: {escape(str(order.customer_email or '—'))}",
         "",
         "📦 <b>Товары:</b>",
     ]
-    
+
     for item in order.items:
         product_name = item.product.name if item.product else f"Товар #{item.product_id}"
-        lines.append(f"  • {product_name} × {item.quantity} — {item.price * item.quantity:,.0f} ₽".replace(",", " "))
-    
-    total_str = f"{order.total_amount:,.0f}".replace(",", " ")
+        line_sum = (item.price or 0) * (item.quantity or 0)
+        lines.append(
+            f"  • {escape(str(product_name))} × {int(item.quantity or 0)} — "
+            f"{line_sum:,.0f} ₽".replace(",", " ")
+        )
+
+    total_str = f"{(order.total_amount or 0):,.0f}".replace(",", " ")
     lines.extend([
         "",
         f"💰 <b>Итого: {total_str} ₽</b>",
         "",
-        f"📍 Адрес доставки: {order.delivery_address or '—'}",
-        f"🚚 Доставка: от 0 ₽ (зависит от адреса); сроки уточнит менеджер",
-        f"💳 Оплата: При получении",
+        f"📍 Адрес доставки: {escape(str(order.delivery_address or '—'))}",
+        "🚚 Доставка: от 0 ₽ (зависит от адреса); сроки уточнит менеджер",
+        "💳 Оплата: При получении",
     ])
-    
+
     if order.comment:
-        lines.extend(["", f"💬 Комментарий: {order.comment}"])
-    
+        lines.extend(["", f"💬 Комментарий: {escape(str(order.comment))}"])
+
     return "\n".join(lines)
 
 
@@ -137,12 +98,17 @@ def send_order_to_telegram(order):
     ok, err, placements = send_telegram_messages(
         text, reply_markup=markup, return_placements=True,
     )
+    if not ok:
+        _logger.warning('[Telegram] с кнопкой не ушло (%s), повтор без markup', err)
+        ok, err, placements = send_telegram_messages(
+            text, reply_markup=None, return_placements=True,
+        )
     if ok and placements:
-        register_order_notify_messages(order.order_number, placements)
+        try:
+            register_order_notify_messages(order.order_number, placements)
+        except Exception as reg_err:
+            _logger.warning('[Telegram] register placements: %s', reg_err)
     return ok, err
-
-
-
 
 
 def send_order_to_telegram_async(order_id: int) -> None:
@@ -154,18 +120,22 @@ def send_order_to_telegram_async(order_id: int) -> None:
             with app.app_context():
                 order = Order.query.get(order_id)
                 if not order:
+                    _logger.warning('[Telegram] order_id=%s не найден', order_id)
                     return
                 ok, err = send_order_to_telegram(order)
                 if not ok:
-                    _logger.warning('[Telegram] Заказ %s: %s', order.order_number, err)
+                    _logger.error('[Telegram] Заказ %s НЕ отправлен: %s', order.order_number, err)
+                else:
+                    _logger.info('[Telegram] Заказ %s отправлен', order.order_number)
         except Exception as exc:
-            _logger.warning('[Telegram] async order_id=%s: %s', order_id, exc)
+            _logger.exception('[Telegram] async order_id=%s: %s', order_id, exc)
 
     threading.Thread(
         target=_worker,
         daemon=True,
         name=f'tg-order-{order_id}',
     ).start()
+
 
 def format_review_pending_message(review):
     """Форматирует отзыв на модерации для Telegram"""
@@ -178,15 +148,15 @@ def format_review_pending_message(review):
     stars = "★" * review.rating + "☆" * (5 - review.rating)
     return (
         f"💬 <b>НОВЫЙ ОТЗЫВ НА МОДЕРАЦИИ</b>\n\n"
-        f"📦 Товар: {product_name}\n"
-        f"👤 Автор: {review.customer_name}\n"
+        f"📦 Товар: {escape(str(product_name))}\n"
+        f"👤 Автор: {escape(str(review.customer_name or ''))}\n"
         f"⭐ Оценка: {stars}\n\n"
-        f"📝 Текст:\n{review.text}"
+        f"📝 Текст:\n{escape(str(review.text or ''))}"
     )
 
 
 def send_review_pending_to_telegram(review):
-    """Отправляет уведомление об отзыве всем staff."""
+    """Отправляет уведомление об отзыве всем staff с кнопками одобрения/отклонения"""
     text = format_review_pending_message(review)
     reply_markup = {
         "inline_keyboard": [[
