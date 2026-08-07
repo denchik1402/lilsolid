@@ -1,9 +1,9 @@
 {% extends "base.html" %}
 
 {% block meta_robots %}{% if request.args %}noindex, follow{% else %}index, follow{% endif %}{% endblock %}
-{% block title %}Купить LIL SOLID, лил солид в Москве | IQOS ILUMA, TEREA, HEETS | LIL SOLID{% endblock %}
-{% block meta_description %}Купить LIL SOLID (лил солид, лил) 3.0 / DUAL / 4.0 в {{ site_city_in }}. Также IQOS ILUMA, илюма, айкос, стики TEREA и HEETS. Оригинал, бронь, доставка по России.{% endblock %}
-{% block meta_keywords %}купить LIL SOLID, купить лил солид, купить лил, LIL SOLID 4.0, купить IQOS, купить илюма, купить айкос, стики TEREA, HEETS, lilsolid, Москва{% endblock %}
+{% block title %}Купить LIL SOLID и илюма в Москве | лил солид, IQOS ILUMA, TEREA | LIL SOLID{% endblock %}
+{% block meta_description %}Купить лил солид 3.0/DUAL/4.0 и илюма (IQOS ILUMA) в {{ site_city_in }}. Стики TEREA и HEETS. Оригинал, бронь, доставка по России.{% endblock %}
+{% block meta_keywords %}купить лил солид, купить LIL SOLID, купить лил, купить илюма, купить IQOS ILUMA, стики TEREA, HEETS, lilsolid, Москва{% endblock %}
 {% block og_title %}Купить LIL SOLID, IQOS и стики | {{ site_brand_name }}{% endblock %}
 {% block og_description %}Оригинальные устройства IQOS ILUMA, LIL SOLID и стики TEREA. Доставка день в день по {{ site_city_in }}.{% endblock %}
 {% block schema_ld %}
@@ -343,6 +343,8 @@
         <div class="psc-item">
             <div class="product-card position-relative h-100">
                 <span class="badge bg-danger position-absolute top-0 start-0 m-2 product-badge-hit">Хит</span>
+                {% include 'includes/discount_badge.html' %}
+                {% include 'includes/compare_btn.html' %}
                 {% include 'includes/favorite_btn.html' %}
                 <a href="{{ product|product_url }}" class="product-card-link text-decoration-none text-dark">
                     <div class="product-card-img-wrap">
@@ -389,6 +391,7 @@
         {% for product in new_products %}
         <div class="psc-item">
             <div class="product-card position-relative h-100">
+                {% include 'includes/discount_badge.html' %}
                 {% include 'includes/compare_btn.html' %}
                 {% include 'includes/favorite_btn.html' %}
                 <a href="{{ product|product_url }}" class="product-card-link text-decoration-none text-dark">

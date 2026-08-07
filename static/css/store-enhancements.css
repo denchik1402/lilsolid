@@ -88,15 +88,31 @@ body.luxury-store .home-model-tile,
     color: var(--text, #212529);
 }
 .product-discount-badge {
+    /* Под кнопками избранного/сравнения справа — иначе перекрывается и не видно */
     position: absolute;
-    top: 0.5rem;
+    top: calc(0.5rem + 36px + 0.4rem);
     right: 0.5rem;
-    z-index: 2;
-    font-size: 0.75rem;
+    left: auto;
+    z-index: 12;
+    font-size: 0.8rem;
+    font-weight: 700;
+    line-height: 1.2;
+    padding: 0.4em 0.55em;
+    pointer-events: none;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.18);
+}
+@media (max-width: 576px) {
+    .product-discount-badge {
+        top: calc(4px + 28px + 6px);
+        right: 4px;
+        font-size: 0.72rem;
+        padding: 0.35em 0.45em;
+    }
 }
 .quick-view-btn {
     position: absolute;
-    top: calc(0.5rem + 36px + 0.35rem);
+    /* Ниже избранного и шильдика скидки */
+    top: calc(0.5rem + 36px + 0.4rem + 1.75rem + 0.35rem);
     right: 0.5rem;
     left: auto;
     bottom: auto;

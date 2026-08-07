@@ -445,8 +445,9 @@ def _generate_iqos_seo(product, name: str, price: str) -> dict[str, str]:
 
     kw = [
         name, f'купить {name}', f'buy {name}',
+        'купить илюма', 'купить ильюма', 'илюма', 'ильюма', 'iluma', 'айкос илюма',
         line, 'IQOS ILUMA', 'IQOS Iluma i', 'ILUMA',
-        'купить IQOS', 'buy IQOS ILUMA', 'нагреватель IQOS', 'IQOS без лезвия',
+        'купить IQOS', 'купить айкос', 'buy IQOS ILUMA', 'нагреватель IQOS', 'IQOS без лезвия',
         'SMARTCORE', 'original IQOS', 'оригинал IQOS', SITE, CITY_RU, CITY_EN,
     ]
     if color_en:
