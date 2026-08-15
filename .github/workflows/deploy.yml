@@ -28,7 +28,8 @@ jobs:
             chown -hR lilstore:lilstore "$APP_DIR"
 
             echo "=== 2. git pull ==="
-            sudo -u lilstore bash -c "cd $APP_DIR && git config --global --add safe.directory $APP_DIR && git fetch origin main && git reset --hard origin/main && git clean -fd alembic/versions/"
+            rm -f /home/lilstore/.gitconfig.lock 2>/dev/null || true
+            sudo -u lilstore bash -c "cd $APP_DIR && git -c safe.directory=$APP_DIR fetch origin main && git -c safe.directory=$APP_DIR reset --hard origin/main && git -c safe.directory=$APP_DIR clean -fd alembic/versions/"
 
             echo "=== 3. pip install ==="
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && pip install -r requirements.txt --quiet"
