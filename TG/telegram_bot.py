@@ -436,6 +436,7 @@ async def handle_checkout_message(update: Update, context: ContextTypes.DEFAULT_
             delivery_method='Самовывоз',
             payment_method='При получении',
             comment='',
+            status='new',
             total_amount=total,
             promo_code=applied_promo,
             discount_amount=discount
@@ -493,10 +494,25 @@ async def show_courier_orders(update_or_query, context, is_callback: bool, page=
         return
 
     with app.app_context():
+        from order_status import heal_order_status_from_taken, status_label
         q = Order.query.filter(Order.status.in_(['new', 'processing']))
         if show_my_only == 'my':
             q = q.filter(Order.courier_telegram_id == user_id)
         orders = q.order_by(Order.created_at.desc()).all()
+        healed = False
+        for o in orders:
+            try:
+                if heal_order_status_from_taken(o):
+                    healed = True
+            except Exception:
+                pass
+        if healed:
+            try:
+                db.session.commit()
+            except Exception:
+                db.session.rollback()
+        # после heal могли стать completed — оставим только активные
+        orders = [o for o in orders if o.status in ('new', 'processing')]
         total = len(orders)
         start = page * PAGE_SIZE
         page_orders = orders[start:start + PAGE_SIZE]
@@ -515,6 +531,7 @@ async def show_courier_orders(update_or_query, context, is_callback: bool, page=
                 e = em.get(o.status, "•")
                 is_mine = o.courier_telegram_id == user_id
                 text += f"{e} <b>{num}. Заказ: {o.order_number}</b>" + (" (мой)" if is_mine else "") + "\n"
+                text += f"   Статус: {status_label(o.status)}\n"
                 text += f"   {o.customer_name} | {o.customer_phone or '—'}\n"
                 text += f"   📍 {o.delivery_address or '—'}\n"
                 for item_line in format_order_items_brief(o.items):
@@ -527,12 +544,16 @@ async def show_courier_orders(update_or_query, context, is_callback: bool, page=
         for idx, o in enumerate(page_orders):
             num = start + idx + 1
             row = [InlineKeyboardButton(str(num), callback_data="noop")]
-            if o.courier_telegram_id != user_id:
+            is_mine = o.courier_telegram_id == user_id
+            # Пока заказ никто не взял — только «Взять». Иначе случайно жмут «Выполнен»
+            # и на сайте сразу «Получен», хотя в уведомлении ещё «в работе».
+            if not is_mine:
                 row.append(InlineKeyboardButton("📌 Взять", callback_data=f"courier_take_{o.id}"))
+            else:
+                row.append(InlineKeyboardButton("✅ Получен", callback_data=f"complete_{o.id}"))
+                row.append(InlineKeyboardButton("❌ Отказ", callback_data=f"courier_cancel_{o.id}"))
             in_route = str(o.id) in route_ids
             row.append(InlineKeyboardButton("➖ Из маршрута" if in_route else "➕ В маршрут", callback_data=f"courier_route_{'del' if in_route else 'add'}_{o.id}"))
-            row.append(InlineKeyboardButton("✅ Выполнен", callback_data=f"complete_{o.id}"))
-            row.append(InlineKeyboardButton("❌ Отказался", callback_data=f"courier_cancel_{o.id}"))
             keyboard.append(row)
         nav = []
         if page > 0:
@@ -1124,11 +1145,23 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         oid = int(data.replace("courier_take_", ""))
         app, db, Product, Category, Review, Order, OrderItem, TelegramUser, *_ = get_db()
         with app.app_context():
+            from order_status import STATUS_PROCESSING, apply_order_status, sync_taken_state
             order = Order.query.get(oid)
             if order and order.status in ('new', 'processing'):
+                if order.courier_telegram_id and order.courier_telegram_id != user_id:
+                    await query.answer("Заказ уже взят другим курьером.", show_alert=True)
+                    return
                 order.courier_telegram_id = user_id
-                order.status = 'processing'
+                apply_order_status(order, STATUS_PROCESSING, force=True)
                 db.session.commit()
+                display_name = _order_taker_display_name(query, user_id)
+                if order.order_number:
+                    sync_taken_state(
+                        order.order_number,
+                        telegram_id=user_id,
+                        display_name=display_name,
+                        outcome=STATUS_PROCESSING,
+                    )
         route = context.user_data.setdefault('courier_route_orders', set())
         if not isinstance(route, set):
             route = set(str(x) for x in route) if route else set()
@@ -1158,10 +1191,28 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         app, db, Product, Category, Review, Order, OrderItem, TelegramUser, *_ = get_db()
         oid = int(data.replace("complete_", ""))
         with app.app_context():
+            from order_status import STATUS_COMPLETED, apply_order_status, sync_taken_state
             order = Order.query.get(oid)
-            if order:
-                order.status = 'completed'
-                db.session.commit()
+            if not order:
+                await query.answer("Заказ не найден", show_alert=True)
+                return
+            if order.status == 'new' and order.courier_telegram_id != user_id:
+                await query.answer("Сначала нажмите «Взять», потом «Получен».", show_alert=True)
+                return
+            if order.courier_telegram_id and order.courier_telegram_id != user_id:
+                role = get_user_role(user_id)
+                if not role_can_access(role, 'boss'):
+                    await query.answer("Только тот, кто взял заказ, может отметить доставку.", show_alert=True)
+                    return
+            apply_order_status(order, STATUS_COMPLETED, force=True)
+            db.session.commit()
+            if order.order_number:
+                sync_taken_state(
+                    order.order_number,
+                    telegram_id=user_id,
+                    display_name=_order_taker_display_name(query, user_id),
+                    outcome=STATUS_COMPLETED,
+                )
         route = context.user_data.get('courier_route_orders') or set()
         if isinstance(route, set):
             route.discard(str(oid))
@@ -1172,11 +1223,29 @@ async def handle_callback(update: Update, context: ContextTypes.DEFAULT_TYPE):
         oid = int(data.replace("courier_cancel_", ""))
         app, db, Product, Category, Review, Order, OrderItem, TelegramUser, *_ = get_db()
         with app.app_context():
+            from order_status import STATUS_CANCELLED, apply_order_status, sync_taken_state
             order = Order.query.get(oid)
-            if order:
-                order.status = 'cancelled'
-                order.courier_telegram_id = None
-                db.session.commit()
+            if not order:
+                await query.answer("Заказ не найден", show_alert=True)
+                return
+            if order.status == 'new' and order.courier_telegram_id != user_id:
+                await query.answer("Сначала нажмите «Взять», или отмените из уведомления о заказе.", show_alert=True)
+                return
+            if order.courier_telegram_id and order.courier_telegram_id != user_id:
+                role = get_user_role(user_id)
+                if not role_can_access(role, 'boss'):
+                    await query.answer("Только тот, кто взял заказ, может отметить отказ.", show_alert=True)
+                    return
+            apply_order_status(order, STATUS_CANCELLED, force=True)
+            order.courier_telegram_id = None
+            db.session.commit()
+            if order.order_number:
+                sync_taken_state(
+                    order.order_number,
+                    telegram_id=user_id,
+                    display_name=_order_taker_display_name(query, user_id),
+                    outcome=STATUS_CANCELLED,
+                )
         route = context.user_data.get('courier_route_orders') or set()
         if isinstance(route, set):
             route.discard(str(oid))

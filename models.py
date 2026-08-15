@@ -194,6 +194,8 @@ class Order(db.Model):
     items = db.relationship('OrderItem', backref='order', lazy=True, cascade='all, delete-orphan')
     
     def __init__(self, *args, **kwargs):
+        if 'status' not in kwargs or not kwargs.get('status'):
+            kwargs['status'] = 'new'
         super().__init__(*args, **kwargs)
         self.generate_order_number()
     

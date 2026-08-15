@@ -1029,24 +1029,145 @@ def _normalize_phone(s):
     return str(s).replace(' ', '').replace('-', '').replace('(', '').replace(')', '').replace('+', '')
 
 
+
+def _order_track_clear_phone_session():
+    session.pop('order_track_phone', None)
+    session.pop('order_track_phone_at', None)
+
+
+def _order_track_phone_verified():
+    """Телефон подтверждён в этой сессии (TTL 60 мин)."""
+    from datetime import datetime, timedelta
+    phone = session.get('order_track_phone')
+    at = session.get('order_track_phone_at')
+    if not phone or not at:
+        return None
+    try:
+        when = datetime.fromisoformat(at)
+    except (TypeError, ValueError):
+        _order_track_clear_phone_session()
+        return None
+    if datetime.utcnow() - when > timedelta(minutes=60):
+        _order_track_clear_phone_session()
+        return None
+    return phone
+
+
+def _orders_for_phone(phone_norm: str):
+    """Все заказы с этим телефоном (с учётом разных форматов записи)."""
+    if not phone_norm:
+        return []
+    candidates = Order.query.order_by(Order.created_at.desc()).limit(500).all()
+    return [o for o in candidates if _normalize_phone(o.customer_phone) == phone_norm]
+
+
+def _heal_orders_status(orders):
+    from order_status import heal_order_status_from_taken
+    changed = False
+    for o in orders:
+        try:
+            if heal_order_status_from_taken(o):
+                changed = True
+        except Exception:
+            continue
+    if changed:
+        try:
+            db.session.commit()
+        except Exception:
+            db.session.rollback()
+
+
 @app.route('/order-track', methods=['GET', 'POST'])
 def order_track():
-    """Отслеживание заказа по номеру и телефону"""
+    """
+    Отслеживание:
+    - по номеру заказа → сразу карточка заказа;
+    - по телефону → только после подтверждения (последние 4 символа любого
+      номера заказа на этот телефон), затем список всех заказов.
+    """
+    from order_status import status_badge, status_label
+
     order = None
+    orders = None
     error = None
+    mode = (request.form.get('mode') or request.args.get('mode') or 'number').strip()
+    verified_phone = _order_track_phone_verified()
+
     if request.method == 'POST':
-        order_number = (request.form.get('order_number') or '').strip().upper()
-        phone = _normalize_phone((request.form.get('phone') or '').strip())
-        if not order_number or not phone:
-            error = 'Укажите номер заказа и телефон'
-        else:
-            order = Order.query.filter_by(order_number=order_number).first()
-            if not order:
-                error = 'Заказ не найден'
-            elif _normalize_phone(order.customer_phone) != phone:
-                error = 'Телефон не совпадает'
-                order = None
-    return render_template('order_track.html', order=order, error=error)
+        action = (request.form.get('action') or 'lookup').strip()
+
+        if action == 'logout_phone':
+            _order_track_clear_phone_session()
+            verified_phone = None
+            mode = 'phone'
+        elif mode == 'number' or action == 'by_number':
+            order_number = (request.form.get('order_number') or '').strip().upper()
+            if not order_number:
+                error = 'Укажите номер заказа'
+            else:
+                order = Order.query.filter_by(order_number=order_number).first()
+                if not order:
+                    error = 'Заказ не найден'
+                else:
+                    _heal_orders_status([order])
+                    order = db.session.get(Order, order.id)
+            mode = 'number'
+        elif mode == 'phone' or action in ('by_phone', 'verify_phone'):
+            mode = 'phone'
+            phone = _normalize_phone((request.form.get('phone') or '').strip())
+            code = (request.form.get('confirm_code') or '').strip().upper()
+            if verified_phone and phone and phone != verified_phone:
+                _order_track_clear_phone_session()
+                verified_phone = None
+            if verified_phone and not phone:
+                phone = verified_phone
+
+            if not phone:
+                error = 'Укажите номер телефона'
+            elif len(phone) < 10:
+                error = 'Проверьте номер телефона'
+            elif verified_phone == phone:
+                orders = _orders_for_phone(phone)
+                _heal_orders_status(orders)
+            elif not code:
+                error = (
+                    'Для просмотра заказов по телефону введите код подтверждения: '
+                    'последние 4 символа любого вашего номера заказа '
+                    '(он был на странице «Спасибо» после оформления).'
+                )
+            else:
+                code4 = re.sub(r'[^A-Z0-9]', '', code)[-4:]
+                if len(code4) < 4:
+                    error = 'Код подтверждения — 4 символа'
+                else:
+                    matched = [
+                        o for o in _orders_for_phone(phone)
+                        if (o.order_number or '').upper().endswith(code4)
+                    ]
+                    if not matched:
+                        error = 'Телефон или код подтверждения не совпали'
+                    else:
+                        from datetime import datetime
+                        session['order_track_phone'] = phone
+                        session['order_track_phone_at'] = datetime.utcnow().isoformat()
+                        verified_phone = phone
+                        orders = _orders_for_phone(phone)
+                        _heal_orders_status(orders)
+
+    elif verified_phone and mode == 'phone':
+        orders = _orders_for_phone(verified_phone)
+        _heal_orders_status(orders)
+
+    return render_template(
+        'order_track.html',
+        order=order,
+        orders=orders,
+        error=error,
+        mode=mode,
+        verified_phone=verified_phone,
+        status_label=status_label,
+        status_badge=status_badge,
+    )
 
 
 @app.route('/order-success/<int:order_id>')

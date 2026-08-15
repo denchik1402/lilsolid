@@ -73,7 +73,7 @@ def _markup_for_taken(order_number: str, taken: dict) -> dict:
         }
     return {
         'inline_keyboard': [[
-            {'text': '✔️Доставлен', 'callback_data': f'order_deliver_{order_number}'},
+            {'text': '✔️Получен', 'callback_data': f'order_deliver_{order_number}'},
             {'text': '❌Отказ', 'callback_data': f'order_refuse_{order_number}'},
         ]]
     }

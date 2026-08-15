@@ -1,55 +1,127 @@
 {% extends "base.html" %}
 
-{% block title %}Отслеживание заказа - {{ site_brand_name }}{% endblock %}
+{% block title %}Отслеживание заказа - LIL SOLID{% endblock %}
 {% block meta_robots %}noindex, follow{% endblock %}
 
 {% block content %}
 <div class="row justify-content-center py-5">
-    <div class="col-md-6">
-        <h2 class="mb-4">📦 Отслеживание заказа</h2>
-        <p class="text-muted mb-4">Введите номер заказа и телефон, указанный при оформлении.</p>
-        
+    <div class="col-md-7">
+        <h2 class="mb-3">📦 Отслеживание заказа</h2>
+        <p class="text-muted mb-4">Можно найти заказ по номеру или посмотреть все заказы по телефону (с подтверждением).</p>
+
+        <ul class="nav nav-pills mb-4">
+            <li class="nav-item">
+                <a class="nav-link {% if mode != 'phone' %}active{% endif %}" href="{{ url_for('order_track', mode='number') }}">По номеру заказа</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link {% if mode == 'phone' %}active{% endif %}" href="{{ url_for('order_track', mode='phone') }}">По телефону</a>
+            </li>
+        </ul>
+
+        {% if mode == 'phone' %}
         <form method="post" class="card shadow-sm mb-4">
             <div class="card-body">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
-                <div class="mb-3">
-                    <label class="form-label">Номер заказа</label>
-                    <input type="text" name="order_number" class="form-control form-control-lg" 
-                           placeholder="Например: ABC12345" value="{{ request.form.order_number or '' }}" required>
-                </div>
+                <input type="hidden" name="mode" value="phone">
+                <input type="hidden" name="action" value="by_phone">
                 <div class="mb-3">
                     <label class="form-label">Телефон</label>
-                    <input type="tel" name="phone" class="form-control form-control-lg" 
-                           placeholder="+7 999 123-45-67" value="{{ request.form.phone or '' }}" required>
+                    <input type="tel" name="phone" class="form-control form-control-lg"
+                           placeholder="+7 999 123-45-67"
+                           value="{{ verified_phone or request.form.phone or '' }}"
+                           {% if verified_phone %}readonly{% endif %} required>
                 </div>
-                <button type="submit" class="btn btn-primary btn-lg w-100">Проверить статус</button>
+                {% if not verified_phone %}
+                <div class="mb-3">
+                    <label class="form-label">Код подтверждения</label>
+                    <input type="text" name="confirm_code" class="form-control form-control-lg"
+                           placeholder="Например: 7K2A" maxlength="8" autocomplete="off" required>
+                    <div class="form-text">
+                        Последние 4 символа <strong>любого</strong> вашего номера заказа
+                        (на странице «Спасибо» после оформления). Так чужой человек не увидит ваши заказы.
+                    </div>
+                </div>
+                {% else %}
+                <div class="alert alert-light border small mb-3">
+                    Телефон подтверждён в этом браузере на ~60 минут: код снова вводить не нужно.
+                    Закроете вкладку или истечёт время — подтверждение спросим снова. Это не SMS и не вход в аккаунт.
+                </div>
+                {% endif %}
+                <button type="submit" class="btn btn-primary btn-lg w-100">
+                    {% if verified_phone %}Показать заказы{% else %}Подтвердить и показать{% endif %}
+                </button>
+                {% if verified_phone %}
+                <button type="submit" name="action" value="logout_phone" class="btn btn-link w-100 mt-2">Выйти с этого телефона</button>
+                {% endif %}
             </div>
         </form>
-        
+        {% else %}
+        <form method="post" class="card shadow-sm mb-4">
+            <div class="card-body">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <input type="hidden" name="mode" value="number">
+                <input type="hidden" name="action" value="by_number">
+                <div class="mb-3">
+                    <label class="form-label">Номер заказа</label>
+                    <input type="text" name="order_number" class="form-control form-control-lg"
+                           placeholder="Например: A1B2C3D4"
+                           value="{{ request.form.order_number or '' }}" required>
+                </div>
+                <button type="submit" class="btn btn-primary btn-lg w-100">Открыть заказ</button>
+            </div>
+        </form>
+        {% endif %}
+
         {% if error %}
         <div class="alert alert-danger">{{ error }}</div>
         {% endif %}
-        
-        {% if order %}
-        <div class="card shadow-sm">
-            <div class="card-header bg-primary text-white">
-                <h5 class="mb-0">Заказ {{ order.order_number }}</h5>
+
+        {% macro order_card(o) %}
+        <div class="card shadow-sm mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0">Заказ <code>{{ o.order_number }}</code></h5>
+                <span class="badge bg-{{ status_badge(o.status) }}">{{ status_label(o.status) }}</span>
             </div>
             <div class="card-body">
-                <p class="mb-2">
-                    <strong>Статус:</strong>
-                    {% if order.status == 'new' %}<span class="badge bg-info">Получен</span>
-                    {% elif order.status == 'processing' %}<span class="badge bg-primary">В работе</span>
-                    {% elif order.status == 'completed' %}<span class="badge bg-success">Доставлен</span>
-                    {% elif order.status == 'cancelled' %}<span class="badge bg-danger">Отменён</span>
-                    {% else %}<span class="badge bg-secondary">{{ order.status }}</span>{% endif %}
-                </p>
-                <p class="mb-2"><strong>Сумма:</strong> {{ order.total_amount|format_price }} ₽</p>
-                <p class="mb-0"><strong>Дата:</strong> {{ order.created_at.strftime('%d.%m.%Y %H:%M') if order.created_at else '—' }}</p>
+                <p class="mb-2"><strong>Сумма:</strong> {{ o.total_amount|format_price }} ₽</p>
+                <p class="mb-2"><strong>Дата:</strong> {{ o.created_at.strftime('%d.%m.%Y %H:%M') if o.created_at else '—' }}</p>
+                {% if o.items %}
+                <ul class="mb-0 small text-muted">
+                    {% for item in o.items %}
+                    <li>{{ item.product.name if item.product else 'Товар' }} × {{ item.quantity }}</li>
+                    {% endfor %}
+                </ul>
+                {% endif %}
             </div>
         </div>
+        {% endmacro %}
+
+        {% if order %}
+            {{ order_card(order) }}
         {% endif %}
-        
+
+        {% if orders is not none %}
+            {% if orders %}
+                <h5 class="mb-3">Ваши заказы ({{ orders|length }})</h5>
+                {% for o in orders %}
+                    {{ order_card(o) }}
+                {% endfor %}
+            {% else %}
+                <div class="alert alert-secondary">Заказов на этот телефон не найдено.</div>
+            {% endif %}
+        {% endif %}
+
+        <div class="alert alert-secondary small mt-3 mb-0">
+            <strong>Нет номера заказа?</strong>
+            Он показывается один раз на странице «Спасибо» сразу после оформления — сохраните его (скриншот или запишите).
+            Без номера список по телефону не открыть (код подтверждения — это как раз часть номера).
+            {% if telegram_bot_url %}
+            Напишите нам в <a href="{{ telegram_bot_url }}" target="_blank" rel="noopener">Telegram</a> с телефоном, с которого оформляли — подскажем номер.
+            {% else %}
+            Напишите нам в Telegram с телефоном, с которого оформляли — подскажем номер.
+            {% endif %}
+        </div>
+
         <p class="mt-4 text-center">
             <a href="/" class="btn btn-outline-secondary">← На главную</a>
         </p>

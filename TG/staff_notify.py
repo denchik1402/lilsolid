@@ -184,7 +184,9 @@ def send_telegram_messages(text: str, *, reply_markup: dict | None = None,
             return False, 'Нет получателей: назначьте роли admin/boss/courier и напишите боту /start', []
         return False, 'Нет получателей: назначьте роли admin/boss/courier и напишите боту /start'
 
-    url = f'https://api.telegram.org/bot{token}/sendMessage'
+    from telegram_api import telegram_method_url, telegram_request_headers
+
+    url = telegram_method_url(token, 'sendMessage')
     errors = []
     sent = 0
     placements: list[tuple[int | str, int]] = []
@@ -193,6 +195,8 @@ def send_telegram_messages(text: str, *, reply_markup: dict | None = None,
         data = urllib.parse.urlencode(payload).encode()
         req = urllib.request.Request(url, data=data, method='POST')
         req.add_header('Content-Type', 'application/x-www-form-urlencoded')
+        for k, v in telegram_request_headers().items():
+            req.add_header(k, v)
         with urllib.request.urlopen(req, timeout=15) as resp:
             return json.loads(resp.read().decode())
 
