@@ -840,6 +840,18 @@ def _get_cart_products(session_cart):
     return apply_cart_pricing(raw)
 
 
+def _parse_checkout_contact(form_data):
+    """Контакты + адрес + код доставки с тарифом."""
+    from delivery_options import normalize_delivery_code, delivery_fee
+
+    name = (form_data.get('name') or '').strip()[:100]
+    phone = (form_data.get('phone') or '').strip()[:20]
+    address = (form_data.get('address') or '').strip()[:500]
+    dcode = normalize_delivery_code(form_data.get('delivery'))
+    fee = float(delivery_fee(dcode))
+    return name, phone, address, dcode, fee
+
+
 @app.route('/cart')
 def cart():
     """Корзина"""
@@ -938,27 +950,32 @@ def checkout():
                 finalize_checkout_session(session, existing.id)
                 return redirect(url_for('order_success', order_id=existing.id))
 
+            name, phone, address, dcode, delivery_cost = _parse_checkout_contact(request.form)
+            if not name or not phone or not address:
+                flash('Заполните ФИО, телефон, адрес и выберите доставку.', 'danger')
+                return redirect(url_for('checkout'))
+
             _, server_subtotal = _get_cart_products(session.get('cart', {}))
             if server_subtotal <= 0:
                 return redirect(url_for('cart'))
             promo_code = (request.form.get('promo_code') or '').strip().upper()
-            server_discount, server_total = 0, server_subtotal
+            server_discount, goods_total = 0, server_subtotal
             if promo_code:
                 promo = PromoCode.query.filter_by(code=promo_code).first()
                 if promo and promo.is_valid():
-                    server_discount, server_total = promo.apply_discount(server_subtotal)
+                    server_discount, goods_total = promo.apply_discount(server_subtotal)
                     if server_discount > 0:
                         promo.used_count += 1
 
             order = Order(
-                customer_name=request.form.get('name', '').strip()[:100],
-                customer_phone=request.form.get('phone', '').strip()[:20],
+                customer_name=name,
+                customer_phone=phone,
                 customer_email=request.form.get('email', '').strip()[:100],
-                delivery_address=request.form.get('address', '').strip()[:500],
-                delivery_method=request.form.get('delivery', 'pickup')[:50],
+                delivery_address=address,
+                delivery_method=dcode,
                 payment_method=request.form.get('payment', 'store')[:50],
                 comment=request.form.get('comment', '')[:500],
-                total_amount=server_total,
+                total_amount=round(goods_total + delivery_cost, 2),
                 promo_code=promo_code if server_discount > 0 else None,
                 discount_amount=server_discount,
                 idempotency_key=idempotency_key,
@@ -1010,6 +1027,7 @@ def checkout():
     
     checkout_key = ensure_checkout_idempotency_key(session)
     from checkout_upsell import get_checkout_stick_upsell
+    from delivery_options import delivery_choices
     stick_upsell_sections = get_checkout_stick_upsell(session.get('cart', {}), _get_cart_products)
     return render_template(
         'checkout.html',
@@ -1020,6 +1038,7 @@ def checkout():
         checkout_idempotency_key=checkout_key,
         stick_upsell_sections=stick_upsell_sections,
         upsell_theme='cyber',
+        delivery_choices=delivery_choices(),
     )
 
 def _normalize_phone(s):

@@ -2,13 +2,12 @@
 """Контент и константы для SEO-блоков."""
 
 DELIVERY_RATES = {
-    'moscow_price': 0,
-    'moscow_note': 'точная стоимость зависит от адреса',
+    'moscow_price': 700,
+    'moscow_note': 'фиксированная стоимость по Москве',
     'moscow_same_day': 'Экспресс по Москве при заказе до 14:00',
     'moscow_cutoff': '14:00',
-    # По РФ фиксированной цены нет — менеджер называет при подтверждении заказа
-    'rf_from': None,
-    'rf_manager_note': 'стоимость доставки сообщит менеджер при подтверждении заказа',
+    'rf_from': 500,
+    'rf_manager_note': 'стоимость фиксированная для ТК',
     'rf_note': 'СДЭК и другие ТК по России',
     'days_moscow': 'сегодня или на следующий день',
     'days_rf': 'от 1–2 дней',
@@ -21,8 +20,8 @@ def format_delivery_moscow_price(rates=None) -> str:
     r = rates or DELIVERY_RATES
     price = r.get('moscow_price', 0)
     if price in (0, None, ''):
-        return 'от 0 ₽'
-    return f'от {int(price)} ₽'
+        return '—'
+    return f'{int(price)} ₽'
 
 
 def format_delivery_rf_text(rates=None) -> str:

@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block title %}Получение и оплата — {{ site_brand_name }}{% endblock %}
-{% block meta_description %}Доставка от 0 ₽ (стоимость зависит от адреса); в регионы — по срокам службы доставки. Оплата при получении. Условия доставки и оплаты в {{ site_brand_name }}.{% endblock %}
+{% block meta_description %}Доставка: ТК — 500 ₽, курьер по Москве — 700 ₽. Оплата при получении. Условия доставки и оплаты в {{ site_brand_name }}.{% endblock %}
 {% block schema_ld %}
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Главная","item":"{{ request.url_root.rstrip('/') }}/"},{"@type":"ListItem","position":2,"name":"Получение и оплата","item":"{{ request.url_root.rstrip('/') }}{{ url_for('delivery') }}"}]}
@@ -22,7 +22,7 @@
                 <h5>Доставка</h5>
             </div>
             <div class="card-body">
-                <p class="mb-2"><strong>Стоимость</strong> — от 0 ₽, точная сумма зависит от адреса доставки. Менеджер сообщит её при подтверждении брони.</p>
+                <p class="mb-2"><strong>Стоимость</strong> — ТК по России 500 ₽, курьер по Москве 700 ₽.</p>
                 <p class="mb-2"><strong>По Москве и МО</strong> — обычно в день заказа или на следующий (уточняется при звонке).</p>
                 <p class="mb-2"><strong>По России</strong> — СДЭК и другие ТК; срок от 1–2 дней, стоимость и сроки подтверждает менеджер.</p>
                 <p class="mb-0">После оформления брони мы свяжемся с вами для согласования адреса и времени.</p>

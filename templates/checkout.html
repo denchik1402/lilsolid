@@ -3,9 +3,13 @@
 {% block title %}Оформление заказа - {{ site_brand_name }}{% endblock %}
 {% block meta_robots %}noindex, follow{% endblock %}
 
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/checkout-upsell.css') }}?v=3">
+{% endblock %}
+
 {% block content %}
 <h1 class="mb-4">Оформление</h1>
-<p class="text-muted mb-4">Доставка от 0 ₽ — точная стоимость зависит от адреса. Сроки по Москве обычно день в день или на следующий; по России — от 1–2 дней. Менеджер подтвердит при звонке. Оплата при получении.</p>
+<p class="text-muted mb-4">Выберите способ доставки и укажите, как с вами связаться. Оплата при получении.</p>
 
 <form action="/checkout" method="post" id="checkoutForm">
     <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
@@ -41,8 +45,19 @@
                     <h5>Доставка</h5>
                 </div>
                 <div class="card-body">
-                    <p class="text-muted small mb-3">По Москве — 0–2 дня. В регионы срок зависит от службы доставки — менеджер перезвонит для подтверждения заказа.</p>
-                    <input type="hidden" name="delivery" value="delivery">
+                    <div class="mb-3">
+                        <label class="form-label d-block">Вид доставки *</label>
+                        {% for code, label, price in delivery_choices %}
+                        <div class="form-check mb-2">
+                            <input class="form-check-input delivery-option" type="radio" name="delivery"
+                                   id="delivery_{{ code }}" value="{{ code }}" data-fee="{{ price }}"
+                                   {% if loop.first %}checked{% endif %} required>
+                            <label class="form-check-label" for="delivery_{{ code }}">
+                                {{ label }} — <strong>{{ price }} ₽</strong>
+                            </label>
+                        </div>
+                        {% endfor %}
+                    </div>
                     <div class="mb-3">
                         <label class="form-label">Адрес доставки *</label>
                         <input type="text" name="address" id="checkoutAddress" class="form-control" placeholder="Начните вводить адрес: Москва, ул. Примерная, д. 1" required autocomplete="off">
@@ -108,7 +123,7 @@
                     </div>
                     <div class="d-flex justify-content-between">
                         <span>Доставка:</span>
-                        <span>от 0 ₽</span>
+                        <span id="checkoutDeliveryFee">{{ delivery_choices[0][2] if delivery_choices else 500 }} ₽</span>
                     </div>
                     <div class="d-flex justify-content-between text-success" id="promoDiscountRow" style="display:none!important;">
                         <span>Скидка:</span>
@@ -116,7 +131,7 @@
                     </div>
                     <div class="d-flex justify-content-between mt-2">
                         <strong>Итого:</strong>
-                        <strong id="checkoutTotal">{{ total|format_price }} ₽</strong>
+                        <strong id="checkoutTotal">{{ ((subtotal|default(total)|default(0)) + (delivery_choices[0][2] if delivery_choices else 500))|format_price }} ₽</strong>
                     </div>
                     <p class="text-muted small mb-0 mt-2">Оплата при доставке</p>
                     <button type="submit" class="btn btn-success btn-lg w-100 mt-3" {% if not cart_items %}disabled{% endif %}>Оплатить при получении</button>
@@ -186,38 +201,60 @@
 })();
 </script>
 <script>
-document.getElementById('checkoutForm').onsubmit = function(e) {
-    document.getElementById('totalAmount').value = document.getElementById('checkoutTotal').textContent.replace(/\s/g,'').replace('₽','');
-    if (this.dataset.submitting === '1') {
-        e.preventDefault();
-        return false;
-    }
-    this.dataset.submitting = '1';
-    var btn = this.querySelector('button[type="submit"]');
-    if (btn) {
-        btn.disabled = true;
-        btn.textContent = 'Оформляем…';
-    }
-    return true;
-};
 (function() {
-    var totalInput = document.getElementById('totalAmount');
-    if (totalInput) totalInput.setAttribute('data-total', {{ total|default(0) }});
+    var form = document.getElementById('checkoutForm');
+    if (!form) return;
+    var subtotalEl = document.getElementById('checkoutSubtotal');
+    var feeEl = document.getElementById('checkoutDeliveryFee');
+    var totalEl = document.getElementById('checkoutTotal');
+    var discountEl = document.getElementById('checkoutDiscount');
+    var discountRow = document.getElementById('promoDiscountRow');
+    var appliedDiscount = 0;
+
+    function goodsBase() {
+        return parseFloat((subtotalEl && subtotalEl.getAttribute('data-raw')) || '0') || 0;
+    }
+    function selectedFee() {
+        var checked = form.querySelector('.delivery-option:checked');
+        return checked ? (parseFloat(checked.getAttribute('data-fee')) || 0) : 0;
+    }
+    function refreshTotals() {
+        var fee = selectedFee();
+        var goods = Math.max(0, goodsBase() - appliedDiscount);
+        var total = goods + fee;
+        if (feeEl) feeEl.textContent = Math.round(fee).toLocaleString('ru-RU') + ' ₽';
+        if (totalEl) totalEl.textContent = Math.round(total).toLocaleString('ru-RU') + ' ₽';
+    }
+    form.querySelectorAll('.delivery-option').forEach(function(el) {
+        el.addEventListener('change', refreshTotals);
+    });
+    refreshTotals();
+
+    form.onsubmit = function(e) {
+        document.getElementById('totalAmount').value = document.getElementById('checkoutTotal').textContent.replace(/\s/g,'').replace('₽','');
+        if (this.dataset.submitting === '1') {
+            e.preventDefault();
+            return false;
+        }
+        this.dataset.submitting = '1';
+        var btn = this.querySelector('button[type="submit"]');
+        if (btn) {
+            btn.disabled = true;
+            btn.textContent = 'Оформляем…';
+        }
+        return true;
+    };
+
     var btn = document.getElementById('applyPromoBtn');
     var inp = document.getElementById('promoCodeInput');
     var msg = document.getElementById('promoMessage');
-    var discountRow = document.getElementById('promoDiscountRow');
-    var discountEl = document.getElementById('checkoutDiscount');
-    var totalEl = document.getElementById('checkoutTotal');
-    var subtotalEl = document.getElementById('checkoutSubtotal');
     if (!btn || !inp) return;
-    var appliedDiscount = 0;
-    var appliedFinal = {{ total|default(0) }};
     window.checkoutPromoReset = function(newTotal) {
         appliedDiscount = 0;
-        appliedFinal = newTotal;
+        if (subtotalEl) subtotalEl.setAttribute('data-raw', newTotal);
         if (msg) { msg.textContent = ''; msg.className = 'text-muted small mt-2 mb-0'; }
         if (discountRow) discountRow.style.display = 'none';
+        refreshTotals();
     };
     btn.addEventListener('click', function() {
         var code = inp.value.trim();
@@ -229,21 +266,17 @@ document.getElementById('checkoutForm').onsubmit = function(e) {
             .then(function(data) {
                 if (data.success) {
                     appliedDiscount = data.discount;
-                    appliedFinal = data.final;
                     msg.textContent = data.message;
                     msg.className = 'text-success small mt-2 mb-0';
                     discountRow.style.display = 'flex';
                     discountEl.textContent = '-' + Math.round(data.discount).toLocaleString('ru-RU') + ' ₽';
-                    totalEl.textContent = Math.round(data.final).toLocaleString('ru-RU') + ' ₽';
                 } else {
                     msg.textContent = data.error || 'Ошибка';
                     msg.className = 'text-danger small mt-2 mb-0';
                     discountRow.style.display = 'none';
                     appliedDiscount = 0;
-                    var raw = parseFloat(subtotalEl.getAttribute('data-raw')) || 0;
-                    appliedFinal = raw;
-                    totalEl.textContent = Math.round(raw).toLocaleString('ru-RU') + ' ₽';
                 }
+                refreshTotals();
             });
     });
 })();

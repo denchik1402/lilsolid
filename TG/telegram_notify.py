@@ -56,6 +56,8 @@ def _site_order_label() -> str:
 
 def format_order_message(order):
     """Форматирует заказ для Telegram (HTML-safe)."""
+    from delivery_options import format_delivery_line
+
     lines = [
         f"🛒 <b>НОВЫЙ ЗАКАЗ</b> · {_site_order_label()}",
         "",
@@ -67,9 +69,11 @@ def format_order_message(order):
         "📦 <b>Товары:</b>",
     ]
 
+    goods_sum = 0.0
     for item in order.items:
         product_name = item.product.name if item.product else f"Товар #{item.product_id}"
         line_sum = (item.price or 0) * (item.quantity or 0)
+        goods_sum += line_sum
         lines.append(
             f"  • {escape(str(product_name))} × {int(item.quantity or 0)} — "
             f"{line_sum:,.0f} ₽".replace(",", " ")
@@ -78,10 +82,11 @@ def format_order_message(order):
     total_str = f"{(order.total_amount or 0):,.0f}".replace(",", " ")
     lines.extend([
         "",
+        f"💰 Товары: {goods_sum:,.0f} ₽".replace(",", " "),
+        f"🚚 Доставка: {escape(format_delivery_line(order.delivery_method))}",
         f"💰 <b>Итого: {total_str} ₽</b>",
         "",
         f"📍 Адрес доставки: {escape(str(order.delivery_address or '—'))}",
-        "🚚 Доставка: от 0 ₽ (зависит от адреса); сроки уточнит менеджер",
         "💳 Оплата: При получении",
     ])
 
