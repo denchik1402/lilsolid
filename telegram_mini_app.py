@@ -127,15 +127,19 @@ def register(app, csrf, db, Product, Category, Order, OrderItem, PromoCode, get_
                 if server_discount > 0:
                     promo.used_count += 1
 
+        from delivery_options import normalize_delivery_code, delivery_fee
+
+        dcode = normalize_delivery_code(form_data.get('delivery'))
+        fee = float(delivery_fee(dcode))
         order = Order(
             customer_name=(form_data.get('name') or '').strip()[:100],
             customer_phone=(form_data.get('phone') or '').strip()[:20],
             customer_email=(form_data.get('email') or '').strip()[:100],
             delivery_address=(form_data.get('address') or '').strip()[:500],
-            delivery_method=(form_data.get('delivery') or 'delivery')[:50],
+            delivery_method=dcode,
             payment_method=(form_data.get('payment') or 'courier')[:50],
             comment=(form_data.get('comment') or '')[:500],
-            total_amount=server_total,
+            total_amount=round(float(server_total) + fee, 2),
             promo_code=promo_code if server_discount > 0 else None,
             discount_amount=server_discount,
             idempotency_key=idempotency_key,

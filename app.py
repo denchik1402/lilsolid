@@ -1393,15 +1393,19 @@ def api_one_click_order():
         return _one_click_json(existing)
 
     try:
+        from delivery_options import DEFAULT_DELIVERY, delivery_fee, delivery_label
+
+        dcode = DEFAULT_DELIVERY
+        fee = float(delivery_fee(dcode))
         order = Order(
             customer_name=name,
             customer_phone=phone,
             customer_email='',
             delivery_address='Уточнить у клиента (заказ в 1 клик)',
-            delivery_method='delivery',
+            delivery_method=dcode,
             payment_method='courier',
-            comment='Заказ в 1 клик с сайта',
-            total_amount=product.price,
+            comment=f'Заказ в 1 клик с сайта. Доставка по умолчанию: {delivery_label(dcode)}',
+            total_amount=round(float(product.price) + fee, 2),
             idempotency_key=idempotency_key,
         )
         db.session.add(order)
