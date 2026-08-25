@@ -163,6 +163,10 @@ def health():
     return jsonify({"status": "ok"}), 200
 
 
+from yesterday_orders_api import register_yesterday_orders_api
+register_yesterday_orders_api(app)
+
+
 @app.route('/version')
 def version():
     """Проверка версии деплоя — data-build в HTML должен совпадать"""
