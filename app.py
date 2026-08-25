@@ -1434,10 +1434,14 @@ def api_one_click_order():
 
     order = db.session.get(Order, order.id)
     try:
-        from telegram_notify import send_order_to_telegram_async
-        send_order_to_telegram_async(order.id)
+        # Для one-click отправляем синхронно: daemon-поток может оборваться
+        # при перезапуске воркера до фактической доставки в Telegram.
+        from telegram_notify import send_order_to_telegram
+        ok, err = send_order_to_telegram(order)
+        if not ok:
+            logger.warning('[Telegram] one-click order_id=%s not sent: %s', order.id, err)
     except Exception as e:
-        logger.warning('[Telegram async] one-click order_id=%s: %s', order.id, e)
+        logger.warning('[Telegram] one-click order_id=%s: %s', order.id, e)
 
     return _one_click_json(order)
 
