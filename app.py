@@ -1556,7 +1556,7 @@ def validate_promo():
 
 @app.route('/admin')
 def admin():
-    """Админ-панель: вкладки Товары, Отзывы, Статистика"""
+    """Админ-панель: данные грузим только для активной вкладки (быстрее на слабом VPS)."""
     login = _admin_or_login('admin.html')
     if login is not None:
         return login
@@ -1564,88 +1564,116 @@ def admin():
     date_from = request.args.get('date_from', '')
     date_to = request.args.get('date_to', '')
 
-    orders = Order.query.order_by(Order.created_at.desc()).all()
-    pending = Review.query.filter_by(status='pending').order_by(Review.created_at.desc()).all()
-    products = Product.query.order_by(Product.name).all()
-    categories = Category.query.all()
-    promo_codes = PromoCode.query.order_by(PromoCode.created_at.desc()).all()
+    # Лёгкие счётчики для бейджей на всех вкладках
     pending_reviews_count = Review.query.filter_by(status='pending').count()
     products_count = Product.query.count()
 
-    # Базовые запросы для статистики (без фильтра дат)
-    order_base = Order.query
-    review_base = Review.query
+    orders = []
+    pending = []
+    products = []
+    categories = []
+    promo_codes = []
+    banners = []
+    home_blocks = []
+    products_for_link = []
+    blog_posts = []
+    carousel_slides = []
+    device_models = []
+    device_model_counts = {}
+    top_products_by_views = []
+    banner_stats = []
 
-    # Фильтр по датам (по умолчанию — всё время)
-    from datetime import datetime as dt, time
-    if date_from:
-        try:
-            d_start = dt.combine(dt.strptime(date_from, '%Y-%m-%d').date(), time.min)
-            order_base = order_base.filter(Order.created_at >= d_start)
-            review_base = review_base.filter(Review.created_at >= d_start)
-        except ValueError as e:
-            logger.warning("Admin stats: invalid date_from %s: %s", date_from, e)
-    if date_to:
-        try:
-            d_end = dt.combine(dt.strptime(date_to, '%Y-%m-%d').date(), time.max)
-            order_base = order_base.filter(Order.created_at <= d_end)
-            review_base = review_base.filter(Review.created_at <= d_end)
-        except ValueError as e:
-            logger.warning("Admin stats: invalid date_to %s: %s", date_to, e)
-
-    # Статистика (с учётом фильтра)
-    total_orders = order_base.count()
-    new_orders = order_base.filter_by(status='new').count()
-    completed_orders = order_base.filter_by(status='completed').count()
-    total_revenue = order_base.filter(Order.status != 'cancelled').with_entities(db.func.sum(Order.total_amount)).scalar() or 0
-    approved_reviews_count = review_base.filter_by(status='approved').count()
-
-    # Данные для графиков
-    orders_for_chart = order_base.filter(Order.status != 'cancelled').all()
-    revenue_by_date = {}
-    for o in orders_for_chart:
-        d = o.created_at.date() if o.created_at else None
-        if d:
-            revenue_by_date[str(d)] = revenue_by_date.get(str(d), 0) + o.total_amount
-    chart_revenue_labels = sorted(revenue_by_date.keys())
-    chart_revenue_data = [revenue_by_date[k] for k in chart_revenue_labels]
-
-    orders_all = order_base.all()
-    status_counts = {'new': 0, 'processing': 0, 'completed': 0, 'cancelled': 0}
-    for o in orders_all:
-        status_counts[o.status] = status_counts.get(o.status, 0) + 1
+    total_orders = new_orders = completed_orders = approved_reviews_count = 0
+    total_revenue = 0
+    chart_revenue_labels = []
+    chart_revenue_data = []
     chart_status_labels = ['Новые', 'В работе', 'Выполнено', 'Отменено']
-    chart_status_data = [status_counts['new'], status_counts['processing'], status_counts['completed'], status_counts['cancelled']]
+    chart_status_data = [0, 0, 0, 0]
     chart_status_colors = ['#ffc107', '#0d6efd', '#198754', '#dc3545']
 
-    top_products_by_views = Product.query.order_by(Product.views.desc()).limit(10).all()
-    banner_stats = Banner.query.order_by(Banner.sort_order, Banner.id).limit(15).all()
+    if tab == 'orders':
+        orders = Order.query.order_by(Order.created_at.desc()).limit(300).all()
+    elif tab == 'products':
+        products = Product.query.order_by(Product.name).all()
+        categories = Category.query.order_by(Category.name).all()
+    elif tab == 'categories':
+        categories = Category.query.order_by(Category.name).all()
+    elif tab == 'models':
+        device_models = _query_device_models()
+        device_model_counts = _device_model_product_counts()
+    elif tab == 'reviews':
+        pending = (
+            Review.query.filter_by(status='pending')
+            .options(joinedload(Review.product))
+            .order_by(Review.created_at.desc())
+            .all()
+        )
+    elif tab == 'promo':
+        promo_codes = PromoCode.query.order_by(PromoCode.created_at.desc()).all()
+    elif tab == 'banners':
+        banners = Banner.query.order_by(Banner.sort_order, Banner.id).all()
+        home_blocks = HomeBlock.query.order_by(HomeBlock.position).all()
+        products_for_link = Product.query.order_by(Product.name).limit(200).all()
+        class CarouselSlideInfo:
+            __slots__ = ('type', 'title', 'obj', 'sort_order')
+            def __init__(self, type_, title, obj=None, sort_order=None):
+                self.type = type_
+                self.title = title
+                self.obj = obj
+                self.sort_order = sort_order
+        banners_in_carousel = Banner.query.filter_by(is_active=True).order_by(Banner.sort_order, Banner.id).limit(15).all()
+        if banners_in_carousel:
+            carousel_slides = [CarouselSlideInfo('banner', b.title, b, b.sort_order) for b in banners_in_carousel]
+        else:
+            promo_prods = Product.query.filter(Product.old_price.isnot(None), Product.old_price > 0).order_by(Product.created_at.desc()).limit(6).all()
+            if not promo_prods:
+                promo_prods = Product.query.order_by(Product.views.desc()).limit(5).all()
+            if not promo_prods:
+                promo_prods = Product.query.order_by(Product.created_at.desc()).limit(5).all()
+            carousel_slides = [CarouselSlideInfo('product', p.name, p, i) for i, p in enumerate(promo_prods[:5])]
+    elif tab == 'blog':
+        blog_posts = BlogPost.query.order_by(BlogPost.created_at.desc()).limit(100).all()
+    elif tab == 'stats':
+        from datetime import datetime as dt, time
+        order_base = Order.query
+        review_base = Review.query
+        if date_from:
+            try:
+                d_start = dt.combine(dt.strptime(date_from, '%Y-%m-%d').date(), time.min)
+                order_base = order_base.filter(Order.created_at >= d_start)
+                review_base = review_base.filter(Review.created_at >= d_start)
+            except ValueError as e:
+                logger.warning("Admin stats: invalid date_from %s: %s", date_from, e)
+        if date_to:
+            try:
+                d_end = dt.combine(dt.strptime(date_to, '%Y-%m-%d').date(), time.max)
+                order_base = order_base.filter(Order.created_at <= d_end)
+                review_base = review_base.filter(Review.created_at <= d_end)
+            except ValueError as e:
+                logger.warning("Admin stats: invalid date_to %s: %s", date_to, e)
 
-    banners = Banner.query.order_by(Banner.sort_order, Banner.id).all()
-    home_blocks = HomeBlock.query.order_by(HomeBlock.position).all()
-    products_for_link = Product.query.order_by(Product.name).limit(200).all()
-    blog_posts = BlogPost.query.order_by(BlogPost.created_at.desc()).all()
+        total_orders = order_base.count()
+        new_orders = order_base.filter_by(status='new').count()
+        completed_orders = order_base.filter_by(status='completed').count()
+        total_revenue = order_base.filter(Order.status != 'cancelled').with_entities(db.func.sum(Order.total_amount)).scalar() or 0
+        approved_reviews_count = review_base.filter_by(status='approved').count()
 
-    # Что сейчас в карусели на главной (для отображения в админке)
-    class CarouselSlideInfo:
-        """Слайд для отображения в админке (баннер или товар)"""
-        __slots__ = ('type', 'title', 'obj', 'sort_order')
-        def __init__(self, type_, title, obj=None, sort_order=None):
-            self.type = type_
-            self.title = title
-            self.obj = obj
-            self.sort_order = sort_order
+        orders_for_chart = order_base.filter(Order.status != 'cancelled').all()
+        revenue_by_date = {}
+        for o in orders_for_chart:
+            d = o.created_at.date() if o.created_at else None
+            if d:
+                revenue_by_date[str(d)] = revenue_by_date.get(str(d), 0) + o.total_amount
+        chart_revenue_labels = sorted(revenue_by_date.keys())
+        chart_revenue_data = [revenue_by_date[k] for k in chart_revenue_labels]
 
-    banners_in_carousel = Banner.query.filter_by(is_active=True).order_by(Banner.sort_order, Banner.id).limit(15).all()
-    if banners_in_carousel:
-        carousel_slides = [CarouselSlideInfo('banner', b.title, b, b.sort_order) for b in banners_in_carousel]
-    else:
-        promo_prods = Product.query.filter(Product.old_price.isnot(None), Product.old_price > 0).order_by(Product.created_at.desc()).limit(6).all()
-        if not promo_prods:
-            promo_prods = Product.query.order_by(Product.views.desc()).limit(5).all()
-        if not promo_prods:
-            promo_prods = Product.query.order_by(Product.created_at.desc()).limit(5).all()
-        carousel_slides = [CarouselSlideInfo('product', p.name, p, i) for i, p in enumerate(promo_prods[:5])]
+        orders_all = order_base.all()
+        status_counts = {'new': 0, 'processing': 0, 'completed': 0, 'cancelled': 0}
+        for o in orders_all:
+            status_counts[o.status] = status_counts.get(o.status, 0) + 1
+        chart_status_data = [status_counts['new'], status_counts['processing'], status_counts['completed'], status_counts['cancelled']]
+        top_products_by_views = Product.query.order_by(Product.views.desc()).limit(10).all()
+        banner_stats = Banner.query.order_by(Banner.sort_order, Banner.id).limit(15).all()
 
     return render_template('admin.html',
         orders=orders, reviews=pending, products=products, categories=categories, promo_codes=promo_codes, tab=tab,
@@ -1658,8 +1686,8 @@ def admin():
         top_products_by_views=top_products_by_views, banner_stats=banner_stats,
         banners=banners, home_blocks=home_blocks, products_for_link=products_for_link,
         carousel_slides=carousel_slides,
-        device_models=_query_device_models(),
-        device_model_counts=_device_model_product_counts(),
+        device_models=device_models,
+        device_model_counts=device_model_counts,
         blog_posts=blog_posts,
         admin_role=_get_admin_role(),
         admin_can_delete_orders=_admin_can_delete_orders(),
@@ -2170,12 +2198,17 @@ def admin_review_action(review_id, action):
     review = db.get_or_404(Review, review_id)
     if action == 'approve':
         review.status = 'approved'
+        flash('Отзыв одобрен и опубликован на сайте.', 'success')
     elif action == 'reject':
         review.status = 'rejected'
+        flash('Отзыв отклонён.', 'warning')
     else:
         return "Неверное действие", 400
     db.session.commit()
-    _invalidate_cache()
+    try:
+        _invalidate_cache('index_data')
+    except Exception:
+        pass
     return redirect(url_for('admin', tab='reviews'))
 
 
