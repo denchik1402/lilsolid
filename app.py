@@ -190,6 +190,37 @@ def internal_error(e):
     return render_template('errors/500.html'), 500
 
 
+SITE_PHONE_DEFAULT = '+7 (993) 596-82-25'
+SITE_ADDRESS_DEFAULT = 'Москва, Ленинградское шоссе, 16А'
+SITE_CITY_DEFAULT = 'Москва'
+
+
+def _get_site_setting(name, default=''):
+    val = os.environ.get(name)
+    if val:
+        return val
+    if os.path.exists(_config_path):
+        try:
+            import config
+            val = getattr(config, name, None)
+        except ImportError:
+            val = None
+        if val:
+            return val
+    return default
+
+
+def _phone_to_tel(display_phone):
+    """+7 (993) 596-82-25 -> tel:+79935968225"""
+    digits = ''.join(c for c in (display_phone or '') if c.isdigit())
+    if not digits:
+        return ''
+    if digits.startswith('8') and len(digits) == 11:
+        digits = '7' + digits[1:]
+    elif len(digits) == 10:
+        digits = '7' + digits
+    return '+' + digits
+
 @app.context_processor
 def inject_site_contacts():
     from seo_utils import city_prepositional
