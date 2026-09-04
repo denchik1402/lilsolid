@@ -134,9 +134,16 @@
                         <strong id="checkoutTotal">{{ ((subtotal|default(total)|default(0)) + (delivery_choices[0][2] if delivery_choices else 500))|format_price }} ₽</strong>
                     </div>
                     <p class="text-muted small mb-0 mt-2">Оплата при доставке</p>
+                    {% with input_id='checkoutPdConsent' %}
+                    {% include 'includes/pd_consent_checkbox.html' %}
+                    {% endwith %}
                     <button type="submit" class="btn btn-success btn-lg w-100 mt-3" {% if not cart_items %}disabled{% endif %}>Оплатить при получении</button>
                 {% else %}
                 <p class="text-muted">Корзина пуста</p>
+                {% with input_id='checkoutPdConsentEmpty' %}
+                {% include 'includes/pd_consent_checkbox.html' %}
+                {% endwith %}
+                <p class="small text-muted">При оформлении заказа потребуется согласие на обработку персональных данных.</p>
                 <p><a href="{{ url_for('catalog') }}" class="btn btn-primary">Перейти в каталог</a></p>
                 {% endif %}
             </div>

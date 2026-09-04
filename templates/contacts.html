@@ -1,10 +1,25 @@
 {% extends "base.html" %}
 
 {% block title %}Контакты — {{ site_brand_name }}{% endblock %}
-{% block meta_description %}Контакты {{ site_brand_name }}: телефон {{ site_phone }}, Telegram @iluma_prime_bot. IQOS и стики TEREA.{% endblock %}
+{% block meta_description %}Контакты {{ site_brand_name }}: {{ site_address }}, телефон {{ site_phone }}, Telegram @iluma_prime_bot.{% endblock %}
 {% block schema_ld %}
 <script type="application/ld+json">
 {"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Главная","item":"{{ request.url_root.rstrip('/') }}/"},{"@type":"ListItem","position":2,"name":"Контакты","item":"{{ request.url_root.rstrip('/') }}{{ url_for('contacts') }}"}]}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  "name": "{{ site_brand_name }}",
+  "telephone": "{{ site_phone }}",
+  "url": "{{ request.url_root.rstrip('/') }}",
+  "address": {
+    "@type": "PostalAddress",
+    "addressCountry": "RU",
+    "addressLocality": "{{ site_city }}",
+    "streetAddress": "{{ site_address }}"
+  }
+}
 </script>
 {% endblock %}
 
@@ -18,16 +33,30 @@
                 <h5>Наши контакты</h5>
             </div>
             <div class="card-body">
+                <p><strong>Адрес:</strong> {{ site_address }}</p>
                 <p><strong>Телефон:</strong> <a href="tel:{{ site_phone_tel }}">{{ site_phone }}</a></p>
                 <p><strong>Telegram:</strong> <a href="https://t.me/iluma_prime_bot" target="_blank" rel="noopener">@iluma_prime_bot</a></p>
-                
+                {% if legal_pd_email %}
+                <p><strong>Email (ПД / обращения):</strong> <a href="mailto:{{ legal_pd_email }}">{{ legal_pd_email }}</a></p>
+                {% endif %}
+
                 <h5 class="mt-4">Режим работы</h5>
                 <p>Пн-Пт: 9:00 - 21:00<br>
                 Сб-Вс: 10:00 - 20:00</p>
             </div>
         </div>
     </div>
-    
+    <div class="col-md-6">
+        <div class="card mb-4">
+            <div class="card-header"><h5>Реквизиты</h5></div>
+            <div class="card-body">
+                {% with summary='Показать реквизиты продавца' %}
+                {% include 'includes/legal_requisites.html' %}
+                {% endwith %}
+                <p class="small text-muted mt-3 mb-0">Также: <a href="{{ url_for('privacy') }}">Политика конфиденциальности</a>, <a href="{{ url_for('returns') }}">Возврат</a>.</p>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class="card mt-3">
@@ -35,22 +64,11 @@
         <h5>Напишите нам</h5>
     </div>
     <div class="card-body">
-        <form>
-            <div class="row">
-                <div class="col-md-6 mb-3">
-                    <input type="text" class="form-control" placeholder="Ваше имя (например: Иван)">
-                </div>
-                <div class="col-md-6 mb-3">
-                    <input type="email" class="form-control" placeholder="Email (например: ivan@mail.ru)">
-                </div>
-                <div class="col-12 mb-3">
-                    <textarea class="form-control" rows="4" placeholder="Напишите ваш вопрос или сообщение"></textarea>
-                </div>
-                <div class="col-12">
-                    <button type="submit" class="btn btn-primary">Отправить</button>
-                </div>
-            </div>
-        </form>
+        <p class="mb-2">Чтобы связаться с нами, напишите в Telegram или позвоните — так мы быстрее ответим.</p>
+        <a href="https://t.me/iluma_prime_bot" target="_blank" rel="noopener" class="btn btn-primary me-2"><i class="fab fa-telegram me-1"></i> Telegram</a>
+        <a href="tel:{{ site_phone_tel }}" class="btn btn-outline-secondary">{{ site_phone }}</a>
+        <p class="small text-muted mt-3 mb-0">Обработка персональных данных — только с вашего согласия, см. <a href="{{ url_for('privacy') }}">Политику</a>.</p>
     </div>
 </div>
+{% include 'includes/page_seo_footer.html' %}
 {% endblock %}

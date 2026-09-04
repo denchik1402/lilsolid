@@ -44,3 +44,10 @@ DELIVERY_RF_DAYS = 'от 1–2 дней'
 YANDEX_METRIKA_ID = ''
 
 ILUMA_XLSX_PATH = ''
+
+# Юридические реквизиты продавца (футер, контакты, политика ПД).
+LEGAL_ENTITY_NAME = ''
+LEGAL_INN = ''
+LEGAL_OGRN = ''
+LEGAL_ADDRESS = ''
+LEGAL_PD_EMAIL = ''

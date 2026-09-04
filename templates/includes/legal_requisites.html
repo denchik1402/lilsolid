@@ -1,0 +1,13 @@
+{# Раскрывашка / блок реквизитов. Данные из config LEGAL_*. #}
+<details class="legal-requisites {{ extra_class|default('') }}" open>
+    <summary>{{ summary|default('Реквизиты') }}</summary>
+    <div class="legal-requisites-body">
+        {% if legal_entity_name %}<p class="mb-1"><strong>{{ legal_entity_name }}</strong></p>{% else %}<p class="mb-1"><strong>Продавец:</strong> уточняется</p>{% endif %}
+        <p class="mb-1"><strong>ИНН:</strong> {% if legal_inn %}{{ legal_inn }}{% else %}уточняется{% endif %}</p>
+        <p class="mb-1"><strong>ОГРН / ОГРНИП:</strong> {% if legal_ogrn %}{{ legal_ogrn }}{% else %}уточняется{% endif %}</p>
+        <p class="mb-1"><strong>Юр. адрес:</strong> {% if legal_address %}{{ legal_address }}{% else %}уточняется{% endif %}</p>
+        {% if legal_pd_email %}
+        <p class="mb-0"><strong>Email (ПД / инциденты):</strong> <a href="mailto:{{ legal_pd_email }}">{{ legal_pd_email }}</a></p>
+        {% endif %}
+    </div>
+</details>

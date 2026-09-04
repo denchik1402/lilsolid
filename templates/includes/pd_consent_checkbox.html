@@ -1,0 +1,9 @@
+{# Обязательное согласие на обработку ПД (152-ФЗ). #}
+<div class="form-check pd-consent-check mb-3">
+    <input class="form-check-input" type="checkbox" value="1" id="{{ input_id|default('pdConsent') }}" name="pd_consent" required>
+    <label class="form-check-label small" for="{{ input_id|default('pdConsent') }}">
+        Я даю
+        <a href="{{ url_for('privacy') }}" target="_blank" rel="noopener">согласие на обработку персональных данных</a>
+        в соответствии с Политикой конфиденциальности{% if extra_suffix %}{{ extra_suffix }}{% endif %}.
+    </label>
+</div>

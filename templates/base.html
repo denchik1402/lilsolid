@@ -1108,6 +1108,17 @@
             background: rgba(255,255,255,0.3);
             color: white;
         }
+        .cookie-banner-text { flex: 1; min-width: 220px; }
+        .cookie-banner-text a { color: #9ec5fe; text-decoration: underline; }
+        .cookie-banner-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+        .legal-requisites { font-size: 0.8rem; color: var(--text-muted, #6c757d); }
+        .legal-requisites summary { cursor: pointer; list-style: none; }
+        .legal-requisites summary::-webkit-details-marker { display: none; }
+        .legal-requisites summary::before { content: '▸ '; }
+        .legal-requisites[open] summary::before { content: '▾ '; }
+        .legal-requisites-body { margin-top: 0.5rem; padding: 0.5rem 0.75rem; border-left: 2px solid rgba(108,117,125,0.35); }
+        .footer-requisites { max-width: 16rem; }
+        .pd-consent-check a { text-decoration: underline; }
         
         /* Юридический текст в подвале */
         .footer-legal {
@@ -1541,6 +1552,8 @@
                         <li class="mb-2"><a href="{{ url_for('faq') }}">FAQ</a></li>
                         <li class="mb-2"><a href="{{ url_for('blog_index') }}">Блог</a></li>
                         <li class="mb-2"><a href="{{ url_for('privacy') }}">Политика конфиденциальности</a></li>
+                        <li class="mb-2"><a href="{{ url_for('returns') }}">Возврат</a></li>
+                        <li class="mb-2"><a href="{{ url_for('oferta') }}">Оферта</a></li>
                     </ul>
                 </div>
             </div>
@@ -1548,6 +1561,9 @@
             <div class="text-center">
                 <small class="text-muted">&copy; 2026 {{ site_brand_name }}. Все права защищены.</small>
             </div>
+            {% with summary='Реквизиты', extra_class='footer-requisites mt-2' %}
+            {% include 'includes/legal_requisites.html' %}
+            {% endwith %}
             <div class="footer-legal">
                 <p class="mb-0">* Информация, размещённая на сайте, представлена для ознакомления и не является публичной офертой. Продажа табачной продукции онлайн не осуществляется: на сайте возможна только бронь товара, быстрая доставка по всей России. Оплата при получении в соответствии с действующим законодательством РФ.</p>
                 <p class="mt-2 mb-0 minzdrav">МИНЗДРАВСОЦРАЗВИТИЯ России предупреждает: курение вредит вашему здоровью!</p>
@@ -1571,11 +1587,18 @@
         <span class="cart-float-count" id="cartFloatCount">0</span>
     </button>
 
-    <!-- Плашка о cookies -->
-    <div id="cookieBanner" class="cookie-banner" style="display: none;">
-        <p>Мы используем файлы cookie и метаданные для улучшения работы сайта, анализа посещаемости и персонализации контента. Продолжая использовать сайт, вы соглашаетесь с нашей политикой использования cookie и метаданных.</p>
-        <button type="button" class="btn btn-accept" id="btnCookieAccept">Понятно</button>
+        <!-- Плашка о cookies: активное согласие (152-ФЗ) -->
+    <div id="cookieBanner" class="cookie-banner" style="display: none;" role="dialog" aria-labelledby="cookieBannerTitle" aria-live="polite">
+        <div class="cookie-banner-text">
+            <p id="cookieBannerTitle" class="mb-1"><strong>Файлы cookie</strong></p>
+            <p class="mb-0">Мы используем необходимые cookie для работы сайта. Аналитические cookie (Яндекс.Метрика) включаются только с вашего согласия. Подробнее — в <a href="{{ url_for('privacy') }}">Политике конфиденциальности</a>.</p>
+        </div>
+        <div class="cookie-banner-actions">
+            <button type="button" class="btn btn-outline-light btn-sm" id="btnCookieReject">Только необходимые</button>
+            <button type="button" class="btn btn-accept" id="btnCookieAccept">Принять</button>
+        </div>
     </div>
+
 
     <!-- Боковая корзина -->
     <div class="offcanvas offcanvas-end cart-sidebar" tabindex="-1" id="cartSidebar" aria-labelledby="cartSidebarLabel">
@@ -1771,10 +1794,20 @@
                 window.location.href = '{{ url_for("age_restricted") }}';
             });
             
-            $('#btnCookieAccept').on('click', function() {
-                localStorage.setItem(COOKIE_KEY, 'true');
+                        $('#btnCookieAccept').on('click', function() {
+                localStorage.setItem(COOKIE_KEY, '1');
+                hideCookieBanner();
+                try { window.dispatchEvent(new Event('lilstore-analytics-consent')); } catch (e) {}
+            });
+            $('#btnCookieReject').on('click', function() {
+                localStorage.setItem(COOKIE_KEY, '0');
                 hideCookieBanner();
             });
+            try {
+                if (localStorage.getItem(COOKIE_KEY) === 'true') {
+                    localStorage.removeItem(COOKIE_KEY);
+                }
+            } catch (e) {}
             
             $(document).ready(function() {
                 $('.catalog-categories-toggle').on('keydown', function(e) {

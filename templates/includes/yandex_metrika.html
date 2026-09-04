@@ -1,9 +1,22 @@
-{# Код счётчика как в metrika.yandex.ru; загрузка после отрисовки страницы #}
+{# Яндекс.Метрика только после явного согласия на аналитические cookies (localStorage cookies_accepted=1). #}
 <script>
 window.dataLayer = window.dataLayer || [];
 (function() {
     var metrikaId = {{ yandex_metrika_id }};
+    var CONSENT_KEY = 'cookies_accepted';
+
+    function hasAnalyticsConsent() {
+        try {
+            var v = localStorage.getItem(CONSENT_KEY);
+            return v === '1' || v === 'true';
+        } catch (e) {
+            return false;
+        }
+    }
+
     function initMetrika() {
+        if (window.__ymLilstoreInit) return;
+        window.__ymLilstoreInit = true;
         (function(m,e,t,r,i,k,a){
             m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
             m[i].l=1*new Date();
@@ -21,11 +34,20 @@ window.dataLayer = window.dataLayer || [];
             trackLinks: true
         });
     }
-    if (window.requestIdleCallback) {
-        requestIdleCallback(initMetrika, {timeout: 4000});
-    } else {
-        window.addEventListener('load', function() { setTimeout(initMetrika, 500); });
+
+    function scheduleInit() {
+        if (!hasAnalyticsConsent()) return;
+        if (window.requestIdleCallback) {
+            requestIdleCallback(initMetrika, {timeout: 4000});
+        } else {
+            window.addEventListener('load', function() { setTimeout(initMetrika, 500); });
+        }
     }
+
+    scheduleInit();
+    window.addEventListener('lilstore-analytics-consent', scheduleInit);
 })();
 </script>
-<noscript><div><img src="https://mc.yandex.ru/watch/{{ yandex_metrika_id }}" style="position:absolute; left:-9999px;" alt="" /></div></noscript>
+{% if false %}
+{# noscript-пиксель не вставляем без согласия — иначе трекер грузится до выбора пользователя #}
+{% endif %}

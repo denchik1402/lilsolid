@@ -191,77 +191,18 @@ def internal_error(e):
 
 
 @app.context_processor
-def inject_telegram_bot():
-    return {'telegram_bot_url': _get_telegram_bot_url()}
-
-def _invalidate_cache(*keys):
-    """Сброс кэша при изменениях в админке."""
-    to_delete = list(keys) if keys else [
-        'nav_categories', 'index_data', 'index_banners', 'sitemap_xml'
-    ]
-    for k in to_delete:
-        cache.delete(k)
-
-def _get_nav_categories():
-    """Категории для меню (кэш 5 мин)."""
-    return Category.query.order_by(Category.name).all()
-
-@app.context_processor
-def inject_nav_categories():
-    """Категории для выпадающего меню «Каталог» в шапке."""
-    try:
-        categories = cache.get('nav_categories')
-        if categories is None:
-            categories = _get_nav_categories()
-            cache.set('nav_categories', categories, timeout=300)
-        return {'nav_categories': categories}
-    except Exception as exc:
-        logger.warning('nav_categories failed: %s', exc)
-        try:
-            db.session.rollback()
-        except Exception:
-            pass
-        return {'nav_categories': []}
-
-SITE_PHONE_DEFAULT = '+7 (993) 596-82-25'
-SITE_ADDRESS_DEFAULT = 'Москва, Ленинградское шоссе, 16А'
-SITE_CITY_DEFAULT = 'Москва'
-
-
-def _get_site_setting(name, default=''):
-    val = os.environ.get(name)
-    if val:
-        return val
-    if os.path.exists(_config_path):
-        try:
-            import config
-            val = getattr(config, name, None)
-        except ImportError:
-            val = None
-        if val:
-            return val
-    return default
-
-
-def _phone_to_tel(display_phone):
-    """+7 (993) 596-82-25 -> tel:+79935968225"""
-    digits = ''.join(c for c in (display_phone or '') if c.isdigit())
-    if not digits:
-        return ''
-    if digits.startswith('8') and len(digits) == 11:
-        digits = '7' + digits[1:]
-    elif len(digits) == 10:
-        digits = '7' + digits
-    return '+' + digits
-
-
-@app.context_processor
 def inject_site_contacts():
     from seo_utils import city_prepositional
     phone = _get_site_setting('SITE_PHONE', SITE_PHONE_DEFAULT)
     brand = _get_site_setting('SITE_BRAND_NAME', 'LIL SOLID')
     wa = _get_site_setting('SITE_WHATSAPP_URL', '')
     city = _get_site_setting('SITE_CITY', SITE_CITY_DEFAULT)
+    legal_name = (_get_site_setting('LEGAL_ENTITY_NAME', '') or '').strip()
+    legal_inn = (_get_site_setting('LEGAL_INN', '') or '').strip()
+    legal_ogrn = (_get_site_setting('LEGAL_OGRN', '') or '').strip()
+    legal_address = (_get_site_setting('LEGAL_ADDRESS', '') or '').strip()
+    legal_pd_email = (_get_site_setting('LEGAL_PD_EMAIL', '') or '').strip()
+    legal_filled = bool(legal_name or legal_inn or legal_ogrn or legal_address)
     return {
         'site_phone': phone,
         'site_phone_tel': _phone_to_tel(phone),
@@ -278,8 +219,14 @@ def inject_site_contacts():
         ),
         'delivery_moscow_note': _get_site_setting('DELIVERY_MOSCOW_NOTE', 'в день заказа'),
         'delivery_rf_days': _get_site_setting('DELIVERY_RF_DAYS', 'от 1–2 дней'),
-    }
 
+        'legal_entity_name': legal_name,
+        'legal_inn': legal_inn,
+        'legal_ogrn': legal_ogrn,
+        'legal_address': legal_address,
+        'legal_pd_email': legal_pd_email,
+        'legal_requisites_filled': legal_filled,
+    }
 
 def _get_yandex_metrika_id():
     """ID счётчика Яндекс.Метрики (только цифры). Пусто — счётчик не подключается."""
@@ -1330,6 +1277,20 @@ def blog_post(slug):
 def privacy():
     """Политика конфиденциальности и отказ от ответственности"""
     return render_template('privacy.html')
+
+
+
+@app.route('/returns', strict_slashes=False)
+def returns():
+    """Правила возврата / отказа от заказа (ЗОЗПП ст. 26.1)."""
+    return render_template('returns.html')
+
+
+
+@app.route('/oferta', strict_slashes=False)
+def oferta():
+    """Публичная оферта (ГК РФ ст. 437)."""
+    return render_template('oferta.html')
 
 @app.route('/api/cart-count')
 def cart_count():
