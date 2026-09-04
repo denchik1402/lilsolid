@@ -1,5 +1,5 @@
-{# Раскрывашка / блок реквизитов. Данные из config LEGAL_*. #}
-<details class="legal-requisites {{ extra_class|default('') }}" open>
+{# Раскрывашка реквизитов. В футере — как обычный пункт списка (свёрнуто). Данные из LEGAL_*. #}
+<details class="legal-requisites {{ extra_class|default('') }}">
     <summary>{{ summary|default('Реквизиты') }}</summary>
     <div class="legal-requisites-body">
         {% if legal_entity_name %}<p class="mb-1"><strong>{{ legal_entity_name }}</strong></p>{% else %}<p class="mb-1"><strong>Продавец:</strong> уточняется</p>{% endif %}

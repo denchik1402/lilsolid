@@ -1,4 +1,4 @@
-﻿name: Deploy lilsolid.ru
+name: Deploy lilsolid.ru
 
 on:
   push:
@@ -14,7 +14,7 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          command_timeout: 8m
+          command_timeout: 25m
           script: |
             set -e
             set -o pipefail
@@ -59,7 +59,7 @@ jobs:
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 normalize_product_names.py" 2>/dev/null || true
 
             echo "=== 4d. sync from lilstore (catalog, banners, blog — last) ==="
-            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 scripts/apply_store_sync.py"
+            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && timeout 12m python3 scripts/apply_store_sync.py" || echo "WARN: store sync timed out or failed — continuing deploy"
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 fix_product_images.py" || true
 
             echo "=== 4d2. fill SEO after sync (role brand, wipe LIL STORE leaks) ==="

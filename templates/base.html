@@ -1071,56 +1071,141 @@
             color: white;
         }
         
-        /* Плашка cookies */
+                /* Плашка cookies — cyber */
         .cookie-banner {
             position: fixed;
             bottom: 0;
             left: 0;
             right: 0;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
-            color: white;
-            padding: 20px 30px;
+            background: rgba(10, 10, 18, 0.96);
+            color: var(--text);
+            padding: 18px 24px;
             z-index: 9997;
-            box-shadow: 0 -5px 30px rgba(0,0,0,0.2);
+            border-top: 1px solid rgba(0, 245, 255, 0.35);
+            box-shadow: 0 -10px 40px rgba(0, 245, 255, 0.12);
             display: flex;
             align-items: center;
             justify-content: space-between;
             flex-wrap: wrap;
-            gap: 15px;
-        }
-        .cookie-banner p {
-            margin: 0;
-            flex: 1;
-            min-width: 200px;
-            font-size: 0.95rem;
-            color: rgba(255,255,255,0.9);
-        }
-        .cookie-banner .btn-accept {
-            background: rgba(255,255,255,0.2);
-            border: 1px solid rgba(255,255,255,0.4);
-            color: white;
-            padding: 10px 25px;
-            border-radius: 8px;
-            font-weight: 600;
-            transition: all 0.3s;
-        }
-        .cookie-banner .btn-accept:hover {
-            background: rgba(255,255,255,0.3);
-            color: white;
+            gap: 14px;
+            backdrop-filter: blur(12px);
+            font-family: 'Rajdhani', 'Segoe UI', sans-serif;
         }
         .cookie-banner-text { flex: 1; min-width: 220px; }
-        .cookie-banner-text a { color: #9ec5fe; text-decoration: underline; }
-        .cookie-banner-actions { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
-        .legal-requisites { font-size: 0.8rem; color: var(--text-muted, #6c757d); }
-        .legal-requisites summary { cursor: pointer; list-style: none; }
+        .cookie-banner-title {
+            margin: 0 0 4px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.82rem;
+            font-weight: 700;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: var(--neon-cyan, #00f5ff);
+        }
+        .cookie-banner-desc {
+            margin: 0;
+            font-size: 0.95rem;
+            line-height: 1.45;
+            color: rgba(232,232,232,0.85);
+            font-weight: 500;
+        }
+        .cookie-banner-text a {
+            color: var(--neon-cyan, #00f5ff);
+            text-decoration: underline;
+        }
+        .cookie-banner-actions {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+        }
+        .cookie-banner .btn-cookie-accept,
+        .cookie-banner .btn-accept {
+            background: transparent;
+            border: 1px solid var(--neon-cyan, #00f5ff);
+            color: var(--neon-cyan, #00f5ff);
+            padding: 10px 22px;
+            border-radius: 4px;
+            font-family: 'Orbitron', sans-serif;
+            font-weight: 700;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            box-shadow: 0 0 14px rgba(0, 245, 255, 0.25);
+            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+        }
+        .cookie-banner .btn-cookie-accept:hover,
+        .cookie-banner .btn-accept:hover {
+            background: rgba(0, 245, 255, 0.15);
+            color: #fff;
+            box-shadow: 0 0 22px rgba(0, 245, 255, 0.4);
+        }
+        .cookie-banner .btn-cookie-reject {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.25);
+            color: rgba(232,232,232,0.85);
+            padding: 10px 16px;
+            border-radius: 4px;
+            font-family: 'Rajdhani', sans-serif;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        .cookie-banner .btn-cookie-reject:hover {
+            border-color: var(--neon-pink, #ff00ff);
+            color: #fff;
+        }
+        .legal-requisites {
+            font-size: 0.95rem;
+            color: var(--text-muted);
+        }
+        .legal-requisites summary {
+            cursor: pointer;
+            list-style: none;
+            color: inherit;
+            display: inline;
+        }
         .legal-requisites summary::-webkit-details-marker { display: none; }
-        .legal-requisites summary::before { content: '▸ '; }
-        .legal-requisites[open] summary::before { content: '▾ '; }
-        .legal-requisites-body { margin-top: 0.5rem; padding: 0.5rem 0.75rem; border-left: 2px solid rgba(108,117,125,0.35); }
-        .footer-requisites { max-width: 16rem; }
-        .pd-consent-check a { text-decoration: underline; }
-        
-        /* Юридический текст в подвале */
+        .legal-requisites summary::before { content: none; }
+        .legal-requisites summary::after {
+            content: ' ᐯ';
+            font-size: 0.75em;
+            opacity: 0.85;
+        }
+        .legal-requisites[open] summary::after { content: ' ᐱ'; }
+        .legal-requisites-body {
+            margin-top: 0.45rem;
+            padding: 0.45rem 0 0.2rem;
+            font-size: 0.85rem;
+            line-height: 1.45;
+            color: var(--text-muted);
+        }
+        .footer-req-li .legal-requisites,
+        .footer-requisites {
+            max-width: none;
+            font-size: inherit;
+            color: inherit;
+            margin: 0;
+        }
+        .footer-req-li .legal-requisites summary,
+        .footer .footer-requisites summary {
+            color: var(--text);
+            opacity: 0.9;
+            font-size: inherit;
+        }
+        .footer-req-li .legal-requisites summary:hover,
+        .footer .footer-requisites summary:hover {
+            color: var(--neon-cyan, #00f5ff);
+            text-decoration: underline;
+            opacity: 1;
+        }
+        .pd-consent-check {
+            padding: 0.7rem 0.85rem;
+            border-radius: 4px;
+            border: 1px solid rgba(0, 245, 255, 0.25);
+            background: rgba(0, 245, 255, 0.05);
+        }
+        .pd-consent-check .form-check-label { color: var(--text); }
+        .pd-consent-check a { color: var(--neon-cyan, #00f5ff); text-decoration: underline; }
+/* Юридический текст в подвале */
         .footer-legal {
             font-size: 0.8rem;
             color: var(--text-muted);
@@ -1554,6 +1639,11 @@
                         <li class="mb-2"><a href="{{ url_for('privacy') }}">Политика конфиденциальности</a></li>
                         <li class="mb-2"><a href="{{ url_for('returns') }}">Возврат</a></li>
                         <li class="mb-2"><a href="{{ url_for('oferta') }}">Оферта</a></li>
+                        <li class="mb-2 footer-req-li">
+                            {% with summary='Реквизиты', extra_class='footer-requisites' %}
+                            {% include 'includes/legal_requisites.html' %}
+                            {% endwith %}
+                        </li>
                     </ul>
                 </div>
             </div>
@@ -1561,9 +1651,6 @@
             <div class="text-center">
                 <small class="text-muted">&copy; 2026 {{ site_brand_name }}. Все права защищены.</small>
             </div>
-            {% with summary='Реквизиты', extra_class='footer-requisites mt-2' %}
-            {% include 'includes/legal_requisites.html' %}
-            {% endwith %}
             <div class="footer-legal">
                 <p class="mb-0">* Информация, размещённая на сайте, представлена для ознакомления и не является публичной офертой. Продажа табачной продукции онлайн не осуществляется: на сайте возможна только бронь товара, быстрая доставка по всей России. Оплата при получении в соответствии с действующим законодательством РФ.</p>
                 <p class="mt-2 mb-0 minzdrav">МИНЗДРАВСОЦРАЗВИТИЯ России предупреждает: курение вредит вашему здоровью!</p>
@@ -1587,15 +1674,15 @@
         <span class="cart-float-count" id="cartFloatCount">0</span>
     </button>
 
-        <!-- Плашка о cookies: активное согласие (152-ФЗ) -->
+    <!-- Плашка о cookies: активное согласие (152-ФЗ) -->
     <div id="cookieBanner" class="cookie-banner" style="display: none;" role="dialog" aria-labelledby="cookieBannerTitle" aria-live="polite">
         <div class="cookie-banner-text">
-            <p id="cookieBannerTitle" class="mb-1"><strong>Файлы cookie</strong></p>
-            <p class="mb-0">Мы используем необходимые cookie для работы сайта. Аналитические cookie (Яндекс.Метрика) включаются только с вашего согласия. Подробнее — в <a href="{{ url_for('privacy') }}">Политике конфиденциальности</a>.</p>
+            <p id="cookieBannerTitle" class="cookie-banner-title">Файлы cookie</p>
+            <p class="cookie-banner-desc mb-0">Мы используем необходимые cookie для работы сайта. Аналитические cookie (Яндекс.Метрика) включаются только с вашего согласия. Подробнее — в <a href="{{ url_for('privacy') }}">Политике конфиденциальности</a>.</p>
         </div>
         <div class="cookie-banner-actions">
-            <button type="button" class="btn btn-outline-light btn-sm" id="btnCookieReject">Только необходимые</button>
-            <button type="button" class="btn btn-accept" id="btnCookieAccept">Принять</button>
+            <button type="button" class="btn btn-cookie-reject" id="btnCookieReject">Только необходимые</button>
+            <button type="button" class="btn btn-cookie-accept" id="btnCookieAccept">Принять</button>
         </div>
     </div>
 
