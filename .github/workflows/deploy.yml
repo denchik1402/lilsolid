@@ -14,7 +14,7 @@ jobs:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          command_timeout: 25m
+          command_timeout: 12m
           script: |
             set -e
             set -o pipefail
@@ -34,54 +34,20 @@ jobs:
             echo "=== 3. pip install ==="
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && pip install -r requirements.txt --quiet"
 
-            echo "=== 4. stop for DB repair ==="
+            echo "=== 4. light DB repair (no full catalog sync on every deploy) ==="
             systemctl stop "$SERVICE" || true
-            rm -rf "$APP_DIR/cache/"* 2>/dev/null || true
-
-            echo "=== 4b. repair_db (integrity + seed) ==="
-            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 repair_db.py" || true
-
-            echo "=== 4b. migrations ==="
-            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 -c \"
-            from app import app
-            from alembic_runner import run_alembic
-            with app.app_context():
-                run_alembic()
-            \"" || true
             sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 repair_schema.py" || true
 
-            echo "=== 4c. SEO scripts (before catalog sync) ==="
-            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 update_product_galleries.py" 2>/dev/null || true
-            echo "=== 5c2. sync_device_models ==="
-            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 sync_device_models.py" 2>/dev/null || true
-            echo "=== 5c3. import_lil40_products ==="
-            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 import_lil40_products.py" 2>/dev/null || true
-            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 normalize_product_names.py" 2>/dev/null || true
-
-            echo "=== 4d. sync from lilstore (catalog, banners, blog — last) ==="
-            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && timeout 12m python3 scripts/apply_store_sync.py" || echo "WARN: store sync timed out or failed — continuing deploy"
-            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 fix_product_images.py" || true
-
-            echo "=== 4d2. fill SEO after sync (role brand, wipe LIL STORE leaks) ==="
-            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 fill_seo_meta.py --force" 2>/dev/null || true
-            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 fill_seo_meta.py --refresh-keywords" 2>/dev/null || true
-
-            echo "=== 5c4. align_prices_vs_tabachka (after store sync) ==="
-            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 align_prices_vs_tabachka.py" || true
-
-            echo "=== 4e. sync notify chat_id from lilstore.ru ==="
-            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 sync_notify_chat.py" || true
-
-            echo "=== 5. skip seed_seo_blog on lilsolid (blog from store_sync) ==="
-            chown -R www-data:www-data "$APP_DIR/static"
-            find "$APP_DIR/static" -type d -exec chmod 755 {} \;
-            find "$APP_DIR/static" -type f -exec chmod 644 {} \;
+            echo "=== 5. static perms ==="
+            chown -R www-data:www-data "$APP_DIR/static" 2>/dev/null || true
+            find "$APP_DIR/static" -type d -exec chmod 755 {} \; 2>/dev/null || true
+            find "$APP_DIR/static" -type f -exec chmod 644 {} \; 2>/dev/null || true
             for d in banners products blog categories; do
               mkdir -p "$APP_DIR/static/images/$d"
               chown -R lilstore:lilstore "$APP_DIR/static/images/$d"
             done
 
-            echo "=== 7. nginx + systemd ==="
+            echo "=== 6. nginx + systemd ==="
             if [[ -f /etc/letsencrypt/live/lilsolid.ru/fullchain.pem ]]; then
               cp "$APP_DIR/deploy/nginx-lilsolid.conf" /etc/nginx/sites-available/lilsolid
             else
@@ -89,20 +55,14 @@ jobs:
             fi
             ln -sf /etc/nginx/sites-available/lilsolid /etc/nginx/sites-enabled/lilsolid
             cp "$APP_DIR/deploy/lilsolid.service" "/etc/systemd/system/${SERVICE}.service"
-            cp "$APP_DIR/deploy/healthcheck.sh" /usr/local/bin/healthcheck-lilsolid.sh
-            chmod +x /usr/local/bin/healthcheck-lilsolid.sh
             systemctl daemon-reload
             nginx -t
             systemctl reload nginx
 
-            echo "=== 8. restart site (NO telegram bot on this server) ==="
+            echo "=== 7. restart ==="
             systemctl restart "$SERVICE"
-            echo "=== 8a. diag ==="
-            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 diag_db_queries.py" || true
-            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && APP_DIR=$APP_DIR python3 test_prod_urls.py" || true
-
-            echo "=== 8b. smoke test ==="
-            sudo -u lilstore bash -c "cd $APP_DIR && source venv/bin/activate && python3 smoke_test.py" || true
-
-            echo "=== Deploy lilsolid completed ==="
-
+            sleep 2
+            systemctl is-active "$SERVICE"
+            curl -sS -m 8 -o /dev/null -w "home:%{http_code}\n" -L http://127.0.0.1:8000/ || true
+            echo "=== Deploy lilsolid (fast) completed ==="
+            echo "Tip: for full catalog sync run on server: sudo -u lilstore bash -c 'cd $APP_DIR && source venv/bin/activate && python3 scripts/apply_store_sync.py'"

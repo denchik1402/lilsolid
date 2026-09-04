@@ -1120,10 +1120,14 @@
         }
         .cookie-banner .btn-cookie-accept,
         .cookie-banner .btn-accept {
-            background: transparent;
-            border: 1px solid var(--neon-cyan, #00f5ff);
-            color: var(--neon-cyan, #00f5ff);
-            padding: 10px 22px;
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0, 245, 255, 0.12) !important;
+            border: 1px solid var(--neon-cyan, #00f5ff) !important;
+            color: var(--neon-cyan, #00f5ff) !important;
+            padding: 11px 22px !important;
+            min-height: 44px;
             border-radius: 4px;
             font-family: 'Orbitron', sans-serif;
             font-weight: 700;
@@ -1131,7 +1135,9 @@
             letter-spacing: 0.05em;
             text-transform: uppercase;
             box-shadow: 0 0 14px rgba(0, 245, 255, 0.25);
-            transition: background 0.2s, color 0.2s, box-shadow 0.2s;
+            opacity: 1 !important;
+            visibility: visible !important;
+            transition: all 0.3s;
         }
         .cookie-banner .btn-cookie-accept:hover,
         .cookie-banner .btn-accept:hover {
@@ -1140,14 +1146,20 @@
             box-shadow: 0 0 22px rgba(0, 245, 255, 0.4);
         }
         .cookie-banner .btn-cookie-reject {
-            background: transparent;
-            border: 1px solid rgba(255,255,255,0.25);
-            color: rgba(232,232,232,0.85);
-            padding: 10px 16px;
+            display: inline-flex !important;
+            align-items: center;
+            justify-content: center;
+            background: transparent !important;
+            border: 1px solid rgba(255,255,255,0.35) !important;
+            color: #fff !important;
+            padding: 11px 18px !important;
+            min-height: 44px;
             border-radius: 4px;
             font-family: 'Rajdhani', sans-serif;
             font-weight: 600;
             font-size: 0.9rem;
+            opacity: 1 !important;
+            visibility: visible !important;
         }
         .cookie-banner .btn-cookie-reject:hover {
             border-color: var(--neon-pink, #ff00ff);
@@ -1205,6 +1217,114 @@
         }
         .pd-consent-check .form-check-label { color: var(--text); }
         .pd-consent-check a { color: var(--neon-cyan, #00f5ff); text-decoration: underline; }
+
+        /* ── Cyber footer ── */
+        .site-footer-cyber {
+            margin-top: 3rem;
+            padding: 2.5rem 0 1.25rem;
+            border-top: 1px solid rgba(0, 245, 255, 0.28);
+            background: linear-gradient(180deg, rgba(0, 245, 255, 0.04) 0%, transparent 40%), var(--bg-nav, #0a0a12);
+            box-shadow: 0 -12px 40px rgba(0, 245, 255, 0.06);
+        }
+        .footer-cyber-grid {
+            display: grid;
+            grid-template-columns: 1.4fr 1fr 1fr;
+            gap: 1.75rem 2rem;
+            align-items: start;
+        }
+        @media (max-width: 991px) {
+            .footer-cyber-grid { grid-template-columns: 1fr 1fr; }
+        }
+        @media (max-width: 575px) {
+            .footer-cyber-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+        }
+        .footer-cyber-tagline {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 500;
+            color: var(--text-muted);
+            line-height: 1.45;
+            max-width: 18rem;
+            margin: 0 0 1rem;
+        }
+        .footer-cyber-contacts {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.75rem 1.25rem;
+        }
+        .footer-cyber-contacts a {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.04em;
+            color: var(--neon-cyan, #00f5ff) !important;
+            text-decoration: none;
+        }
+        .footer-cyber-contacts a:hover {
+            text-shadow: 0 0 12px rgba(0, 245, 255, 0.45);
+        }
+        .footer-cyber-col h5 {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 700;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--neon-cyan, #00f5ff);
+            margin-bottom: 0.85rem;
+        }
+        .footer-cyber-links {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .footer-cyber-links li { margin-bottom: 0.35rem; }
+        .footer-cyber-links a {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text) !important;
+            text-decoration: none;
+            opacity: 0.88;
+        }
+        .footer-cyber-links a:hover {
+            color: var(--neon-cyan, #00f5ff) !important;
+            opacity: 1;
+            text-decoration: underline;
+        }
+        .footer-cyber-bottom {
+            margin-top: 1.75rem;
+            padding-top: 1.1rem;
+            border-top: 1px solid rgba(0, 245, 255, 0.15);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem 1.5rem;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+        .footer-cyber-bottom small {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.65rem;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+        }
+        .site-footer-cyber .footer-legal {
+            max-width: 36rem;
+            font-size: 0.72rem;
+            color: var(--text-muted);
+            line-height: 1.45;
+        }
+        .site-footer-cyber .footer-req-li .legal-requisites summary {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text);
+            opacity: 0.88;
+        }
+        .site-footer-cyber .footer-req-li .legal-requisites summary:hover {
+            color: var(--neon-cyan, #00f5ff);
+            opacity: 1;
+        }
+
 /* Юридический текст в подвале */
         .footer-legal {
             font-size: 0.8rem;
@@ -1613,33 +1733,40 @@
     </main>
 
     <!-- Подвал -->
-    <footer class="footer">
+    <footer class="footer site-footer-cyber">
         <div class="container">
-            <div class="row align-items-start mb-4">
-                <div class="col-lg-6 mb-4 mb-lg-0">
+            <div class="footer-cyber-grid">
+                <div class="footer-cyber-brand">
                     {% with extra_class='site-logo--footer mb-3' %}
                     {% include 'includes/site_logo.html' %}
                     {% endwith %}
-                    <p class="mb-3 small">Оригинальные устройства IQOS и стики TEREA. Бронь на сайте, быстрая доставка по всей России. Работаем с 2020 года.</p>
-                    <h5>Контакты</h5>
-                    <p class="mb-1"><a href="tel:{{ site_phone_tel }}">{{ site_phone }}</a></p>
-                    <p class="mb-0"><a href="https://t.me/iluma_prime_bot" target="_blank" rel="noopener">@iluma_prime_bot</a></p>
+                    <p class="footer-cyber-tagline">Оригинальные IQOS ILUMA и стики TEREA. Бронь на сайте, доставка по России.</p>
+                    <div class="footer-cyber-contacts">
+                        <a href="tel:{{ site_phone_tel }}">{{ site_phone }}</a>
+                        <a href="https://t.me/iluma_prime_bot" target="_blank" rel="noopener">Telegram</a>
+                    </div>
                 </div>
-                <div class="col-lg-6">
-                    <h5>Информация</h5>
-                    <ul class="list-unstyled mb-0 footer-info-cols">
-                        <li class="mb-2"><a href="{{ url_for('about') }}">О нас</a></li>
-                        <li class="mb-2"><a href="{{ url_for('compare') }}">Сравнение</a></li>
-                        <li class="mb-2"><a href="{{ url_for('favorites') }}">Избранное</a></li>
-                        <li class="mb-2"><a href="{{ url_for('delivery') }}">Получение и оплата</a></li>
-                        <li class="mb-2"><a href="{{ url_for('order_track') }}">Отследить заказ</a></li>
-                        <li class="mb-2"><a href="{{ url_for('contacts') }}">Контакты</a></li>
-                        <li class="mb-2"><a href="{{ url_for('faq') }}">FAQ</a></li>
-                        <li class="mb-2"><a href="{{ url_for('blog_index') }}">Блог</a></li>
-                        <li class="mb-2"><a href="{{ url_for('privacy') }}">Политика конфиденциальности</a></li>
-                        <li class="mb-2"><a href="{{ url_for('returns') }}">Возврат</a></li>
-                        <li class="mb-2"><a href="{{ url_for('oferta') }}">Оферта</a></li>
-                        <li class="mb-2 footer-req-li">
+                <div class="footer-cyber-col">
+                    <h5>Магазин</h5>
+                    <ul class="footer-cyber-links">
+                        <li><a href="{{ url_for('catalog') }}">Каталог</a></li>
+                        <li><a href="{{ url_for('about') }}">О нас</a></li>
+                        <li><a href="{{ url_for('delivery') }}">Получение и оплата</a></li>
+                        <li><a href="{{ url_for('order_track') }}">Отследить заказ</a></li>
+                        <li><a href="{{ url_for('blog_index') }}">Блог</a></li>
+                        <li><a href="{{ url_for('faq') }}">FAQ</a></li>
+                    </ul>
+                </div>
+                <div class="footer-cyber-col">
+                    <h5>Сервис</h5>
+                    <ul class="footer-cyber-links">
+                        <li><a href="{{ url_for('compare') }}">Сравнение</a></li>
+                        <li><a href="{{ url_for('favorites') }}">Избранное</a></li>
+                        <li><a href="{{ url_for('contacts') }}">Контакты</a></li>
+                        <li><a href="{{ url_for('privacy') }}">Конфиденциальность</a></li>
+                        <li><a href="{{ url_for('returns') }}">Возврат</a></li>
+                        <li><a href="{{ url_for('oferta') }}">Оферта</a></li>
+                        <li class="footer-req-li">
                             {% with summary='Реквизиты', extra_class='footer-requisites' %}
                             {% include 'includes/legal_requisites.html' %}
                             {% endwith %}
@@ -1647,14 +1774,12 @@
                     </ul>
                 </div>
             </div>
-            <hr class="my-4" style="border-color: var(--border);">
-            <div class="text-center">
-                <small class="text-muted">&copy; 2026 {{ site_brand_name }}. Все права защищены.</small>
-            </div>
-            <div class="footer-legal">
-                <p class="mb-0">* Информация, размещённая на сайте, представлена для ознакомления и не является публичной офертой. Продажа табачной продукции онлайн не осуществляется: на сайте возможна только бронь товара, быстрая доставка по всей России. Оплата при получении в соответствии с действующим законодательством РФ.</p>
-                <p class="mt-2 mb-0 minzdrav">МИНЗДРАВСОЦРАЗВИТИЯ России предупреждает: курение вредит вашему здоровью!</p>
-                <p class="mt-2 mb-0">Мы не продаём табачные изделия лицам моложе 18 лет.</p>
+            <div class="footer-cyber-bottom">
+                <small>&copy; 2026 {{ site_brand_name }}</small>
+                <div class="footer-legal">
+                    <p class="mb-1">* Бронь на сайте, оплата при получении. Продажа табачной продукции онлайн не осуществляется.</p>
+                    <p class="mb-0 minzdrav">МИНЗДРАВСОЦРАЗВИТИЯ России предупреждает: курение вредит вашему здоровью! 18+</p>
+                </div>
             </div>
         </div>
     </footer>

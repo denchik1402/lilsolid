@@ -37,6 +37,20 @@ try:
 except ImportError:
     pass
 cache = Cache(app, config=_cache_config)
+
+
+def _invalidate_cache(*keys):
+    """Сброс кэша при изменениях в админке (отзывы, товары, баннеры и т.д.)."""
+    to_delete = list(keys) if keys else [
+        'nav_categories', 'index_data', 'index_banners', 'sitemap_xml'
+    ]
+    for k in to_delete:
+        try:
+            cache.delete(k)
+        except Exception:
+            pass
+
+
 def _get_secret_key():
     """SECRET_KEY: из env (рекомендуется), иначе config, иначе случайный для dev."""
     k = os.environ.get('SECRET_KEY')
